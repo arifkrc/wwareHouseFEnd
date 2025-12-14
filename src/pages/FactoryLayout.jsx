@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Warehouse, Save } from 'lucide-react';
+import { Package, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Warehouse, Save, Plus } from 'lucide-react';
 import { useWarehouseZones } from '../hooks/useWarehouseZones';
 import { useLocations } from '../hooks/useLocations';
 import { useItems } from '../hooks/useItems';
@@ -27,6 +27,14 @@ export default function FactoryLayout() {
     type: MOVEMENT_TYPES.IN,
     quantity: '',
     toLocationId: '',
+    toLocationId: '',
+    notes: ''
+  });
+
+  // New state for direct stock add in modal
+  const [addStockForm, setAddStockForm] = useState({
+    itemId: '',
+    quantity: '',
     notes: ''
   });
   const [isProcessing, setIsProcessing] = useState(false);
@@ -35,13 +43,13 @@ export default function FactoryLayout() {
   useEffect(() => {
     if (currentZone?.locationId) {
       // Filter items that have stock at this specific location
-      const filteredItems = items.filter(item => 
-        item.stock_distribution && 
+      const filteredItems = items.filter(item =>
+        item.stock_distribution &&
         item.stock_distribution[currentZone.locationId] > 0
       );
       setZoneItems(filteredItems);
     }
-    
+
     // Unassigned items are those with no stock anywhere or only negative stock
     const unassigned = items.filter(item => {
       if (!item.stock_distribution) return true;
@@ -69,7 +77,7 @@ export default function FactoryLayout() {
     } else {
       document.body.style.overflow = '';
     }
-    
+
     return () => {
       document.body.style.overflow = '';
     };
@@ -88,9 +96,10 @@ export default function FactoryLayout() {
       warning('Bu alan pasif bölge - stok tutulamaz');
       return;
     }
-    
+
     setCurrentZone(zone);
     setActiveTab('assigned');
+    setAddStockForm({ itemId: '', quantity: '', notes: '' }); // Reset form
     setShowZoneModal(true);
   };
 
@@ -102,7 +111,7 @@ export default function FactoryLayout() {
       current_zone_name: currentZone?.name,
       stock_at_zone: item.stock_distribution?.[currentZone?.locationId] || 0
     };
-    
+
     setSelectedItem(itemWithLocation);
     setMovementForm({
       type: type,
@@ -135,7 +144,7 @@ export default function FactoryLayout() {
         // TRANSFER: from current zone to selected zone
         movementData.from_location_id = selectedItem.current_zone_location_id;
         movementData.to_location_id = parseInt(movementForm.toLocationId);
-        
+
         // Add location names to notes
         const toLocation = locations.find(l => l.id === parseInt(movementForm.toLocationId));
         movementData.movement_note = `${selectedItem.current_zone_name} → ${toLocation?.location_code || 'Bilinmeyen'}: ${movementForm.notes}`;
@@ -150,23 +159,23 @@ export default function FactoryLayout() {
       }
 
       await createMovement(movementForm.type, movementData);
-      
+
       // Store item info before clearing state
       const itemName = selectedItem.item_name;
       const quantity = movementForm.quantity;
       const type = movementForm.type;
-      
+
       // Close modal immediately for better UX
       setShowMovementModal(false);
       setSelectedItem(null);
-      
+
       // Refresh data in correct order: movements -> items -> zones
       await refreshMovements();
       await refreshItems();
       await refreshZones();
-      
-      const typeLabel = type === MOVEMENT_TYPES.IN ? 'Giriş' : 
-                        type === MOVEMENT_TYPES.OUT ? 'Çıkış' : 'Transfer';
+
+      const typeLabel = type === MOVEMENT_TYPES.IN ? 'Giriş' :
+        type === MOVEMENT_TYPES.OUT ? 'Çıkış' : 'Transfer';
       success(`${typeLabel}: ${quantity} adet ${itemName}`);
     } catch (err) {
       console.error('Hareket kaydedilemedi:', err);
@@ -178,16 +187,16 @@ export default function FactoryLayout() {
 
   const assignItemToLocation = async (itemId) => {
     if (!currentZone?.locationId) return;
-    
+
     const item = unassignedItems.find(i => i.id === itemId);
     if (!item) return;
-    
+
     // If item has no stock anywhere, we need to prompt for quantity
     if (!item.quantity || item.quantity === 0) {
       warning('Bu ürünün stoğu yok. Önce stok girişi yapın.');
       return;
     }
-    
+
     setIsProcessing(true);
     try {
       // Create an IN movement to this location with all available stock
@@ -197,18 +206,56 @@ export default function FactoryLayout() {
         to_location_id: currentZone.locationId,
         movement_note: `${currentZone.name} alanına atama`
       };
-      
+
       await createMovement(MOVEMENT_TYPES.IN, movementData);
-      
+
       // Refresh data in correct order: movements -> items -> zones
       await refreshMovements();
       await refreshItems();
       await refreshZones();
-      
+
       success(`${item.quantity} adet ${item.item_name} bu alana atandı`);
     } catch (err) {
       console.error('Ürün atanamadı:', err);
       error('Ürün atanırken hata oluştu');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+
+
+  const handleAddStockToZone = async () => {
+    if (!currentZone?.locationId || !addStockForm.itemId || !addStockForm.quantity) {
+      warning('Lütfen ürün ve miktar girin');
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const movementData = {
+        item_id: parseInt(addStockForm.itemId),
+        quantity: parseInt(addStockForm.quantity),
+        to_location_id: currentZone.locationId,
+        movement_note: `Panelden Hızlı Giriş: ${addStockForm.notes || ''}`
+      };
+
+      await createMovement(MOVEMENT_TYPES.IN, movementData);
+
+      // Refresh data
+      await refreshMovements();
+      await refreshItems();
+      await refreshZones();
+
+      success(`Stok girişi başarılı!`);
+
+      // Reset form and switch to assigned tab to show the new item
+      setAddStockForm({ itemId: '', quantity: '', notes: '' });
+      setActiveTab('assigned');
+
+    } catch (err) {
+      console.error('Stok eklenemedi:', err);
+      error('Stok eklenirken hata oluştu');
     } finally {
       setIsProcessing(false);
     }
@@ -351,17 +398,24 @@ export default function FactoryLayout() {
             </div>
 
             <div className="tabs">
-              <button 
+              <button
                 className={`tab ${activeTab === 'assigned' ? 'active' : ''}`}
                 onClick={() => setActiveTab('assigned')}
               >
                 Bu Alandaki Ürünler ({zoneItems.length})
               </button>
-              <button 
+              <button
                 className={`tab ${activeTab === 'unassigned' ? 'active' : ''}`}
                 onClick={() => setActiveTab('unassigned')}
               >
                 Atanmamış Ürünler ({unassignedItems.length})
+              </button>
+              <button
+                className={`tab ${activeTab === 'add_stock' ? 'active' : ''}`}
+                onClick={() => setActiveTab('add_stock')}
+                style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+              >
+                <Plus size={16} /> Stok Ekle
               </button>
             </div>
 
@@ -383,53 +437,53 @@ export default function FactoryLayout() {
                         {zoneItems.map(item => {
                           // Get stock at this specific location from stock_distribution
                           const stockAtLocation = item.stock_distribution?.[currentZone.locationId] || 0;
-                          
+
                           return (
-                          <tr key={item.id}>
-                            <td><strong>{item.item_code}</strong></td>
-                            <td>{item.item_name}</td>
-                            <td>
-                              <span className="badge badge-success">
-                                {stockAtLocation}
-                              </span>
-                            </td>
-                            <td>
-                              <span className="item-description">
-                                {item.description ? 
-                                  (item.description.length > 50 ? 
-                                    item.description.substring(0, 50) + '...' : 
-                                    item.description
-                                  ) : 
-                                  '-'
-                                }
-                              </span>
-                            </td>
-                            <td>
-                              <div className="action-buttons">
-                                <button
-                                  className="btn-icon btn-success"
-                                  onClick={() => openMovementModal(item, MOVEMENT_TYPES.IN)}
-                                  title="Stok Girişi"
-                                >
-                                  <ArrowUpCircle size={16} />
-                                </button>
-                                <button
-                                  className="btn-icon btn-danger"
-                                  onClick={() => openMovementModal(item, MOVEMENT_TYPES.OUT)}
-                                  title="Stok Çıkışı"
-                                >
-                                  <ArrowDownCircle size={16} />
-                                </button>
-                                <button
-                                  className="btn-icon btn-warning"
-                                  onClick={() => openMovementModal(item, MOVEMENT_TYPES.TRANSFER)}
-                                  title="Transfer"
-                                >
-                                  <ArrowRightLeft size={16} />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
+                            <tr key={item.id}>
+                              <td><strong>{item.item_code}</strong></td>
+                              <td>{item.item_name}</td>
+                              <td>
+                                <span className="badge badge-success">
+                                  {stockAtLocation}
+                                </span>
+                              </td>
+                              <td>
+                                <span className="item-description">
+                                  {item.description ?
+                                    (item.description.length > 50 ?
+                                      item.description.substring(0, 50) + '...' :
+                                      item.description
+                                    ) :
+                                    '-'
+                                  }
+                                </span>
+                              </td>
+                              <td>
+                                <div className="action-buttons">
+                                  <button
+                                    className="btn-icon btn-success"
+                                    onClick={() => openMovementModal(item, MOVEMENT_TYPES.IN)}
+                                    title="Stok Girişi"
+                                  >
+                                    <ArrowUpCircle size={16} />
+                                  </button>
+                                  <button
+                                    className="btn-icon btn-danger"
+                                    onClick={() => openMovementModal(item, MOVEMENT_TYPES.OUT)}
+                                    title="Stok Çıkışı"
+                                  >
+                                    <ArrowDownCircle size={16} />
+                                  </button>
+                                  <button
+                                    className="btn-icon btn-warning"
+                                    onClick={() => openMovementModal(item, MOVEMENT_TYPES.TRANSFER)}
+                                    title="Transfer"
+                                  >
+                                    <ArrowRightLeft size={16} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
                           );
                         })}
                       </tbody>
@@ -469,11 +523,11 @@ export default function FactoryLayout() {
                             </td>
                             <td>
                               <span className="item-description">
-                                {item.description ? 
-                                  (item.description.length > 50 ? 
-                                    item.description.substring(0, 50) + '...' : 
+                                {item.description ?
+                                  (item.description.length > 50 ?
+                                    item.description.substring(0, 50) + '...' :
                                     item.description
-                                  ) : 
+                                  ) :
                                   '-'
                                 }
                               </span>
@@ -498,6 +552,66 @@ export default function FactoryLayout() {
                     <p>Tüm ürünler bir alana atanmış</p>
                   </div>
                 )
+              )}
+
+
+              {activeTab === 'add_stock' && (
+                <div className="add-stock-panel" style={{ padding: '1rem' }}>
+                  <div className="alert alert-info" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Package size={18} />
+                    <span><strong>{currentZone.name}</strong> alanına yeni stok girişi yapıyorsunuz.</span>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Ürün Seç *</label>
+                    <select
+                      className="form-select"
+                      value={addStockForm.itemId}
+                      onChange={(e) => setAddStockForm({ ...addStockForm, itemId: e.target.value })}
+                    >
+                      <option value="">Ürün seçin...</option>
+                      {items.map(item => (
+                        <option key={item.id} value={item.id}>
+                          {item.item_code} - {item.item_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Miktar *</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={addStockForm.quantity}
+                      onChange={(e) => setAddStockForm({ ...addStockForm, quantity: e.target.value })}
+                      placeholder="Adet girin"
+                      min="1"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Not</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={addStockForm.notes}
+                      onChange={(e) => setAddStockForm({ ...addStockForm, notes: e.target.value })}
+                      placeholder="Opsiyonel açıklama"
+                    />
+                  </div>
+
+                  <div style={{ marginTop: '1.5rem' }}>
+                    <button
+                      className="btn btn-primary btn-large"
+                      style={{ width: '100%' }}
+                      onClick={handleAddStockToZone}
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? 'Ekleniyor...' : 'Stoğa Ekle'}
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           </div>

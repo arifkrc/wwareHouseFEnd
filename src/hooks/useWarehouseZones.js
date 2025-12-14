@@ -32,7 +32,7 @@ const ZONE_CONFIG = {
 export const useWarehouseZones = () => {
   const { locations, loading: locationsLoading, createLocation } = useLocations();
   const { items } = useItems();
-  const { movements } = useMovements();
+  const { movements, refresh: refreshMovements } = useMovements();
   const [zones, setZones] = useState([]);
 
   const mapLocationsToZones = useCallback(() => {
@@ -43,7 +43,7 @@ export const useWarehouseZones = () => {
 
     movements?.forEach(m => {
       const itemId = m.item_id;
-      
+
       if (m.movement_type === 'IN' && m.to_location_id) {
         if (!stockByLocationAndItem[m.to_location_id]) {
           stockByLocationAndItem[m.to_location_id] = {};
@@ -111,7 +111,7 @@ export const useWarehouseZones = () => {
       if (config) {
         const totalQuantity = stockByLocation[loc.id] || 0;
         const itemCount = itemsByLocation[loc.id] || 0;
-        
+
         mappedZones.push({
           id: loc.location_code.toLowerCase(),
           section: config.section,
@@ -148,7 +148,7 @@ export const useWarehouseZones = () => {
       const order = { left: 0, corridor: 1, right: 2 };
       const sectionCompare = order[a.section] - order[b.section];
       if (sectionCompare !== 0) return sectionCompare;
-      
+
       // Within same section, sort by ID to maintain consistent order
       return a.id.localeCompare(b.id);
     });
@@ -168,7 +168,7 @@ export const useWarehouseZones = () => {
         location_code: zone.id.toUpperCase(),
         description: zone.description || zone.name,
       });
-      
+
       // Zones will be auto-updated via locations hook
       return response;
     } catch (err) {
@@ -177,10 +177,16 @@ export const useWarehouseZones = () => {
     }
   }, [createLocation]);
 
+  const refreshAll = useCallback(async () => {
+    await refreshMovements();
+    // Locations refresh might be needed too if locations changed, but usually movements/items are the volatile ones
+    // mapLocationsToZones will automatically run via useEffect when movements updates
+  }, [refreshMovements]);
+
   return {
     zones,
     loading: locationsLoading,
-    refresh: mapLocationsToZones,
+    refresh: refreshAll,
     createZoneLocation,
   };
 };

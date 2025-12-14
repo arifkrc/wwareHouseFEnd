@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Warehouse, Save, Plus } from 'lucide-react';
+import { Package, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Warehouse, RefreshCw, Plus } from 'lucide-react';
 import { useWarehouseZones } from '../hooks/useWarehouseZones';
 import { useLocations } from '../hooks/useLocations';
 import { useItems } from '../hooks/useItems';
@@ -8,6 +8,27 @@ import { useToast } from '../hooks/useToast';
 import Toast from '../components/Toast';
 import { MOVEMENT_TYPES } from '../utils/movementHelpers';
 import './FactoryLayout.css';
+
+const ExpandableText = ({ text, limit = 50 }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  if (!text || text.length <= limit) return <span>{text}</span>;
+
+  return (
+    <div
+      onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+      style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}
+      title={expanded ? "Daralt" : "Genişlet"}
+    >
+      <span>
+        {expanded ? text : `${text.substring(0, limit)}...`}
+      </span>
+      <small style={{ color: '#2563eb', marginLeft: '4px', fontSize: '0.7em', whiteSpace: 'nowrap' }}>
+        {expanded ? '(daha az)' : '(daha fazla)'}
+      </small>
+    </div>
+  );
+};
 
 export default function FactoryLayout() {
   const { zones, loading: zonesLoading, refresh: refreshZones } = useWarehouseZones();
@@ -283,7 +304,7 @@ export default function FactoryLayout() {
         </div>
         <div className="toolbar-right">
           <button className="btn btn-primary" onClick={handleRefresh} disabled={zonesLoading}>
-            <Save size={18} /> {zonesLoading ? 'Yükleniyor...' : 'Yenile'}
+            <RefreshCw size={18} /> {zonesLoading ? 'Yükleniyor...' : 'Yenile'}
           </button>
         </div>
       </div>
@@ -441,7 +462,7 @@ export default function FactoryLayout() {
                           return (
                             <tr key={item.id}>
                               <td><strong>{item.item_code}</strong></td>
-                              <td>{item.item_name}</td>
+                              <td><ExpandableText text={item.item_name} limit={50} /></td>
                               <td>
                                 <span className="badge badge-success">
                                   {stockAtLocation}

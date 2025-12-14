@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import { Settings as SettingsIcon, MapPin, Package, Trash2, Edit2, Plus, Save, X } from 'lucide-react';
+import { Settings as SettingsIcon, MapPin, Package, Users, Trash2, Edit2, Plus, Save, X } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { useLocations } from '../hooks/useLocations';
 import { useItems } from '../hooks/useItems';
 import { useToast } from '../hooks/useToast';
+import api from '../services/api';
 import Toast from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import './Settings.css';
 
 export default function Settings() {
+  const { isAdmin } = useAuth();
   const { locations, loading: locationsLoading, createLocation, updateLocation, deleteLocation } = useLocations();
   const { items, loading: itemsLoading, createItem, updateItem, deleteItem } = useItems();
   const { toasts, removeToast, success, error } = useToast();
@@ -15,6 +18,7 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState('locations');
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showItemModal, setShowItemModal] = useState(false);
+  const [showUserModal, setShowUserModal] = useState(false);
   const [editingLocation, setEditingLocation] = useState(null);
   const [locationForm, setLocationForm] = useState({
     location_code: '',
@@ -26,6 +30,15 @@ export default function Settings() {
     item_code: '',
     item_name: '',
     description: ''
+  });
+
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [userForm, setUserForm] = useState({
+    username: '',
+    password: '',
+    full_name: '',
+    role: 'user'
   });
 
   const [confirmDialog, setConfirmDialog] = useState({
@@ -175,6 +188,59 @@ export default function Settings() {
     });
   };
 
+  // User operations
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const response = await api.get('/auth/users');
+      setUsers(response.data);
+    } catch (err) {
+      error('Kullanıcılar yüklenemedi');
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const openUserModal = () => {
+    setUserForm({
+      username: '',
+      password: '',
+      full_name: '',
+      role: 'user'
+    });
+    setShowUserModal(true);
+  };
+
+  const handleUserSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/auth/register', userForm);
+      success(`Kullanıcı oluşturuldu: ${userForm.username}`);
+      setShowUserModal(false);
+      fetchUsers();
+    } catch (err) {
+      error(err.response?.data?.error || 'Kullanıcı oluşturulamadı');
+    }
+  };
+
+  const handleDeleteUser = async (user) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Kullanıcı Sil',
+      message: `"${user.full_name}" (${user.username}) kullanıcısını silmek istediğinizden emin misiniz?`,
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          await api.delete(`/auth/users/${user.id}`);
+          success(`Kullanıcı silindi: ${user.username}`);
+          fetchUsers();
+        } catch (err) {
+          error(err.response?.data?.error || 'Kullanıcı silinemedi');
+        }
+      }
+    });
+  };
+
   if (locationsLoading || itemsLoading) {
     return (
       <div className="loading">
@@ -205,6 +271,18 @@ export default function Settings() {
           <Package size={18} />
           Ürünler ({items.length})
         </button>
+        {isAdmin && (
+          <button 
+            className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
+            onClick={() => {
+              setActiveTab('users');
+              fetchUsers();
+            }}
+          >
+            <Users size={18} />
+            Kullanıcılar
+          </button>
+        )}
       </div>
 
       {activeTab === 'locations' && (
@@ -380,6 +458,69 @@ export default function Settings() {
         </div>
       )}
 
+      {isAdmin && activeTab === 'users' && (
+        <div className="settings-content">
+          <div className="content-header">
+            <h2>Kullanıcı Yönetimi</h2>
+            <button className="btn btn-primary" onClick={openUserModal}>
+              <Plus size={18} />
+              Yeni Kullanıcı Ekle
+            </button>
+          </div>
+
+          <div className="table-container">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Kullanıcı Adı</th>
+                  <th>Ad Soyad</th>
+                  <th>Rol</th>
+                  <th>İşlemler</th>
+                </tr>
+              </thead>
+              <tbody>
+                {usersLoading ? (
+                  <tr>
+                    <td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>
+                      Yükleniyor...
+                    </td>
+                  </tr>
+                ) : users.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>
+                      Henüz kullanıcı yok.
+                    </td>
+                  </tr>
+                ) : (
+                  users.map(user => (
+                    <tr key={user.id}>
+                      <td>{user.username}</td>
+                      <td>{user.full_name}</td>
+                      <td>
+                        <span className={`badge ${user.role === 'admin' ? 'badge-primary' : 'badge-secondary'}`}>
+                          {user.role === 'admin' ? 'Admin' : 'Kullanıcı'}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="action-buttons">
+                          <button 
+                            className="btn-icon btn-danger"
+                            onClick={() => handleDeleteUser(user)}
+                            title="Sil"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Location Modal */}
       {showLocationModal && (
         <div className="modal-overlay" onClick={() => setShowLocationModal(false)}>
@@ -487,6 +628,83 @@ export default function Settings() {
                 <button type="submit" className="btn btn-primary">
                   <Save size={18} />
                   {editingItem ? 'Güncelle' : 'Oluştur'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* User Modal */}
+      {showUserModal && (
+        <div className="modal-overlay" onClick={() => setShowUserModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">
+                <Users size={20} />
+                Yeni Kullanıcı Ekle
+              </h3>
+              <button className="modal-close" onClick={() => setShowUserModal(false)}>×</button>
+            </div>
+
+            <form onSubmit={handleUserSubmit}>
+              <div className="form-group">
+                <label className="form-label">Kullanıcı Adı *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={userForm.username}
+                  onChange={(e) => setUserForm({...userForm, username: e.target.value})}
+                  placeholder="Kullanıcı adı..."
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Ad Soyad *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={userForm.full_name}
+                  onChange={(e) => setUserForm({...userForm, full_name: e.target.value})}
+                  placeholder="Ad Soyad..."
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Şifre *</label>
+                <input
+                  type="password"
+                  className="form-input"
+                  value={userForm.password}
+                  onChange={(e) => setUserForm({...userForm, password: e.target.value})}
+                  placeholder="Şifre..."
+                  required
+                  minLength="6"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Rol *</label>
+                <select
+                  className="form-input"
+                  value={userForm.role}
+                  onChange={(e) => setUserForm({...userForm, role: e.target.value})}
+                  required
+                >
+                  <option value="user">Kullanıcı</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+              <div className="modal-footer">
+                <button type="button" className="btn btn-outline" onClick={() => setShowUserModal(false)}>
+                  İptal
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  <Save size={18} />
+                  Oluştur
                 </button>
               </div>
             </form>

@@ -5,7 +5,7 @@ import { LayoutGrid, Package, History, BarChart3, Plus, LogOut, User, Menu, X, S
 import './Layout.css';
 
 export default function Layout({ children }) {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -44,10 +44,12 @@ export default function Layout({ children }) {
         </div>
 
         <nav className="sidebar-nav">
-          <Link to="/" className="nav-link" onClick={closeMobileMenu}>
-            <BarChart3 size={20} />
-            <span>Dashboard</span>
-          </Link>
+          {isAdmin && (
+            <Link to="/" className="nav-link" onClick={closeMobileMenu}>
+              <BarChart3 size={20} />
+              <span>Dashboard</span>
+            </Link>
+          )}
           <Link to="/layout" className="nav-link" onClick={closeMobileMenu}>
             <LayoutGrid size={20} />
             <span>Fabrika Yerleşimi</span>
@@ -60,10 +62,12 @@ export default function Layout({ children }) {
             <History size={20} />
             <span>Hareket Geçmişi</span>
           </Link>
-          <Link to="/settings" className="nav-link" onClick={closeMobileMenu}>
-            <Settings size={20} />
-            <span>Ayarlar</span>
-          </Link>
+          {isAdmin && (
+            <Link to="/settings" className="nav-link" onClick={closeMobileMenu}>
+              <Settings size={20} />
+              <span>Ayarlar</span>
+            </Link>
+          )}
         </nav>
 
         <div className="sidebar-footer">

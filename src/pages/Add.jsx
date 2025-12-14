@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Plus, Package, Archive } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { useItems } from '../hooks/useItems';
 import { useLocations } from '../hooks/useLocations';
 import { useToast } from '../hooks/useToast';
@@ -7,11 +8,12 @@ import api from '../services/api';
 import './Add.css';
 
 export default function Add() {
+  const { isAdmin } = useAuth();
   const { items, refresh: refreshItems, createItem, loading: itemsLoading } = useItems();
   const { locations, loading: locationsLoading } = useLocations();
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState('product');
+  const [activeTab, setActiveTab] = useState('stock');
   
   // Ürün ekleme formu
   const [productForm, setProductForm] = useState({
@@ -104,13 +106,15 @@ export default function Add() {
       </div>
 
       <div className="add-tabs">
-        <button 
-          className={`tab-button ${activeTab === 'product' ? 'active' : ''}`}
-          onClick={() => setActiveTab('product')}
-        >
-          <Package size={18} />
-          Ürün Ekle
-        </button>
+        {isAdmin && (
+          <button 
+            className={`tab-button ${activeTab === 'product' ? 'active' : ''}`}
+            onClick={() => setActiveTab('product')}
+          >
+            <Package size={18} />
+            Ürün Ekle
+          </button>
+        )}
         <button 
           className={`tab-button ${activeTab === 'stock' ? 'active' : ''}`}
           onClick={() => setActiveTab('stock')}
@@ -121,7 +125,7 @@ export default function Add() {
       </div>
 
       <div className="add-content">
-        {activeTab === 'product' && (
+        {isAdmin && activeTab === 'product' && (
           <div className="card">
             <h3><Package size={20} /> Yeni Ürün Ekle</h3>
             <p className="help-text">Sisteme yeni bir ürün ekleyin. Daha sonra bu ürüne stok atayabilirsiniz.</p>

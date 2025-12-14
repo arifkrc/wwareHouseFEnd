@@ -7,18 +7,16 @@ import Toast from '../components/Toast';
 import './Login.css';
 
 export default function Login() {
-  const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     username: '',
-    password: '',
-    full_name: ''
+    password: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { login, register } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
-  const { toasts, removeToast, success, error: showError } = useToast();
+  const { toasts, removeToast, error: showError } = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,18 +24,10 @@ export default function Login() {
     setLoading(true);
 
     try {
-      if (isLogin) {
-        await login(formData.username, formData.password);
-        navigate('/');
-      } else {
-        await register(formData.username, formData.password, formData.full_name);
-        setIsLogin(true);
-        setFormData({ username: '', password: '', full_name: '' });
-        setError('');
-        success('Kayıt başarılı! Şimdi giriş yapabilirsiniz.');
-      }
+      await login(formData.username, formData.password);
+      navigate('/');
     } catch (err) {
-      const errorMsg = err.response?.data?.error || 'Bir hata oluştu';
+      const errorMsg = err.response?.data?.error || 'Giriş başarısız';
       setError(errorMsg);
       showError(errorMsg);
     } finally {
@@ -70,21 +60,6 @@ export default function Login() {
         )}
 
         <form onSubmit={handleSubmit}>
-          {!isLogin && (
-            <div className="form-group">
-              <label className="form-label">Ad Soyad</label>
-              <input
-                type="text"
-                name="full_name"
-                className="form-input"
-                value={formData.full_name}
-                onChange={handleChange}
-                required
-                autoComplete="name"
-              />
-            </div>
-          )}
-
           <div className="form-group">
             <label className="form-label">Kullanıcı Adı</label>
             <input
@@ -107,29 +82,15 @@ export default function Login() {
               value={formData.password}
               onChange={handleChange}
               required
-              autoComplete={isLogin ? 'current-password' : 'new-password'}
+              autoComplete="current-password"
             />
           </div>
 
           <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
             <LogIn size={18} />
-            {loading ? 'İşleniyor...' : isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
+            {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
           </button>
         </form>
-
-        <div className="login-footer">
-          <button
-            type="button"
-            className="link-button"
-            onClick={() => {
-              setIsLogin(!isLogin);
-              setError('');
-              setFormData({ username: '', password: '', full_name: '' });
-            }}
-          >
-            {isLogin ? 'Hesabınız yok mu? Kayıt olun' : 'Zaten hesabınız var mı? Giriş yapın'}
-          </button>
-        </div>
       </div>
       <Toast toasts={toasts} removeToast={removeToast} />
     </div>

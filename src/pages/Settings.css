@@ -97,6 +97,24 @@
   border-top: 1px solid var(--border);
 }
 
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.badge-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.badge-secondary {
+  background: #6b7280;
+  color: white;
+}
+
 .badge-warning {
   background: #f59e0b;
   color: white;

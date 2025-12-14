@@ -95,7 +95,15 @@ export default function FactoryLayout() {
   };
 
   const openMovementModal = (item, type = MOVEMENT_TYPES.IN) => {
-    setSelectedItem(item);
+    // Add current zone location info to the item
+    const itemWithLocation = {
+      ...item,
+      current_zone_location_id: currentZone?.locationId,
+      current_zone_name: currentZone?.name,
+      stock_at_zone: item.stock_distribution?.[currentZone?.locationId] || 0
+    };
+    
+    setSelectedItem(itemWithLocation);
     setMovementForm({
       type: type,
       quantity: '',
@@ -124,14 +132,21 @@ export default function FactoryLayout() {
           warning('Transfer için hedef lokasyon seçin');
           return;
         }
-        movementData.from_location_id = selectedItem.location_id;
+        // TRANSFER: from current zone to selected zone
+        movementData.from_location_id = selectedItem.current_zone_location_id;
         movementData.to_location_id = parseInt(movementForm.toLocationId);
+        
+        // Add location names to notes
+        const toLocation = locations.find(l => l.id === parseInt(movementForm.toLocationId));
+        movementData.notes = `${selectedItem.current_zone_name} → ${toLocation?.location_code || 'Bilinmeyen'}: ${movementForm.notes}`;
       } else if (movementForm.type === MOVEMENT_TYPES.IN) {
-        // IN: to_location_id (ürün bu alana giriyor)
-        movementData.to_location_id = selectedItem.location_id;
+        // IN: to current zone (ürün bu alana giriyor)
+        movementData.to_location_id = selectedItem.current_zone_location_id;
+        movementData.notes = `${selectedItem.current_zone_name} alanına eklendi: ${movementForm.notes}`;
       } else if (movementForm.type === MOVEMENT_TYPES.OUT) {
-        // OUT: from_location_id (ürün bu alandan çıkıyor)
-        movementData.from_location_id = selectedItem.location_id;
+        // OUT: from current zone (ürün bu alandan çıkıyor)
+        movementData.from_location_id = selectedItem.current_zone_location_id;
+        movementData.notes = `${selectedItem.current_zone_name} alanından çıkarıldı: ${movementForm.notes}`;
       }
 
       await createMovement(movementForm.type, movementData);
@@ -505,7 +520,8 @@ export default function FactoryLayout() {
             <div className="movement-item-info">
               <strong>{selectedItem.item_name}</strong>
               <span className="text-muted">{selectedItem.item_code}</span>
-              <span>Mevcut Stok: <strong>{selectedItem.quantity}</strong></span>
+              <span>Alan: <strong>{selectedItem.current_zone_name}</strong></span>
+              <span>Bu Alandaki Stok: <strong>{selectedItem.stock_at_zone}</strong></span>
             </div>
 
             <div className="form-group">

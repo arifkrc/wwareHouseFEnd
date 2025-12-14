@@ -23,6 +23,12 @@ export default function Add() {
   });
   const [productSubmitting, setProductSubmitting] = useState(false);
 
+  // Bulk CSV import state (admin only)
+  const [bulkItems, setBulkItems] = useState([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
+  const [bulkError, setBulkError] = useState('');
+  const [bulkSuccess, setBulkSuccess] = useState('');
+
   // Stok ekleme formu
   const [stockForm, setStockForm] = useState({
     item_id: '',
@@ -129,7 +135,59 @@ export default function Add() {
           <div className="card">
             <h3><Package size={20} /> Yeni Ürün Ekle</h3>
             <p className="help-text">Sisteme yeni bir ürün ekleyin. Daha sonra bu ürüne stok atayabilirsiniz.</p>
-            
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <label className="btn btn-outline" style={{ cursor: 'pointer' }}>
+                CSV Yükle
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                      // parse CSV (header expected: item_code,item_name,description,initial_quantity,location_code)
+                      const text = ev.target.result;
+                      const lines = text.trim().split('\n');
+                      const parsed = [];
+                      const errors = [];
+                      lines.forEach((line, idx) => {
+                        if (idx === 0) return; // header
+                        const cols = line.split(',').map(s => s.trim());
+                        const [item_code, item_name, description, initial_quantity, location_code] = cols;
+                        if (!item_code || !item_name) {
+                          errors.push(`Satır ${idx + 1}: eksik item_code veya item_name`);
+                          return;
+                        }
+                        const qty = parseInt(initial_quantity) || 0;
+                        parsed.push({
+                          item_code: item_code.slice(0,100),
+                          item_name: item_name.slice(0,255),
+                          description: (description || '').slice(0,1000),
+                          quantity: qty,
+                          location_code: location_code || null
+                        });
+                      });
+                      if (errors.length) setBulkError(errors.join('; ')); else setBulkError('');
+                      setBulkItems(parsed);
+                      setBulkSuccess(parsed.length > 0 ? `${parsed.length} satır yüklendi` : '');
+                    };
+                    reader.readAsText(file);
+                  }}
+                  style={{ display: 'none' }}
+                />
+              </label>
+              <button type="button" className="btn btn-outline" onClick={() => {
+                const csv = 'item_code,item_name,description,initial_quantity,location_code\nPRD-001,Örnek Ürün,Açıklama,10,SOL-1';
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = 'toplu-urun-sablonu.csv'; a.click();
+              }}>CSV Şablon İndir</button>
+            </div>
+
+            {bulkError && <div className="alert alert-error">{bulkError}</div>}
+            {bulkSuccess && <div className="alert alert-success">{bulkSuccess}</div>}
             <form onSubmit={handleProductSubmit} className="add-form">
               <div className="form-group">
                 <label htmlFor="item_code">Ürün Kodu *</label>
@@ -173,6 +231,40 @@ export default function Add() {
               >
                 {productSubmitting ? 'Ekleniyor...' : 'Ürün Ekle'}
               </button>
+              
+              {/* Bulk import action */}
+              {bulkItems.length > 0 && (
+                <div style={{ marginTop: '0.75rem' }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    disabled={bulkLoading}
+                    onClick={async () => {
+                      setBulkLoading(true);
+                      setBulkError('');
+                      setBulkSuccess('');
+                      try {
+                        // Map parsed CSV rows to bulkCreateItems shape
+                        const toSend = bulkItems.map(b => ({
+                          item_code: b.item_code,
+                          item_name: b.item_name,
+                          description: b.description || '',
+                          quantity: b.quantity || 0,
+                          // backend bulk endpoint accepts location_id; we allow location_code -> null
+                          location_code: b.location_code || null
+                        }));
+                        // useItems.bulkCreateItems expects items with location_id; the backend supports location_code as well
+                        await bulkCreateItems(toSend);
+                        setBulkSuccess(`${toSend.length} ürün başarıyla yüklendi`);
+                        setBulkItems([]);
+                        await refreshItems();
+                      } catch (err) {
+                        setBulkError(err.response?.data?.error || err.message || 'Toplu ekleme başarısız');
+                      } finally { setBulkLoading(false); }
+                    }}
+                  >{bulkLoading ? 'Yükleniyor...' : 'CSV ile Toplu Ekle'}</button>
+                </div>
+              )}
             </form>
           </div>
         )}

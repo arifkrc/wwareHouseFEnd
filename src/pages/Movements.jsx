@@ -13,8 +13,8 @@ export default function Movements() {
           <h1><History size={28} /> Hareket Geçmişi</h1>
           <p>Tüm stok hareketlerinin geçmişi</p>
         </div>
-        <button 
-          className="btn btn-secondary" 
+        <button
+          className="btn btn-secondary"
           onClick={refreshMovements}
           disabled={loading}
         >
@@ -63,8 +63,8 @@ export default function Movements() {
                       <strong>{movement.item_code}</strong> - {movement.item_name}
                     </td>
                     <td><strong>{movement.quantity}</strong></td>
-                    <td>{movement.from_location || '-'}</td>
-                    <td>{movement.to_location || '-'}</td>
+                    <td>{movement.from_location_code || '-'}</td>
+                    <td>{movement.to_location_code || '-'}</td>
                     <td>{movement.full_name}</td>
                     <td>{movement.movement_note || '-'}</td>
                   </tr>

@@ -124,7 +124,7 @@ export default function FactoryLayout() {
       const movementData = {
         item_id: selectedItem.id,
         quantity: parseInt(movementForm.quantity),
-        notes: movementForm.notes
+        movement_note: movementForm.notes
       };
 
       if (movementForm.type === MOVEMENT_TYPES.TRANSFER) {
@@ -138,15 +138,15 @@ export default function FactoryLayout() {
         
         // Add location names to notes
         const toLocation = locations.find(l => l.id === parseInt(movementForm.toLocationId));
-        movementData.notes = `${selectedItem.current_zone_name} → ${toLocation?.location_code || 'Bilinmeyen'}: ${movementForm.notes}`;
+        movementData.movement_note = `${selectedItem.current_zone_name} → ${toLocation?.location_code || 'Bilinmeyen'}: ${movementForm.notes}`;
       } else if (movementForm.type === MOVEMENT_TYPES.IN) {
         // IN: to current zone (ürün bu alana giriyor)
         movementData.to_location_id = selectedItem.current_zone_location_id;
-        movementData.notes = `${selectedItem.current_zone_name} alanına eklendi: ${movementForm.notes}`;
+        movementData.movement_note = `${selectedItem.current_zone_name} alanına eklendi: ${movementForm.notes}`;
       } else if (movementForm.type === MOVEMENT_TYPES.OUT) {
         // OUT: from current zone (ürün bu alandan çıkıyor)
         movementData.from_location_id = selectedItem.current_zone_location_id;
-        movementData.notes = `${selectedItem.current_zone_name} alanından çıkarıldı: ${movementForm.notes}`;
+        movementData.movement_note = `${selectedItem.current_zone_name} alanından çıkarıldı: ${movementForm.notes}`;
       }
 
       await createMovement(movementForm.type, movementData);

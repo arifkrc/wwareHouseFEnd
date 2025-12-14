@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings as SettingsIcon, MapPin, Package, Users, Trash2, Edit2, Plus, Save, X } from 'lucide-react';
+import { Settings as SettingsIcon, MapPin, Package, Users, Trash2, Edit2, Plus, Save, X, Lock, Key } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLocations } from '../hooks/useLocations';
 import { useItems } from '../hooks/useItems';
@@ -19,6 +19,9 @@ export default function Settings() {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showItemModal, setShowItemModal] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showAdminPasswordModal, setShowAdminPasswordModal] = useState(false);
+  const [selectedUserForPassword, setSelectedUserForPassword] = useState(null);
   const [editingLocation, setEditingLocation] = useState(null);
   const [locationForm, setLocationForm] = useState({
     location_code: '',
@@ -39,6 +42,17 @@ export default function Settings() {
     password: '',
     full_name: '',
     role: 'user'
+  });
+
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
+  const [adminPasswordForm, setAdminPasswordForm] = useState({
+    newPassword: '',
+    confirmPassword: ''
   });
 
   const [confirmDialog, setConfirmDialog] = useState({
@@ -241,6 +255,65 @@ export default function Settings() {
     });
   };
 
+  // Password change functions
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      error('Yeni şifreler eşleşmiyor');
+      return;
+    }
+    
+    if (passwordForm.newPassword.length < 6) {
+      error('Şifre en az 6 karakter olmalı');
+      return;
+    }
+    
+    try {
+      await api.put('/auth/change-password', {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword
+      });
+      success('Şifreniz başarıyla değiştirildi');
+      setShowPasswordModal(false);
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (err) {
+      error(err.response?.data?.error || 'Şifre değiştirilemedi');
+    }
+  };
+
+  const handleAdminChangeUserPassword = async (e) => {
+    e.preventDefault();
+    
+    if (adminPasswordForm.newPassword !== adminPasswordForm.confirmPassword) {
+      error('Şifreler eşleşmiyor');
+      return;
+    }
+    
+    if (adminPasswordForm.newPassword.length < 6) {
+      error('Şifre en az 6 karakter olmalı');
+      return;
+    }
+    
+    try {
+      await api.put(`/auth/users/${selectedUserForPassword.id}/password`, {
+        newPassword: adminPasswordForm.newPassword
+      });
+      success(`${selectedUserForPassword.username} kullanıcısının şifresi değiştirildi`);
+      setShowAdminPasswordModal(false);
+      setAdminPasswordForm({ newPassword: '', confirmPassword: '' });
+      setSelectedUserForPassword(null);
+    } catch (err) {
+      error(err.response?.data?.error || 'Şifre değiştirilemedi');
+    }
+  };
+
+  const openAdminPasswordModal = (user) => {
+    setSelectedUserForPassword(user);
+    setAdminPasswordForm({ newPassword: '', confirmPassword: '' });
+    setShowAdminPasswordModal(true);
+  };
+
   if (locationsLoading || itemsLoading) {
     return (
       <div className="loading">
@@ -270,6 +343,13 @@ export default function Settings() {
         >
           <Package size={18} />
           Ürünler ({items.length})
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'password' ? 'active' : ''}`}
+          onClick={() => setActiveTab('password')}
+        >
+          <Lock size={18} />
+          Şifre Değiştir
         </button>
         {isAdmin && (
           <button 
@@ -504,6 +584,13 @@ export default function Settings() {
                       <td>
                         <div className="action-buttons">
                           <button 
+                            className="btn-icon btn-warning"
+                            onClick={() => openAdminPasswordModal(user)}
+                            title="Şifre Değiştir"
+                          >
+                            <Key size={16} />
+                          </button>
+                          <button 
                             className="btn-icon btn-danger"
                             onClick={() => handleDeleteUser(user)}
                             title="Sil"
@@ -517,6 +604,60 @@ export default function Settings() {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'password' && (
+        <div className="settings-content">
+          <div className="content-header">
+            <h2>Şifre Değiştir</h2>
+            <p>Kendi şifrenizi buradan değiştirebilirsiniz</p>
+          </div>
+
+          <div style={{ maxWidth: '500px', margin: '2rem auto' }}>
+            <form onSubmit={handleChangePassword} className="password-form">
+              <div className="form-group">
+                <label className="form-label">Mevcut Şifre *</label>
+                <input
+                  type="password"
+                  className="form-input"
+                  value={passwordForm.currentPassword}
+                  onChange={(e) => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Yeni Şifre *</label>
+                <input
+                  type="password"
+                  className="form-input"
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
+                  minLength="6"
+                  required
+                />
+                <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>En az 6 karakter</small>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Yeni Şifre Tekrar *</label>
+                <input
+                  type="password"
+                  className="form-input"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
+                  minLength="6"
+                  required
+                />
+              </div>
+
+              <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }}>
+                <Lock size={18} />
+                Şifreyi Değiştir
+              </button>
+            </form>
           </div>
         </div>
       )}
@@ -705,6 +846,64 @@ export default function Settings() {
                 <button type="submit" className="btn btn-primary">
                   <Save size={18} />
                   Oluştur
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Password Change Modal */}
+      {showAdminPasswordModal && selectedUserForPassword && (
+        <div className="modal-overlay" onClick={() => setShowAdminPasswordModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">
+                <Key size={20} />
+                Kullanıcı Şifresi Değiştir
+              </h3>
+              <button className="modal-close" onClick={() => setShowAdminPasswordModal(false)}>×</button>
+            </div>
+
+            <form onSubmit={handleAdminChangeUserPassword}>
+              <p style={{ marginBottom: '1.5rem', color: '#6b7280' }}>
+                <strong>{selectedUserForPassword.full_name}</strong> ({selectedUserForPassword.username}) için yeni şifre belirleyin
+              </p>
+
+              <div className="form-group">
+                <label className="form-label">Yeni Şifre *</label>
+                <input
+                  type="password"
+                  className="form-input"
+                  value={adminPasswordForm.newPassword}
+                  onChange={(e) => setAdminPasswordForm({...adminPasswordForm, newPassword: e.target.value})}
+                  placeholder="Yeni şifre..."
+                  required
+                  minLength="6"
+                />
+                <small style={{ color: '#6b7280', fontSize: '0.875rem' }}>En az 6 karakter</small>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Şifre Tekrar *</label>
+                <input
+                  type="password"
+                  className="form-input"
+                  value={adminPasswordForm.confirmPassword}
+                  onChange={(e) => setAdminPasswordForm({...adminPasswordForm, confirmPassword: e.target.value})}
+                  placeholder="Şifre tekrar..."
+                  required
+                  minLength="6"
+                />
+              </div>
+
+              <div className="modal-footer">
+                <button type="button" className="btn btn-outline" onClick={() => setShowAdminPasswordModal(false)}>
+                  İptal
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  <Save size={18} />
+                  Şifreyi Değiştir
                 </button>
               </div>
             </form>

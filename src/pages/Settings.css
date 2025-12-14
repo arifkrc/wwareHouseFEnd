@@ -120,6 +120,15 @@
   color: white;
 }
 
+.btn-warning {
+  background: #f59e0b;
+  color: white;
+}
+
+.btn-warning:hover {
+  background: #d97706;
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
   .settings-page {

@@ -92,7 +92,17 @@ export default function Login() {
           </button>
         </form>
       </div>
-      <Toast toasts={toasts} removeToast={removeToast} />
+
+      {/* Toast Notifications */}
+      {toasts.map(toast => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          duration={toast.duration}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
     </div>
   );
 }

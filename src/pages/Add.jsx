@@ -6,7 +6,7 @@ import { useLocations } from '../hooks/useLocations';
 import { useToast } from '../hooks/useToast';
 import api from '../services/api';
 import './Add.css';
-import { useItems } from '../hooks/useItems';
+
 
 export default function Add() {
   const { isAdmin } = useAuth();

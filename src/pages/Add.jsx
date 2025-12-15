@@ -6,10 +6,11 @@ import { useLocations } from '../hooks/useLocations';
 import { useToast } from '../hooks/useToast';
 import api from '../services/api';
 import './Add.css';
+import { useItems } from '../hooks/useItems';
 
 export default function Add() {
   const { isAdmin } = useAuth();
-  const { items, refresh: refreshItems, createItem, loading: itemsLoading } = useItems();
+  const {  items,  refresh: refreshItems,  createItem,  bulkCreateItems,  loading: itemsLoading } = useItems();
   const { locations, loading: locationsLoading } = useLocations();
   const { showToast } = useToast();
 

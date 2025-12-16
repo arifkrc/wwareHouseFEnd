@@ -470,7 +470,7 @@ export default function FactoryLayout() {
                         <tr>
                           <th>Ürün Kodu</th>
                           <th>Ürün Adı</th>
-                          <th>Müşteri/Firma</th>
+                          <th>Transfer Notu</th>
                           <th>Stok</th>
                           <th>Açıklama</th>
                           <th>İşlemler</th>
@@ -485,13 +485,21 @@ export default function FactoryLayout() {
                               <td><strong>{item.item_code}</strong></td>
                               <td><ExpandableText text={item.item_name} limit={20} /></td>
                               <td>
-                                {item.customer_code ? (
-                                  <span className="badge badge-info" style={{ backgroundColor: '#e0f2fe', color: '#0369a1' }}>
-                                    {item.customer_code}
-                                  </span>
-                                ) : (
-                                  <span className="text-muted">-</span>
-                                )}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxWidth: '200px' }}>
+                                  {item.customer_code && (
+                                    <span className="badge badge-info" style={{ backgroundColor: '#e0f2fe', color: '#0369a1', width: 'fit-content' }}>
+                                      {item.customer_code}
+                                    </span>
+                                  )}
+                                  {item.movement_note && (
+                                    <span style={{ fontSize: '0.85em', color: '#475569', fontStyle: 'italic' }}>
+                                      {item.movement_note}
+                                    </span>
+                                  )}
+                                  {!item.customer_code && !item.movement_note && (
+                                    <span className="text-muted">-</span>
+                                  )}
+                                </div>
                               </td>
                               <td>
                                 <span className="badge badge-success">

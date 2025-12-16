@@ -6,29 +6,48 @@ import { useMovements } from './useMovements';
 // Zone configuration - Single source of truth
 // Fixed zone names: Streç (left), Koridor (corridor), Karşı Duvar (right)
 // Passive zones cannot store items (Streç Makinesi, Kapı, Jeneratör)
-const ZONE_CONFIG = {
-  'SOL-1': { section: 'left', name: 'Streç Sol', color: '#506d95', passive: false },
-  'SOL-2': { section: 'left', name: 'Streç Makinesi', color: '#9ca3af', passive: true },
-  'SOL-3': { section: 'left', name: 'Streç Sağ', color: '#506d95', passive: false },
-  'SOL-4': { section: 'left', name: 'Kapı', color: '#9ca3af', passive: true },
-  'SOL-5': { section: 'left', name: 'Jeneratör Sol', color: '#506d95', passive: false },
-  'SOL-6': { section: 'left', name: 'Jeneratör', color: '#9ca3af', passive: true },
-  'SOL-7': { section: 'left', name: 'Jeneratör Sağ', color: '#506d95', passive: false },
-  'KORIDOR-1': { section: 'corridor', name: 'Koridor 1', color: '#e4ae62', passive: false },
-  'KORIDOR-2': { section: 'corridor', name: 'Koridor 2', color: '#e4ae62', passive: false },
-  'KORIDOR-3': { section: 'corridor', name: 'Koridor 3', color: '#e4ae62', passive: false },
-  'KORIDOR-4': { section: 'corridor', name: 'Koridor 4', color: '#e4ae62', passive: false },
-  'KORIDOR-5': { section: 'corridor', name: 'Koridor 5', color: '#e4ae62', passive: false },
-  'KORIDOR-6': { section: 'corridor', name: 'Koridor 6', color: '#e4ae62', passive: false },
-  'KORIDOR-7': { section: 'corridor', name: 'Koridor 7', color: '#e4ae62', passive: false },
-  'SAG-1': { section: 'right', name: 'Streç Karşı Sol', color: '#506d95', passive: false },
-  'SAG-2': { section: 'right', name: 'Streç Karşı', color: '#506d95', passive: false },
-  'SAG-3': { section: 'right', name: 'Streç Karşı Sağ', color: '#506d95', passive: false },
-  'SAG-4': { section: 'right', name: 'Kapı Karşı', color: '#506d95', passive: false },
-  'SAG-5': { section: 'right', name: 'Jeneratör Sol Karşı', color: '#506d95', passive: false },
-  'SAG-6': { section: 'right', name: 'Jeneratör Karşı', color: '#506d95', passive: false },
-  'SAG-7': { section: 'right', name: 'Jeneratör Karşı Sağ', color: '#506d95', passive: false },
+// Zone configuration - Dynamic generation for 3x14 grid
+const generateZoneConfig = () => {
+  const config = {};
+
+  // Left Side (A1-A14)
+  for (let i = 1; i <= 14; i++) {
+    const code = `A${i}`;
+    let name = code;
+    let passive = false;
+    let color = '#506d95'; // Blue-ish for storage
+
+    // Special cases for Left
+    if (i === 6) { name = 'Kapı (A6)'; passive = true; color = '#9ca3af'; }
+    if (i === 9) { name = 'Jeneratör (A9)'; passive = true; color = '#9ca3af'; }
+    if (i === 10) { name = 'Jeneratör (A10)'; passive = true; color = '#9ca3af'; }
+
+    config[code] = { section: 'left', name, color, passive };
+  }
+
+  // Corridor (K1-K14)
+  for (let i = 1; i <= 14; i++) {
+    const code = `K${i}`;
+    config[code] = { section: 'corridor', name: code, color: '#e4ae62', passive: false }; // Yellow/Orange
+  }
+
+  // Right Side (B1-B14)
+  for (let i = 1; i <= 14; i++) {
+    const code = `B${i}`;
+    let name = code;
+    let passive = false;
+    let color = '#506d95'; // Blue-ish
+
+    // Special cases for Right
+    if (i === 14) { name = 'Arızalı Makine (B14)'; passive = true; color = '#ef4444'; } // Red
+
+    config[code] = { section: 'right', name, color, passive };
+  }
+
+  return config;
 };
+
+const ZONE_CONFIG = generateZoneConfig();
 export const useWarehouseZones = () => {
   const { locations, loading: locationsLoading, createLocation } = useLocations();
   const { items } = useItems();
@@ -148,9 +167,12 @@ export const useWarehouseZones = () => {
       const order = { left: 0, corridor: 1, right: 2 };
       const sectionCompare = order[a.section] - order[b.section];
       if (sectionCompare !== 0) return sectionCompare;
+      // Within same section, sort by numeric ID if possible
+      // Extract number from code (A1 -> 1, K12 -> 12)
+      const numA = parseInt(a.id.match(/\d+/)?.[0] || '0');
+      const numB = parseInt(b.id.match(/\d+/)?.[0] || '0');
 
-      // Within same section, sort by ID to maintain consistent order
-      return a.id.localeCompare(b.id);
+      return numA - numB;
     });
 
     setZones(sortedZones);

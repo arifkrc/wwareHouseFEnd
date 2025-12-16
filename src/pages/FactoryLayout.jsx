@@ -56,8 +56,10 @@ export default function FactoryLayout() {
   const [addStockForm, setAddStockForm] = useState({
     itemId: '',
     quantity: '',
+    customerId: '',
     customerCode: '',
-    notes: ''
+    notes: '',
+    showCustomerInput: false // Toggle for UI
   });
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -586,14 +588,24 @@ export default function FactoryLayout() {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Firma / Müşteri (Opsiyonel)</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={addStockForm.customerCode}
-                      onChange={(e) => setAddStockForm({ ...addStockForm, customerCode: e.target.value })}
-                      placeholder="Örn: Firma A (Sevkiyat yapılacak yer)"
-                    />
+                    <div
+                      style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', marginBottom: '8px', color: '#64748b' }}
+                      onClick={() => setAddStockForm(prev => ({ ...prev, showCustomerInput: !prev.showCustomerInput }))}
+                    >
+                      {addStockForm.showCustomerInput ? <CheckSquare size={16} style={{ marginRight: 6, color: '#2563eb' }} /> : <Plus size={16} style={{ marginRight: 6 }} />}
+                      <span style={{ fontSize: '14px', fontWeight: 500 }}>Firma / Müşteri Ata</span>
+                    </div>
+
+                    {addStockForm.showCustomerInput && (
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={addStockForm.customerCode}
+                        onChange={(e) => setAddStockForm({ ...addStockForm, customerCode: e.target.value })}
+                        placeholder="Örn: Firma A (Sevkiyat yapılacak yer)"
+                        autoFocus
+                      />
+                    )}
                   </div>
 
                   <div className="form-group">
@@ -672,6 +684,24 @@ export default function FactoryLayout() {
                   <option value="">Lokasyon seçin</option>
                   {locations
                     .filter(loc => loc.id !== selectedItem.location_id)
+                    .sort((a, b) => {
+                      // Custom sort: A -> K -> B
+                      // Extract headers and numbers
+                      const codeA = a.location_code;
+                      const codeB = b.location_code;
+                      const typeA = codeA.charAt(0); // A, K, B
+                      const typeB = codeB.charAt(0);
+                      const numA = parseInt(codeA.match(/\d+/)?.[0] || 0);
+                      const numB = parseInt(codeB.match(/\d+/)?.[0] || 0);
+
+                      // Define order for types
+                      const order = { 'A': 1, 'K': 2, 'B': 3 };
+                      const scoreA = order[typeA] || 99;
+                      const scoreB = order[typeB] || 99;
+
+                      if (scoreA !== scoreB) return scoreA - scoreB;
+                      return numA - numB;
+                    })
                     .map(loc => (
                       <option key={loc.id} value={loc.id}>
                         {loc.location_code} - {loc.description || 'Açıklama yok'}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Warehouse, RefreshCw, Plus, Edit, CheckSquare } from 'lucide-react';
+import { Package, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Warehouse, RefreshCw } from 'lucide-react';
 import { useWarehouseZones } from '../hooks/useWarehouseZones';
 import { useLocations } from '../hooks/useLocations';
 import { useItems } from '../hooks/useItems';
@@ -8,29 +8,11 @@ import { useToast } from '../hooks/useToast';
 import Toast from '../components/Toast';
 import { MOVEMENT_TYPES } from '../utils/movementHelpers';
 import api from '../services/api';
-import ItemSearchSelect from '../components/ItemSearchSelect';
+import api from '../services/api';
+import ZoneModal from '../components/ZoneModal';
 import './FactoryLayout.css';
 
-const ExpandableText = ({ text, limit = 50 }) => {
-  const [expanded, setExpanded] = useState(false);
 
-  if (!text || text.length <= limit) return <span>{text}</span>;
-
-  return (
-    <div
-      onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-      style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}
-      title={expanded ? "Daralt" : "Genişlet"}
-    >
-      <span>
-        {expanded ? text : `${text.substring(0, limit)}...`}
-      </span>
-      <small style={{ color: '#2563eb', marginLeft: '4px', fontSize: '0.7em', whiteSpace: 'nowrap' }}>
-        {expanded ? '(daha az)' : '(daha fazla)'}
-      </small>
-    </div>
-  );
-};
 
 export default function FactoryLayout() {
   const { zones, loading: zonesLoading, refresh: refreshZones } = useWarehouseZones();
@@ -43,7 +25,7 @@ export default function FactoryLayout() {
   const [currentZone, setCurrentZone] = useState(null);
   const [zoneItems, setZoneItems] = useState([]);
 
-  const [activeTab, setActiveTab] = useState('assigned');
+  // FactoryLayout keeps MovementModal state because it's shared across zones
   const [showMovementModal, setShowMovementModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [movementForm, setMovementForm] = useState({
@@ -53,20 +35,9 @@ export default function FactoryLayout() {
     notes: ''
   });
 
-  // New state for direct stock add in modal
-  const [addStockForm, setAddStockForm] = useState({
-    itemId: '',
-    quantity: '',
-    customerId: '',
-    customerCode: '',
-    notes: '',
-    showCustomerInput: false // Toggle for UI
-  });
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Description editing state
-  const [isEditingDesc, setIsEditingDesc] = useState(false);
-  const [tempDesc, setTempDesc] = useState('');
+
 
   // Update zone items when items or currentZone changes
   // Fetch detailed zone items (with customer allocations) whenever zone or refresh trigger changes
@@ -214,21 +185,12 @@ export default function FactoryLayout() {
     }
   };
 
-  const handleUpdateDescription = async () => {
-    if (!currentZone?.locationId) return;
-
+  /* ZoneModal Handlers (Delegated) */
+  const onUpdateDescription = async (locationId, newDesc) => {
     setIsProcessing(true);
     try {
-      await updateLocation(currentZone.locationId, {
-        description: tempDesc
-      });
-
-      // Update local state
-      setIsEditingDesc(false);
-
-      // Refresh zones to show new description
+      await updateLocation(locationId, { description: newDesc });
       await refreshZones();
-
       success('Açıklama güncellendi');
     } catch (err) {
       console.error('Açıklama güncellenemedi:', err);
@@ -238,37 +200,25 @@ export default function FactoryLayout() {
     }
   };
 
-
-
-  const handleAddStockToZone = async () => {
-    if (!currentZone?.locationId || !addStockForm.itemId || !addStockForm.quantity) {
-      warning('Lütfen ürün ve miktar girin');
-      return;
-    }
-
+  const onAddStock = async (locationId, formData) => {
     setIsProcessing(true);
     try {
       const movementData = {
-        item_id: parseInt(addStockForm.itemId),
-        quantity: parseInt(addStockForm.quantity),
-        to_location_id: currentZone.locationId,
-        customer_code: addStockForm.customerCode || null,
-        movement_note: `Panelden Hızlı Giriş: ${addStockForm.notes || ''}`
+        item_id: parseInt(formData.itemId),
+        quantity: parseInt(formData.quantity),
+        to_location_id: locationId,
+        customer_code: formData.customerCode || null,
+        movement_note: `Panelden Hızlı Giriş: ${formData.notes || ''}`
       };
 
       await createMovement(MOVEMENT_TYPES.IN, movementData);
 
-      // Refresh data
+      // Refresh hierarchy
       await refreshMovements();
       await refreshItems();
       await refreshZones();
 
       success(`Stok girişi başarılı!`);
-
-      // Reset form and switch to assigned tab to show the new item
-      setAddStockForm({ itemId: '', quantity: '', customerCode: '', notes: '' });
-      setActiveTab('assigned');
-
     } catch (err) {
       console.error('Stok eklenemedi:', err);
       error('Stok eklenirken hata oluştu');
@@ -276,6 +226,10 @@ export default function FactoryLayout() {
       setIsProcessing(false);
     }
   };
+
+
+
+
 
   // Calculate total stock from zones (more accurate and robust than summing partial movements)
   const totalStock = zones?.reduce((total, zone) => total + (zone.totalQuantity || 0), 0) || 0;
@@ -394,249 +348,18 @@ export default function FactoryLayout() {
         <p>Bölge isimlerini özelleştirmek için <strong>Ayarlar &gt; Lokasyonlar</strong> bölümünden düzenleyebilirsiniz</p>
       </div>
 
-      {/* Zone Items Modal */}
-      {showZoneModal && (
-        <div className="modal-overlay" onClick={() => setShowZoneModal(false)}>
-          <div className="modal modal-large" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <div style={{ flex: 1 }}>
-                <h3 className="modal-title">
-                  <Package size={20} />
-                  {currentZone?.name}
-                </h3>
-
-                {/* Editable Description Section */}
-                <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {isEditingDesc ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <input
-                        type="text"
-                        className="form-input"
-                        style={{ padding: '4px 8px', fontSize: '14px', width: '200px' }}
-                        value={tempDesc}
-                        onChange={(e) => setTempDesc(e.target.value)}
-                        placeholder="Açıklama girin..."
-                        autoFocus
-                      />
-                      <button
-                        className="btn-icon btn-success"
-                        onClick={handleUpdateDescription}
-                        disabled={isProcessing}
-                        title="Kaydet"
-                      >
-                        <CheckSquare size={16} />
-                      </button>
-                      <button
-                        className="btn-icon btn-danger"
-                        onClick={() => setIsEditingDesc(false)}
-                        disabled={isProcessing}
-                        title="İptal"
-                      >
-                        <span style={{ fontSize: '16px', fontWeight: 'bold' }}>×</span>
-                      </button>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '14px', color: '#64748b', fontStyle: 'italic' }}>
-                        {currentZone?.description || 'Stok'}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <button className="modal-close" onClick={() => setShowZoneModal(false)}>×</button>
-            </div>
-
-            <div className="tabs">
-              <button
-                className={`tab ${activeTab === 'assigned' ? 'active' : ''}`}
-                onClick={() => setActiveTab('assigned')}
-              >
-                Bu Alandaki Ürünler ({zoneItems.length})
-              </button>
-
-              <button
-                className={`tab ${activeTab === 'add_stock' ? 'active' : ''}`}
-                onClick={() => setActiveTab('add_stock')}
-                style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-              >
-                <Plus size={16} /> Stok Ekle
-              </button>
-            </div>
-
-            <div className="zone-items-container">
-              {activeTab === 'assigned' && (
-                zoneItems.length > 0 ? (
-                  <div className="table-container">
-                    <table className="table">
-                      <thead>
-                        <tr>
-                          <th>Ürün Kodu</th>
-                          <th>Ürün Adı</th>
-                          <th>Not</th>
-                          <th>Stok</th>
-                          <th>Açıklama</th>
-                          <th>İşlemler</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {zoneItems.map((item, index) => {
-                          // item now contains specific allocation info (quantity, customer_code) from backend
-
-                          // Parse note: "Prefix: Actual Note" -> "Actual Note"
-                          const displayNote = item.movement_note
-                            ? (item.movement_note.includes(':')
-                              ? item.movement_note.split(':').slice(1).join(':').trim()
-                              : item.movement_note)
-                            : '-';
-
-                          return (
-                            <tr key={item.allocation_id || index}>
-                              <td><strong>{item.item_code}</strong></td>
-                              <td><ExpandableText text={item.item_name} limit={20} /></td>
-                              <td>
-                                {/* Customer Code Hidden as requested */}
-                                <span style={{ fontSize: '0.9em', color: '#475569' }}>
-                                  {displayNote}
-                                </span>
-                              </td>
-                              <td>
-                                <span className="badge badge-success">
-                                  {item.quantity}
-                                </span>
-                              </td>
-                              <td>
-                                <span className="item-description">
-                                  {item.description ?
-                                    (item.description.length > 50 ?
-                                      item.description.substring(0, 50) + '...' :
-                                      item.description
-                                    ) :
-                                    '-'
-                                  }
-                                </span>
-                              </td>
-                              <td>
-                                <div className="action-buttons">
-                                  <button
-                                    className="btn-icon btn-success"
-                                    onClick={() => openMovementModal(item, MOVEMENT_TYPES.IN)}
-                                    title="Stok Arttır"
-                                  >
-                                    <ArrowUpCircle size={16} />
-                                  </button>
-                                  <button
-                                    className="btn-icon btn-danger"
-                                    onClick={() => openMovementModal(item, MOVEMENT_TYPES.OUT)}
-                                    title="Stok Çıkışı"
-                                  >
-                                    <ArrowDownCircle size={16} />
-                                  </button>
-                                  <button
-                                    className="btn-icon btn-warning"
-                                    onClick={() => openMovementModal(item, MOVEMENT_TYPES.TRANSFER)}
-                                    title="Transfer"
-                                  >
-                                    <ArrowRightLeft size={16} />
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="empty-state">
-                    <Package size={48} />
-                    <p>Bu bölgede henüz ürün yok</p>
-                    <small>Atanmamış Ürünler sekmesinden ürün atayabilirsiniz</small>
-                  </div>
-                )
-              )}
-
-
-
-
-              {activeTab === 'add_stock' && (
-                <div className="add-stock-panel" style={{ padding: '1rem' }}>
-                  <div className="alert alert-info" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Package size={18} />
-                    <span><strong>{currentZone.name}</strong> alanına yeni stok girişi yapıyorsunuz.</span>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Ürün Seç *</label>
-                    <ItemSearchSelect
-                      items={items}
-                      value={addStockForm.itemId}
-                      onChange={(newId) => setAddStockForm({ ...addStockForm, itemId: newId })}
-                      placeholder="Ürün kodu ara..."
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Miktar *</label>
-                    <input
-                      type="number"
-                      className="form-input"
-                      value={addStockForm.quantity}
-                      onChange={(e) => setAddStockForm({ ...addStockForm, quantity: e.target.value })}
-                      placeholder="Adet girin"
-                      min="1"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <div
-                      style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', marginBottom: '8px', color: '#64748b' }}
-                      onClick={() => setAddStockForm(prev => ({ ...prev, showCustomerInput: !prev.showCustomerInput }))}
-                    >
-                      {addStockForm.showCustomerInput ? <CheckSquare size={16} style={{ marginRight: 6, color: '#2563eb' }} /> : <Plus size={16} style={{ marginRight: 6 }} />}
-                      <span style={{ fontSize: '14px', fontWeight: 500 }}>Firma / Müşteri Ata</span>
-                    </div>
-
-                    {addStockForm.showCustomerInput && (
-                      <input
-                        type="text"
-                        className="form-input"
-                        value={addStockForm.customerCode}
-                        onChange={(e) => setAddStockForm({ ...addStockForm, customerCode: e.target.value })}
-                        placeholder="Örn: Firma A (Sevkiyat yapılacak yer)"
-                        autoFocus
-                      />
-                    )}
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Not</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      value={addStockForm.notes}
-                      onChange={(e) => setAddStockForm({ ...addStockForm, notes: e.target.value })}
-                      placeholder="Opsiyonel açıklama"
-                    />
-                  </div>
-
-                  <div style={{ marginTop: '1.5rem' }}>
-                    <button
-                      className="btn btn-primary btn-large"
-                      style={{ width: '100%' }}
-                      onClick={handleAddStockToZone}
-                      disabled={isProcessing}
-                    >
-                      {isProcessing ? 'Ekleniyor...' : 'Stoğa Ekle'}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )
-      }
+      {/* Refactored Zone Items Modal */}
+      <ZoneModal
+        isOpen={showZoneModal}
+        onClose={() => setShowZoneModal(false)}
+        zone={currentZone}
+        zoneItems={zoneItems}
+        allItems={items} // Pass full items list for search
+        onUpdateDescription={onUpdateDescription}
+        onAddStock={onAddStock}
+        onOpenMovementModal={openMovementModal} // Parent handles movement modal
+        isProcessing={isProcessing}
+      />
 
       {/* Movement Modal */}
       {

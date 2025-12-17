@@ -21,8 +21,8 @@ export default function Layout({ children }) {
   return (
     <div className="app-layout">
       {/* Mobile Menu Button */}
-      <button 
-        className="mobile-menu-btn" 
+      <button
+        className="mobile-menu-btn"
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         aria-label="Toggle menu"
       >
@@ -31,8 +31,8 @@ export default function Layout({ children }) {
 
       {/* Overlay */}
       {mobileMenuOpen && (
-        <div 
-          className="mobile-overlay" 
+        <div
+          className="mobile-overlay"
           onClick={closeMobileMenu}
         />
       )}
@@ -50,6 +50,10 @@ export default function Layout({ children }) {
               <span>Dashboard</span>
             </Link>
           )}
+          <Link to="/items" className="nav-link" onClick={closeMobileMenu}>
+            <Package size={20} />
+            <span>Ürünler</span>
+          </Link>
           <Link to="/layout" className="nav-link" onClick={closeMobileMenu}>
             <LayoutGrid size={20} />
             <span>Fabrika Yerleşimi</span>

@@ -6,22 +6,35 @@ export const useMovements = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchMovements = useCallback(async () => {
+  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 20, totalPages: 1 });
+
+  const fetchMovements = useCallback(async (params = {}) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.get('/movements');
-      setMovements(response.data);
+      // Build query string
+      const queryString = new URLSearchParams(params).toString();
+      const response = await api.get(`/movements?${queryString}`);
+
+      // Handle both new paginated response and old array response (for safety)
+      if (response.data.pagination) {
+        setMovements(response.data.data);
+        setPagination(response.data.pagination);
+      } else {
+        setMovements(Array.isArray(response.data) ? response.data : []);
+      }
       return response.data;
     } catch (err) {
       setError(err.message || 'Hareketler yüklenemedi');
       console.error('Hareket yükleme hatası:', err);
+      // setMovements([]); // Don't clear on error, keep stale data? No, clear it.
       return [];
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // Initial fetch with defaults
   useEffect(() => {
     fetchMovements();
   }, [fetchMovements]);
@@ -59,5 +72,6 @@ export const useMovements = () => {
     refresh: fetchMovements,
     createMovement,
     getMovementStats,
+    pagination,
   };
 };

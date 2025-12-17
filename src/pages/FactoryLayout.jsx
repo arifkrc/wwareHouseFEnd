@@ -277,15 +277,8 @@ export default function FactoryLayout() {
     }
   };
 
-  // Calculate total stock from movements (not from items.quantity)
-  const totalStock = movements?.reduce((total, m) => {
-    if (m.movement_type === 'IN') {
-      return total + m.quantity;
-    } else if (m.movement_type === 'OUT') {
-      return total - m.quantity;
-    }
-    return total; // TRANSFER doesn't change total stock
-  }, 0) || 0;
+  // Calculate total stock from zones (more accurate and robust than summing partial movements)
+  const totalStock = zones?.reduce((total, zone) => total + (zone.totalQuantity || 0), 0) || 0;
 
   return (
     <div className="factory-layout">
@@ -447,19 +440,6 @@ export default function FactoryLayout() {
                       <span style={{ fontSize: '14px', color: '#64748b', fontStyle: 'italic' }}>
                         {currentZone?.description || 'Stok'}
                       </span>
-                      {!currentZone?.passive && currentZone?.locationId && (
-                        <button
-                          className="btn-icon"
-                          style={{ color: '#94a3b8', padding: '2px' }}
-                          onClick={() => {
-                            setTempDesc(currentZone.description || '');
-                            setIsEditingDesc(true);
-                          }}
-                          title="Açıklamayı Düzenle"
-                        >
-                          <Edit size={14} />
-                        </button>
-                      )}
                     </div>
                   )}
                 </div>
@@ -655,116 +635,121 @@ export default function FactoryLayout() {
             </div>
           </div>
         </div>
-      )}
+      )
+      }
 
       {/* Movement Modal */}
-      {showMovementModal && selectedItem && (
-        <div className="modal-overlay" onClick={() => setShowMovementModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 className="modal-title">
-                {movementForm.type === MOVEMENT_TYPES.IN && <><ArrowUpCircle size={20} /> Stok Girişi</>}
-                {movementForm.type === MOVEMENT_TYPES.OUT && <><ArrowDownCircle size={20} /> Stok Çıkışı</>}
-                {movementForm.type === MOVEMENT_TYPES.TRANSFER && <><ArrowRightLeft size={20} /> Transfer</>}
-              </h3>
-              <button className="modal-close" onClick={() => setShowMovementModal(false)}>×</button>
-            </div>
-
-            <div className="movement-item-info">
-              <strong>{selectedItem.item_name}</strong>
-              <span className="text-muted">{selectedItem.item_code}</span>
-              <span>Alan: <strong>{selectedItem.current_zone_name}</strong></span>
-              {selectedItem.customer_code && (
-                <span className="badge badge-info" style={{ backgroundColor: '#e0f2fe', color: '#0369a1', display: 'inline-block', marginTop: '4px' }}>
-                  Firma: {selectedItem.customer_code}
-                </span>
-              )}
-              <span>Bu Alandaki Stok: <strong>{selectedItem.stock_at_zone}</strong></span>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Adet</label>
-              <input
-                type="number"
-                className="form-input"
-                value={movementForm.quantity}
-                onChange={(e) => setMovementForm({ ...movementForm, quantity: e.target.value })}
-                placeholder="Miktar girin"
-                min="1"
-              />
-            </div>
-
-            {movementForm.type === MOVEMENT_TYPES.TRANSFER && (
-              <div className="form-group">
-                <label className="form-label">Hedef Lokasyon</label>
-                <select
-                  className="form-select"
-                  value={movementForm.toLocationId}
-                  onChange={(e) => setMovementForm({ ...movementForm, toLocationId: e.target.value })}
-                >
-                  <option value="">Lokasyon seçin</option>
-                  {locations
-                    .filter(loc => loc.id !== selectedItem.location_id)
-                    .sort((a, b) => {
-                      // Custom sort: A -> K -> B
-                      // Extract headers and numbers
-                      const codeA = a.location_code;
-                      const codeB = b.location_code;
-                      const typeA = codeA.charAt(0); // A, K, B
-                      const typeB = codeB.charAt(0);
-                      const numA = parseInt(codeA.match(/\d+/)?.[0] || 0);
-                      const numB = parseInt(codeB.match(/\d+/)?.[0] || 0);
-
-                      // Define order for types
-                      const order = { 'A': 1, 'K': 2, 'B': 3 };
-                      const scoreA = order[typeA] || 99;
-                      const scoreB = order[typeB] || 99;
-
-                      if (scoreA !== scoreB) return scoreA - scoreB;
-                      return numA - numB;
-                    })
-                    .map(loc => (
-                      <option key={loc.id} value={loc.id}>
-                        {loc.location_code} - {loc.description || 'Açıklama yok'}
-                      </option>
-                    ))}
-                </select>
+      {
+        showMovementModal && selectedItem && (
+          <div className="modal-overlay" onClick={() => setShowMovementModal(false)}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3 className="modal-title">
+                  {movementForm.type === MOVEMENT_TYPES.IN && <><ArrowUpCircle size={20} /> Stok Girişi</>}
+                  {movementForm.type === MOVEMENT_TYPES.OUT && <><ArrowDownCircle size={20} /> Stok Çıkışı</>}
+                  {movementForm.type === MOVEMENT_TYPES.TRANSFER && <><ArrowRightLeft size={20} /> Transfer</>}
+                </h3>
+                <button className="modal-close" onClick={() => setShowMovementModal(false)}>×</button>
               </div>
-            )}
 
-            <div className="form-group">
-              <label className="form-label">Not (İsteğe Bağlı)</label>
-              <textarea
-                className="form-textarea"
-                value={movementForm.notes}
-                onChange={(e) => setMovementForm({ ...movementForm, notes: e.target.value })}
-                placeholder="Hareket notu"
-                rows="3"
-              />
-            </div>
+              <div className="movement-item-info">
+                <strong>{selectedItem.item_name}</strong>
+                <span className="text-muted">{selectedItem.item_code}</span>
+                <span>Alan: <strong>{selectedItem.current_zone_name}</strong></span>
+                {selectedItem.customer_code && (
+                  <span className="badge badge-info" style={{ backgroundColor: '#e0f2fe', color: '#0369a1', display: 'inline-block', marginTop: '4px' }}>
+                    Firma: {selectedItem.customer_code}
+                  </span>
+                )}
+                <span>Bu Alandaki Stok: <strong>{selectedItem.stock_at_zone}</strong></span>
+              </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-              <button className="btn btn-outline" onClick={() => setShowMovementModal(false)} disabled={isProcessing}>
-                İptal
-              </button>
-              <button className="btn btn-primary" onClick={handleMovement} disabled={isProcessing}>
-                {isProcessing ? 'Kaydediliyor...' : 'Kaydet'}
-              </button>
+              <div className="form-group">
+                <label className="form-label">Adet</label>
+                <input
+                  type="number"
+                  className="form-input"
+                  value={movementForm.quantity}
+                  onChange={(e) => setMovementForm({ ...movementForm, quantity: e.target.value })}
+                  placeholder="Miktar girin"
+                  min="1"
+                />
+              </div>
+
+              {movementForm.type === MOVEMENT_TYPES.TRANSFER && (
+                <div className="form-group">
+                  <label className="form-label">Hedef Lokasyon</label>
+                  <select
+                    className="form-select"
+                    value={movementForm.toLocationId}
+                    onChange={(e) => setMovementForm({ ...movementForm, toLocationId: e.target.value })}
+                  >
+                    <option value="">Lokasyon seçin</option>
+                    {locations
+                      .filter(loc => loc.id !== selectedItem.location_id)
+                      .sort((a, b) => {
+                        // Custom sort: A -> K -> B
+                        // Extract headers and numbers
+                        const codeA = a.location_code;
+                        const codeB = b.location_code;
+                        const typeA = codeA.charAt(0); // A, K, B
+                        const typeB = codeB.charAt(0);
+                        const numA = parseInt(codeA.match(/\d+/)?.[0] || 0);
+                        const numB = parseInt(codeB.match(/\d+/)?.[0] || 0);
+
+                        // Define order for types
+                        const order = { 'A': 1, 'K': 2, 'B': 3 };
+                        const scoreA = order[typeA] || 99;
+                        const scoreB = order[typeB] || 99;
+
+                        if (scoreA !== scoreB) return scoreA - scoreB;
+                        return numA - numB;
+                      })
+                      .map(loc => (
+                        <option key={loc.id} value={loc.id}>
+                          {loc.location_code} - {loc.description || 'Açıklama yok'}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="form-group">
+                <label className="form-label">Not (İsteğe Bağlı)</label>
+                <textarea
+                  className="form-textarea"
+                  value={movementForm.notes}
+                  onChange={(e) => setMovementForm({ ...movementForm, notes: e.target.value })}
+                  placeholder="Hareket notu"
+                  rows="3"
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                <button className="btn btn-outline" onClick={() => setShowMovementModal(false)} disabled={isProcessing}>
+                  İptal
+                </button>
+                <button className="btn btn-primary" onClick={handleMovement} disabled={isProcessing}>
+                  {isProcessing ? 'Kaydediliyor...' : 'Kaydet'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Toast Notifications */}
-      {toasts.map(toast => (
-        <Toast
-          key={toast.id}
-          message={toast.message}
-          type={toast.type}
-          duration={toast.duration}
-          onClose={() => removeToast(toast.id)}
-        />
-      ))}
-    </div>
+      {
+        toasts.map(toast => (
+          <Toast
+            key={toast.id}
+            message={toast.message}
+            type={toast.type}
+            duration={toast.duration}
+            onClose={() => removeToast(toast.id)}
+          />
+        ))
+      }
+    </div >
   );
 }

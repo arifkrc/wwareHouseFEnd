@@ -10,12 +10,28 @@ import './Dashboard.css';
 export default function Dashboard() {
   const { items, loading: itemsLoading } = useItems();
   const { locations, loading: locationsLoading } = useLocations();
-  const { movements, loading: movementsLoading, getMovementStats } = useMovements();
+  const { movements, loading: movementsLoading, getMovementStats, refresh } = useMovements();
   const [stats, setStats] = useState({
     totalIn: 0,
     totalOut: 0,
     totalTransfer: 0
   });
+
+  // Dashboard Filters
+  const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState({
+    startDate: '',
+    endDate: ''
+  });
+
+  const handleFilterApply = () => {
+    refresh({
+      limit: 20, // Keep limit for dashboard
+      search,
+      start_date: filters.startDate,
+      end_date: filters.endDate
+    });
+  };
 
   const loading = itemsLoading || locationsLoading || movementsLoading;
 
@@ -36,7 +52,7 @@ export default function Dashboard() {
   );
 
   const recentMovements = useMemo(() =>
-    movements.slice(0, 10),
+    (Array.isArray(movements) ? movements : []).slice(0, 10),
     [movements]
   );
 
@@ -57,6 +73,52 @@ export default function Dashboard() {
       <div className="dashboard-header">
         <h1><BarChart3 size={28} /> Dashboard</h1>
         <p>Depo takip sistemi genel görünümü</p>
+      </div>
+
+      {/* Filter Section */}
+      <div className="card" style={{ marginBottom: '1.5rem', padding: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Son hareketlerde ara..."
+            className="form-input"
+            style={{ width: '250px' }}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <input
+            type="date"
+            className="form-input"
+            value={filters.startDate}
+            onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
+          />
+          <span style={{ color: '#64748b' }}>-</span>
+          <input
+            type="date"
+            className="form-input"
+            value={filters.endDate}
+            onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
+          />
+          <button
+            className="btn btn-primary"
+            onClick={handleFilterApply}
+            disabled={movementsLoading}
+          >
+            Filtrele
+          </button>
+          {(filters.startDate || filters.endDate || search) && (
+            <button
+              className="btn btn-outline"
+              onClick={() => {
+                setFilters({ startDate: '', endDate: '' });
+                setSearch('');
+                refresh({ limit: 20 });
+              }}
+            >
+              Temizle
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="stats-grid">

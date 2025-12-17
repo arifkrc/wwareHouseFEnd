@@ -18,7 +18,7 @@ export const useMovements = () => {
 
       // Handle both new paginated response and old array response (for safety)
       if (response.data.pagination) {
-        setMovements(response.data.data);
+        setMovements(Array.isArray(response.data.data) ? response.data.data : []);
         setPagination(response.data.pagination);
       } else {
         setMovements(Array.isArray(response.data) ? response.data : []);

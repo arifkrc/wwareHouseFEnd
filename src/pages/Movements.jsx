@@ -13,24 +13,37 @@ export default function Movements() {
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState('created_at');
   const [order, setOrder] = useState('desc');
+  const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
 
-  // Debounce Search
+  // Debounce Search and Date Range
   useEffect(() => {
     const timer = setTimeout(() => {
-      refreshMovements({ page: 1, limit: 20, search, sortBy, order });
-      setPage(1); // Reset to page 1 on search
+      refreshMovements({
+        page: 1,
+        limit: 20,
+        search,
+        sortBy,
+        order,
+        start_date: dateRange.startDate,
+        end_date: dateRange.endDate
+      });
+      setPage(1); // Reset to page 1 on search or date range change
     }, 500); // 500ms debounce
     return () => clearTimeout(timer);
-  }, [search, refreshMovements]); // Dependencies: only when search changes specifically (handling sort/page separately below)
+  }, [search, dateRange, refreshMovements]); // Include dateRange in debounce effect
 
-  // Separate effect for Page/Sort changes to avoid debounce lag
+  // Separate effect for Page/Sort changes
   useEffect(() => {
-    refreshMovements({ page, limit: 20, search, sortBy, order });
-  }, [page, sortBy, order]); // Don't include search here to avoid double fetch? 
-  // actually, if search changes, the other effect runs. If page changes, this runs.
-  // We need to be careful not to double fetch.
-  // Better: Single effect?
-  // Let's use a single handle function and effect.
+    refreshMovements({
+      page,
+      limit: 20,
+      search,
+      sortBy,
+      order,
+      start_date: dateRange.startDate,
+      end_date: dateRange.endDate
+    });
+  }, [page, sortBy, order, search, dateRange, refreshMovements]); // Added search, dateRange, refreshMovements to dependencies for completeness
 
   const handleSort = (field) => {
     const newOrder = sortBy === field && order === 'desc' ? 'asc' : 'desc';
@@ -51,18 +64,32 @@ export default function Movements() {
           <h1><History size={28} /> Hareket Geçmişi</h1>
           <p>Tüm stok hareketlerinin geçmişi</p>
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <input
+            type="date"
+            className="form-input"
+            value={dateRange.startDate}
+            onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
+            title="Başlangıç Tarihi"
+          />
+          <input
+            type="date"
+            className="form-input"
+            value={dateRange.endDate}
+            onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
+            title="Bitiş Tarihi"
+          />
           <input
             type="text"
             className="form-input"
             placeholder="Ara: Ürün, Kod, Not..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ width: '250px' }}
+            style={{ width: '200px' }}
           />
           <button
             className="btn btn-secondary"
-            onClick={() => refreshMovements({ page, limit: 20, search, sortBy, order })}
+            onClick={() => refreshMovements({ page: 1, limit: 20, search, sortBy, order, start_date: dateRange.startDate, end_date: dateRange.endDate })}
             disabled={loading}
           >
             <RefreshCw size={18} /> Yenile

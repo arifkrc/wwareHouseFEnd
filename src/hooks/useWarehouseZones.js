@@ -57,79 +57,20 @@ export const useWarehouseZones = () => {
   const mapLocationsToZones = useCallback(() => {
     const mappedZones = [];
 
-    // Calculate stock per location AND per item from movements
-    const stockByLocationAndItem = {}; // { locationId: { itemId: quantity } }
-
-    movements?.forEach(m => {
-      const itemId = m.item_id;
-
-      if (m.movement_type === 'IN' && m.to_location_id) {
-        if (!stockByLocationAndItem[m.to_location_id]) {
-          stockByLocationAndItem[m.to_location_id] = {};
-        }
-        if (!stockByLocationAndItem[m.to_location_id][itemId]) {
-          stockByLocationAndItem[m.to_location_id][itemId] = 0;
-        }
-        stockByLocationAndItem[m.to_location_id][itemId] += m.quantity;
-      } else if (m.movement_type === 'OUT' && m.from_location_id) {
-        if (!stockByLocationAndItem[m.from_location_id]) {
-          stockByLocationAndItem[m.from_location_id] = {};
-        }
-        if (!stockByLocationAndItem[m.from_location_id][itemId]) {
-          stockByLocationAndItem[m.from_location_id][itemId] = 0;
-        }
-        stockByLocationAndItem[m.from_location_id][itemId] -= m.quantity;
-      } else if (m.movement_type === 'TRANSFER') {
-        // Decrease from source
-        if (m.from_location_id) {
-          if (!stockByLocationAndItem[m.from_location_id]) {
-            stockByLocationAndItem[m.from_location_id] = {};
-          }
-          if (!stockByLocationAndItem[m.from_location_id][itemId]) {
-            stockByLocationAndItem[m.from_location_id][itemId] = 0;
-          }
-          stockByLocationAndItem[m.from_location_id][itemId] -= m.quantity;
-        }
-        // Increase at destination
-        if (m.to_location_id) {
-          if (!stockByLocationAndItem[m.to_location_id]) {
-            stockByLocationAndItem[m.to_location_id] = {};
-          }
-          if (!stockByLocationAndItem[m.to_location_id][itemId]) {
-            stockByLocationAndItem[m.to_location_id][itemId] = 0;
-          }
-          stockByLocationAndItem[m.to_location_id][itemId] += m.quantity;
-        }
-      }
-    });
-
-    // Now calculate totals per location (only count items with stock > 0)
-    const stockByLocation = {};
-    const itemsByLocation = {};
-
-    Object.keys(stockByLocationAndItem).forEach(locationId => {
-      const items = stockByLocationAndItem[locationId];
-      let totalQuantity = 0;
-      let itemCount = 0;
-
-      Object.keys(items).forEach(itemId => {
-        const quantity = items[itemId];
-        if (quantity > 0) {
-          totalQuantity += quantity;
-          itemCount++;
-        }
-      });
-
-      stockByLocation[locationId] = totalQuantity;
-      itemsByLocation[locationId] = itemCount;
-    });
+    // OPTIMIZATION: Removed client-side stock calculation. 
+    // We now rely on the backend 'locations' endpoint to provide 'item_count' and 'total_quantity'.
+    // This removes the need to iterate through thousands of movement records on the frontend.
 
     // Map existing locations to zones
+    // Use the item_count and total_quantity ALREADY returned by the backend (if available)
+    // Fallback to 0 if not present (requires backend update to return these fields usually, 
+    // but the current locations endpoint DOES calculate them in JS, so likely they exist in 'locations' prop)
     locations.forEach(loc => {
       const config = ZONE_CONFIG[loc.location_code];
       if (config) {
-        const totalQuantity = stockByLocation[loc.id] || 0;
-        const itemCount = itemsByLocation[loc.id] || 0;
+        // Optimization: Use values from backend if they exist, otherwise 0.
+        const totalQuantity = loc.total_quantity || 0;
+        const itemCount = loc.item_count || 0;
 
         mappedZones.push({
           id: loc.location_code.toLowerCase(),

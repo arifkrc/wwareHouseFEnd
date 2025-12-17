@@ -11,7 +11,7 @@ export const useItems = () => {
     setError(null);
     try {
       const response = await api.get('/items');
-      setItems(response.data);
+      setItems(Array.isArray(response.data) ? response.data : []);
       return response.data;
     } catch (err) {
       setError(err.message || 'Ürünler yüklenemedi');

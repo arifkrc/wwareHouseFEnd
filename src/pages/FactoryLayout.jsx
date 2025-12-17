@@ -8,7 +8,6 @@ import { useToast } from '../hooks/useToast';
 import Toast from '../components/Toast';
 import { MOVEMENT_TYPES } from '../utils/movementHelpers';
 import api from '../services/api';
-import api from '../services/api';
 import ZoneModal from '../components/ZoneModal';
 import './FactoryLayout.css';
 

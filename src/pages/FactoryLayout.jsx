@@ -8,6 +8,7 @@ import { useToast } from '../hooks/useToast';
 import Toast from '../components/Toast';
 import { MOVEMENT_TYPES } from '../utils/movementHelpers';
 import api from '../services/api';
+import ItemSearchSelect from '../components/ItemSearchSelect';
 import './FactoryLayout.css';
 
 const ExpandableText = ({ text, limit = 50 }) => {
@@ -213,7 +214,29 @@ export default function FactoryLayout() {
     }
   };
 
+  const handleUpdateDescription = async () => {
+    if (!currentZone?.locationId) return;
 
+    setIsProcessing(true);
+    try {
+      await updateLocation(currentZone.locationId, {
+        description: tempDesc
+      });
+
+      // Update local state
+      setIsEditingDesc(false);
+
+      // Refresh zones to show new description
+      await refreshZones();
+
+      success('Açıklama güncellendi');
+    } catch (err) {
+      console.error('Açıklama güncellenemedi:', err);
+      error('Açıklama güncellenirken hata oluştu');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
 
 
@@ -470,7 +493,7 @@ export default function FactoryLayout() {
                         <tr>
                           <th>Ürün Kodu</th>
                           <th>Ürün Adı</th>
-                          <th>Transfer Notu</th>
+                          <th>Not</th>
                           <th>Stok</th>
                           <th>Açıklama</th>
                           <th>İşlemler</th>
@@ -480,26 +503,22 @@ export default function FactoryLayout() {
                         {zoneItems.map((item, index) => {
                           // item now contains specific allocation info (quantity, customer_code) from backend
 
+                          // Parse note: "Prefix: Actual Note" -> "Actual Note"
+                          const displayNote = item.movement_note
+                            ? (item.movement_note.includes(':')
+                              ? item.movement_note.split(':').slice(1).join(':').trim()
+                              : item.movement_note)
+                            : '-';
+
                           return (
                             <tr key={item.allocation_id || index}>
                               <td><strong>{item.item_code}</strong></td>
                               <td><ExpandableText text={item.item_name} limit={20} /></td>
                               <td>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxWidth: '200px' }}>
-                                  {item.customer_code && (
-                                    <span className="badge badge-info" style={{ backgroundColor: '#e0f2fe', color: '#0369a1', width: 'fit-content' }}>
-                                      {item.customer_code}
-                                    </span>
-                                  )}
-                                  {item.movement_note && (
-                                    <span style={{ fontSize: '0.85em', color: '#475569', fontStyle: 'italic' }}>
-                                      {item.movement_note}
-                                    </span>
-                                  )}
-                                  {!item.customer_code && !item.movement_note && (
-                                    <span className="text-muted">-</span>
-                                  )}
-                                </div>
+                                {/* Customer Code Hidden as requested */}
+                                <span style={{ fontSize: '0.9em', color: '#475569' }}>
+                                  {displayNote}
+                                </span>
                               </td>
                               <td>
                                 <span className="badge badge-success">
@@ -569,18 +588,12 @@ export default function FactoryLayout() {
 
                   <div className="form-group">
                     <label className="form-label">Ürün Seç *</label>
-                    <select
-                      className="form-select"
+                    <ItemSearchSelect
+                      items={items}
                       value={addStockForm.itemId}
-                      onChange={(e) => setAddStockForm({ ...addStockForm, itemId: e.target.value })}
-                    >
-                      <option value="">Ürün seçin...</option>
-                      {items.map(item => (
-                        <option key={item.id} value={item.id}>
-                          {item.item_code} - {item.item_name}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(newId) => setAddStockForm({ ...addStockForm, itemId: newId })}
+                      placeholder="Ürün kodu ara..."
+                    />
                   </div>
 
                   <div className="form-group">

@@ -57,8 +57,12 @@ export default function Dashboard() {
   );
 
   useEffect(() => {
-    getMovementStats().then(data => setStats(data));
-  }, [getMovementStats]);
+    // Fetch stats based on current date filters
+    getMovementStats({
+      start_date: filters.startDate,
+      end_date: filters.endDate
+    }).then(data => setStats(data));
+  }, [getMovementStats, filters.startDate, filters.endDate]);
 
   if (loading) {
     return (
@@ -148,7 +152,7 @@ export default function Dashboard() {
           </div>
           <div className="stat-content">
             <div className="dashboard-stat-value">{stats.totalIn}</div>
-            <div className="dashboard-stat-label">Giriş (30 Gün)</div>
+            <div className="dashboard-stat-label">Giriş ({filters.startDate ? 'Seçilen' : '30 Gün'})</div>
           </div>
         </div>
 
@@ -158,7 +162,7 @@ export default function Dashboard() {
           </div>
           <div className="stat-content">
             <div className="dashboard-stat-value">{stats.totalOut}</div>
-            <div className="dashboard-stat-label">Çıkış (30 Gün)</div>
+            <div className="dashboard-stat-label">Çıkış ({filters.startDate ? 'Seçilen' : '30 Gün'})</div>
           </div>
         </div>
 
@@ -168,7 +172,7 @@ export default function Dashboard() {
           </div>
           <div className="stat-content">
             <div className="dashboard-stat-value">{stats.totalTransfer}</div>
-            <div className="dashboard-stat-label">Transfer (30 Gün)</div>
+            <div className="dashboard-stat-label">Transfer ({filters.startDate ? 'Seçilen' : '30 Gün'})</div>
           </div>
         </div>
 

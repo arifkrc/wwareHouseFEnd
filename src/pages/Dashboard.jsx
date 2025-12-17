@@ -3,7 +3,8 @@ import { BarChart3, Package, MapPin, TrendingUp, ArrowDownToLine, ArrowUpFromLin
 import { useItems } from '../hooks/useItems';
 import { useLocations } from '../hooks/useLocations';
 import { useMovements } from '../hooks/useMovements';
-import { getMovementTypeLabel, getMovementTypeBadge } from '../utils/movementHelpers';
+import { getMovementTypeLabel, getMovementTypeBadge, MOVEMENT_TYPES } from '../utils/movementHelpers';
+import { formatDate } from '../utils/dateHelper';
 import './Dashboard.css';
 
 export default function Dashboard() {
@@ -19,22 +20,22 @@ export default function Dashboard() {
   const loading = itemsLoading || locationsLoading || movementsLoading;
 
   // Memoize expensive calculations
-  const lowStockItems = useMemo(() => 
+  const lowStockItems = useMemo(() =>
     items.filter(item => item.quantity < 10).slice(0, 5),
     [items]
   );
 
-  const topStockItems = useMemo(() => 
+  const topStockItems = useMemo(() =>
     items.sort((a, b) => b.quantity - a.quantity).slice(0, 5),
     [items]
   );
 
-  const totalStock = useMemo(() => 
+  const totalStock = useMemo(() =>
     items.reduce((sum, item) => sum + (item.quantity || 0), 0),
     [items]
   );
 
-  const recentMovements = useMemo(() => 
+  const recentMovements = useMemo(() =>
     movements.slice(0, 10),
     [movements]
   );
@@ -137,15 +138,15 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {lowStockItems.map(item => (
-                    <tr key={item.id}>
-                      <td>{item.item_code}</td>
-                      <td>{item.item_name}</td>
-                      <td>
-                        <span className="badge badge-warning">{item.quantity}</span>
-                      </td>
-                      <td>{item.location_code || '-'}</td>
-                    </tr>
-                  ))}
+                  <tr key={item.id}>
+                    <td>{item.item_code}</td>
+                    <td>{item.item_name}</td>
+                    <td>
+                      <span className="badge badge-warning">{item.quantity}</span>
+                    </td>
+                    <td>{item.location_code || '-'}</td>
+                  </tr>
+                ))}
                 {lowStockItems.length === 0 && (
                   <tr>
                     <td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>
@@ -172,15 +173,15 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {topStockItems.map(item => (
-                    <tr key={item.id}>
-                      <td>{item.item_code}</td>
-                      <td>{item.item_name}</td>
-                      <td>
-                        <span className="badge badge-success">{item.quantity}</span>
-                      </td>
-                      <td>{item.location_code || '-'}</td>
-                    </tr>
-                  ))}
+                  <tr key={item.id}>
+                    <td>{item.item_code}</td>
+                    <td>{item.item_name}</td>
+                    <td>
+                      <span className="badge badge-success">{item.quantity}</span>
+                    </td>
+                    <td>{item.location_code || '-'}</td>
+                  </tr>
+                ))}
                 {items.length === 0 && (
                   <tr>
                     <td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>
@@ -218,7 +219,7 @@ export default function Dashboard() {
               ) : (
                 recentMovements.map(movement => (
                   <tr key={movement.id}>
-                    <td>{new Date(movement.created_at).toLocaleString('tr-TR')}</td>
+                    <td>{formatDate(movement.created_at)}</td>
                     <td>
                       <span className={`badge ${getMovementTypeBadge(movement.movement_type)}`}>
                         {getMovementTypeLabel(movement.movement_type)}

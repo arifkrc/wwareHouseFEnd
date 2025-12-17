@@ -1,6 +1,7 @@
 import { History, RefreshCw } from 'lucide-react';
 import { useMovements } from '../hooks/useMovements';
-import { getMovementTypeLabel, getMovementTypeBadge } from '../utils/movementHelpers';
+import { getMovementTypeLabel, getMovementTypeBadge, MOVEMENT_TYPES } from '../utils/movementHelpers';
+import { formatDate } from '../utils/dateHelper';
 import './Movements.css';
 
 export default function Movements() {
@@ -53,9 +54,9 @@ export default function Movements() {
               ) : (
                 movements.map(movement => (
                   <tr key={movement.id}>
-                    <td>{new Date(movement.created_at).toLocaleString('tr-TR')}</td>
+                    <td>{formatDate(movement.created_at)}</td>
                     <td>
-                      <span className={`badge ${getMovementTypeBadge(movement.movement_type)}`}>
+                      <span className={`badge ${getMovementTypeBadge(movement.movement_type)} `}>
                         {getMovementTypeLabel(movement.movement_type)}
                       </span>
                     </td>

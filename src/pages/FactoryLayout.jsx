@@ -95,8 +95,6 @@ export default function FactoryLayout() {
     }
 
     setCurrentZone(zone);
-    setActiveTab('assigned');
-    setAddStockForm({ itemId: '', quantity: '', customerCode: '', notes: '' }); // Reset form
     setShowZoneModal(true);
   };
 

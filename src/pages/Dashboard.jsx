@@ -4,6 +4,7 @@ import { useItems } from '../hooks/useItems';
 import { useLocations } from '../hooks/useLocations';
 import { useMovements } from '../hooks/useMovements';
 import { getMovementTypeLabel, getMovementTypeBadge, MOVEMENT_TYPES } from '../utils/movementHelpers';
+import { getProductType } from '../utils/productHelpers';
 import { formatDate } from '../utils/dateHelper';
 import './Dashboard.css';
 

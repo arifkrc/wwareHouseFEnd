@@ -5,6 +5,7 @@ import { useLocations } from '../hooks/useLocations';
 import { useMovements } from '../hooks/useMovements';
 import { useToast } from '../hooks/useToast';
 import { MOVEMENT_TYPES } from '../utils/movementHelpers';
+import { getProductType } from '../utils/productHelpers';
 import Toast from '../components/Toast';
 import MovementModal from '../components/MovementModal';
 import ExpandableText from '../components/ExpandableText';
@@ -182,7 +183,32 @@ export default function Items() {
                         <tbody>
                             {filteredItems.map(item => (
                                 <tr key={item.id}>
-                                    <td><strong>{item.item_code}</strong></td>
+                                    <td>
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <strong>{item.item_code}</strong>
+
+                                            {/* Product Type Badge */}
+                                            {(() => {
+                                                const type = getProductType(item.item_code);
+                                                return (
+                                                    <span
+                                                        style={{
+                                                            fontSize: '0.7rem',
+                                                            backgroundColor: type.bg,
+                                                            color: type.color,
+                                                            padding: '2px 6px',
+                                                            borderRadius: '4px',
+                                                            width: 'fit-content',
+                                                            marginTop: '2px',
+                                                            fontWeight: '600'
+                                                        }}
+                                                    >
+                                                        {type.label}
+                                                    </span>
+                                                );
+                                            })()}
+                                        </div>
+                                    </td>
                                     <td><ExpandableText text={item.item_name} limit={30} /></td>
                                     <td>
                                         <span className={`badge ${item.quantity > 0 ? 'badge-success' : 'badge-warning'}`}>

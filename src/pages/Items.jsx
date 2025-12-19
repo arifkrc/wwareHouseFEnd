@@ -4,8 +4,10 @@ import { useItems } from '../hooks/useItems';
 import { useLocations } from '../hooks/useLocations';
 import { useMovements } from '../hooks/useMovements';
 import { useToast } from '../hooks/useToast';
-import { MOVEMENT_TYPES } from '../utils/movementHelpers';
+import { MOVEMENT_TYPES, getMovementTypeLabel, getMovementTypeBadge } from '../utils/movementHelpers';
 import { getProductType } from '../utils/productHelpers';
+import { formatDate } from '../utils/dateHelper';
+import api from '../services/api';
 import Toast from '../components/Toast';
 import MovementModal from '../components/MovementModal';
 import ExpandableText from '../components/ExpandableText';
@@ -31,6 +33,7 @@ export default function Items() {
 
     // Detail Modal State (Simple view for stock breakdown)
     const [showDetailModal, setShowDetailModal] = useState(false);
+    const [itemMovements, setItemMovements] = useState([]);
 
     // Filter items
     const filteredItems = useMemo(() => {
@@ -260,16 +263,26 @@ export default function Items() {
                                         <tr>
                                             <th>Lokasyon</th>
                                             <th>Miktar</th>
+                                            <th>Not</th>
                                             <th>İşlemler</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {Object.entries(selectedItem.stock_distribution).map(([locId, qty]) => {
+                                        {Object.entries(selectedItem.stock_distribution).map(([locId, data]) => {
                                             const location = locations.find(l => l.id === parseInt(locId));
+                                            const qty = typeof data === 'object' ? data.quantity : data;
+                                            const rawNote = typeof data === 'object' ? data.latest_note : null;
+
+                                            // Parse note: if contains ':', take part after match. else show full.
+                                            const displayNote = rawNote
+                                                ? (rawNote.includes(':') ? rawNote.split(':').slice(1).join(':').trim() : rawNote)
+                                                : '-';
+
                                             return (
                                                 <tr key={locId}>
                                                     <td>{location?.location_code || 'Bilinmiyor'}</td>
                                                     <td><strong>{qty}</strong></td>
+                                                    <td><span className="text-muted text-small">{displayNote}</span></td>
                                                     <td>
                                                         <div className="action-buttons">
                                                             <button

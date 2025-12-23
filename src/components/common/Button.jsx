@@ -38,7 +38,15 @@ export default function Button({
         >
             {isLoading ? (
                 <span className="spinner-small mr-2" /> // Assumes spinner CSS exists
+            ) : React.isValidElement(Icon) ? (
+                // If Icon is already an element (e.g. <Download />), clone it to inject styles if needed, or just render
+                // For simplicity, just render it. If children exists, wrap in fragment or span to add margin?
+                // The existing code added margin to the component.
+                <span style={{ marginRight: children ? '6px' : 0, display: 'flex', alignItems: 'center' }}>
+                    {Icon}
+                </span>
             ) : Icon ? (
+                // If Icon is a component (e.g. Activity), render it
                 <Icon size={size === 'sm' ? 14 : 18} style={children ? { marginRight: '6px' } : {}} />
             ) : null}
             {children}

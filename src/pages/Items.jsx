@@ -21,7 +21,7 @@ import Button from '../components/common/Button';
 import Pagination from '../components/Pagination';
 
 export default function Items() {
-    const { items, loading: itemsLoading, refresh: refreshItems, pagination } = useItems();
+    const { items, loading: itemsLoading, refresh: refreshItems } = useItems();
     const { locations } = useLocations();
     const { createMovement, refresh: refreshMovements } = useMovements();
     const { toasts, success, error, warning, removeToast } = useToast();
@@ -29,7 +29,11 @@ export default function Items() {
     const [searchTerm, setSearchTerm] = useState('');
     const [showZeroStock, setShowZeroStock] = useState(false);
     const [filterType, setFilterType] = useState('ALL'); // ALL, DISK, KAMPANA, POYRA
-    const [currentPage, setCurrentPage] = useState(1);
+
+    // Fetch all items on mount
+    useEffect(() => {
+        refreshItems({ limit: -1 });
+    }, [refreshItems]);
 
     // Movement Modal State
     const [showMovementModal, setShowMovementModal] = useState(false);
@@ -46,37 +50,45 @@ export default function Items() {
     // Detail Modal State
     const [showDetailModal, setShowDetailModal] = useState(false);
 
-    // Server-side filtering effect
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            refreshItems({
-                page: currentPage,
-                search: searchTerm,
-                type: filterType,
-                has_stock: showZeroStock // Passed as boolean, handled by backend
+    // Client-side filtering
+    const filteredItems = useMemo(() => {
+        let result = items;
+
+        if (!showZeroStock) {
+            result = result.filter(item => item.quantity > 0);
+        }
+
+        // Filter by Product Type
+        if (filterType !== 'ALL') {
+            result = result.filter(item => {
+                const type = getProductType(item.item_code);
+                // Map string key to type object
+                let targetType;
+                switch (filterType) {
+                    case 'DISK': targetType = PRODUCT_TYPES.DISK; break;
+                    case 'KAMPANA': targetType = PRODUCT_TYPES.KAMPANA; break;
+                    case 'POYRA': targetType = PRODUCT_TYPES.POYRA; break;
+                    default: return true;
+                }
+                return type === targetType;
             });
-        }, 300); // Debounce search
+        }
 
-        return () => clearTimeout(timer);
-    }, [refreshItems, currentPage, searchTerm, filterType, showZeroStock]);
+        if (!searchTerm) return result;
 
-    const handleSearch = (e) => {
-        setSearchTerm(e.target.value);
-        setCurrentPage(1); // Reset to page 1
-    };
+        const lowerSearch = searchTerm.toLowerCase();
+        return result.filter(item =>
+            item.item_code.toLowerCase().includes(lowerSearch) ||
+            item.item_name.toLowerCase().includes(lowerSearch)
+        );
+    }, [items, searchTerm, showZeroStock, filterType]);
 
-    const handleFilterType = (e) => {
-        setFilterType(e.target.value);
-        setCurrentPage(1);
-    };
-
-    const handleStockFilter = (e) => {
-        setShowZeroStock(e.target.checked);
-        setCurrentPage(1);
-    };
+    const handleSearch = (e) => setSearchTerm(e.target.value);
+    const handleFilterType = (e) => setFilterType(e.target.value);
+    const handleStockFilter = (e) => setShowZeroStock(e.target.checked);
 
     const handleExportCSV = () => {
-        if (!items.length) {
+        if (!filteredItems.length) {
             warning('Dışa aktarılacak veri yok');
             return;
         }
@@ -85,7 +97,7 @@ export default function Items() {
         const headers = ['Ürün Kodu', 'Ürün Adı', 'Toplam Stok', 'Birincil Lokasyon', 'Ürün Türü'];
 
         // Map data to CSV rows
-        const rows = items.map(item => {
+        const rows = filteredItems.map(item => {
             const type = getProductType(item.item_code);
             return [
                 item.item_code,
@@ -448,38 +460,25 @@ export default function Items() {
                 </div>
             </div>
 
-            <div className="card">
-                <div style={{ padding: '0 1rem 1rem 1rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', color: '#64748b', fontSize: '0.9rem' }}>
-                    <span style={{ fontWeight: 500 }}>Toplam:</span>
-                    <span style={{ marginLeft: '0.5rem', backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: '12px', color: '#0f172a' }}>
-                        {pagination?.total || 0} kayıt
-                    </span>
-                    {pagination?.total !== items.length && items.length > 0 && (
-                        <span style={{ marginLeft: '0.5rem', fontSize: '0.8rem', opacity: 0.8 }}>(Sayfa {pagination?.page})</span>
-                    )}
-                </div>
-                <Table
-                    columns={columns}
-                    data={items}
-                    keyField="id"
-                    isLoading={itemsLoading}
-                    emptyMessage="Ürün bulunamadı"
-                />
-
-                {/* Server-Side Pagination */}
-                {pagination && pagination.totalPages > 1 && (
-                    <div style={{ padding: '1rem', borderTop: '1px solid #f1f5f9' }}>
-                        <Pagination
-                            currentPage={currentPage}
-                            totalPages={pagination.totalPages}
-                            onPageChange={setCurrentPage}
-                            totalItems={pagination.total}
-                        />
-                    </div>
+            <div style={{ padding: '0 1rem 1rem 1rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', color: '#64748b', fontSize: '0.9rem' }}>
+                <span style={{ fontWeight: 500 }}>Toplam:</span>
+                <span style={{ marginLeft: '0.5rem', backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: '12px', color: '#0f172a' }}>
+                    {filteredItems.length} kayıt
+                </span>
+                {filteredItems.length !== items.length && (
+                    <span style={{ marginLeft: '0.5rem', fontSize: '0.8rem', opacity: 0.8 }}>(Filtrelendi)</span>
                 )}
             </div>
+            <Table
+                columns={columns}
+                data={filteredItems}
+                keyField="id"
+                isLoading={itemsLoading}
+                emptyMessage="Ürün bulunamadı"
+            />
+        </div>
 
-            {/* Detail Modal */}
+            {/* Detail Modal */ }
             <Modal
                 isOpen={showDetailModal}
                 onClose={() => setShowDetailModal(false)}
@@ -549,9 +548,11 @@ export default function Items() {
                 titlePrefix={selectedItem?.current_zone_name ? `(${selectedItem.current_zone_name})` : ''}
             />
 
-            {toasts.map(t => (
-                <Toast key={t.id} {...t} onClose={() => removeToast(t.id)} />
-            ))}
-        </div>
+    {
+        toasts.map(t => (
+            <Toast key={t.id} {...t} onClose={() => removeToast(t.id)} />
+        ))
+    }
+        </div >
     );
 }

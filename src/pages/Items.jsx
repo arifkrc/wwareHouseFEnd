@@ -15,10 +15,13 @@ import ExpandableText from '../components/ExpandableText';
 import Table from '../components/common/Table';
 import Modal from '../components/common/Modal';
 import Badge from '../components/common/Badge';
+import Modal from '../components/common/Modal';
+import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
+import Pagination from '../components/Pagination';
 
 export default function Items() {
-    const { items, loading: itemsLoading, refresh: refreshItems } = useItems();
+    const { items, loading: itemsLoading, refresh: refreshItems, pagination } = useItems();
     const { locations } = useLocations();
     const { createMovement, refresh: refreshMovements } = useMovements();
     const { toasts, success, error, warning, removeToast } = useToast();
@@ -26,6 +29,7 @@ export default function Items() {
     const [searchTerm, setSearchTerm] = useState('');
     const [showZeroStock, setShowZeroStock] = useState(false);
     const [filterType, setFilterType] = useState('ALL'); // ALL, DISK, KAMPANA, POYRA
+    const [currentPage, setCurrentPage] = useState(1);
 
     // Movement Modal State
     const [showMovementModal, setShowMovementModal] = useState(false);
@@ -42,47 +46,37 @@ export default function Items() {
     // Detail Modal State
     const [showDetailModal, setShowDetailModal] = useState(false);
 
-    // Filter items
-    const filteredItems = useMemo(() => {
-        let result = items;
-
-        if (!showZeroStock) {
-            result = result.filter(item => item.quantity > 0);
-        }
-
-        // Filter by Product Type
-        if (filterType !== 'ALL') {
-            result = result.filter(item => {
-                const type = getProductType(item.item_code);
-                // Compare labels or keys? productHelpers uses full objects.
-                // Let's match by label or add a key to PRODUCT_TYPES.
-                // PRODUCT_TYPES.DISK.label is 'Disk'. 
-                // Simple approach: Check if the type object matches the selected type constant.
-                // But we selected a string key 'DISK'.
-
-                // Map string key to type object
-                let targetType;
-                switch (filterType) {
-                    case 'DISK': targetType = PRODUCT_TYPES.DISK; break;
-                    case 'KAMPANA': targetType = PRODUCT_TYPES.KAMPANA; break;
-                    case 'POYRA': targetType = PRODUCT_TYPES.POYRA; break;
-                    default: return true;
-                }
-                return type === targetType;
+    // Server-side filtering effect
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            refreshItems({
+                page: currentPage,
+                search: searchTerm,
+                type: filterType,
+                has_stock: showZeroStock // Passed as boolean, handled by backend
             });
-        }
+        }, 300); // Debounce search
 
-        if (!searchTerm) return result;
+        return () => clearTimeout(timer);
+    }, [refreshItems, currentPage, searchTerm, filterType, showZeroStock]);
 
-        const lowerSearch = searchTerm.toLowerCase();
-        return result.filter(item =>
-            item.item_code.toLowerCase().includes(lowerSearch) ||
-            item.item_name.toLowerCase().includes(lowerSearch)
-        );
-    }, [items, searchTerm, showZeroStock, filterType]);
+    const handleSearch = (e) => {
+        setSearchTerm(e.target.value);
+        setCurrentPage(1); // Reset to page 1
+    };
+
+    const handleFilterType = (e) => {
+        setFilterType(e.target.value);
+        setCurrentPage(1);
+    };
+
+    const handleStockFilter = (e) => {
+        setShowZeroStock(e.target.checked);
+        setCurrentPage(1);
+    };
 
     const handleExportCSV = () => {
-        if (!filteredItems.length) {
+        if (!items.length) {
             warning('Dışa aktarılacak veri yok');
             return;
         }
@@ -91,7 +85,7 @@ export default function Items() {
         const headers = ['Ürün Kodu', 'Ürün Adı', 'Toplam Stok', 'Birincil Lokasyon', 'Ürün Türü'];
 
         // Map data to CSV rows
-        const rows = filteredItems.map(item => {
+        const rows = items.map(item => {
             const type = getProductType(item.item_code);
             return [
                 item.item_code,
@@ -421,8 +415,10 @@ export default function Items() {
                         <select
                             className="form-select"
                             style={{ paddingLeft: '32px', minWidth: '140px', height: '40px' }}
+                            className="form-select"
+                            style={{ paddingLeft: '32px', minWidth: '140px', height: '40px' }}
                             value={filterType}
-                            onChange={(e) => setFilterType(e.target.value)}
+                            onChange={handleFilterType}
                         >
                             <option value="ALL">Tüm Türler</option>
                             <option value="DISK">Disk</option>
@@ -435,9 +431,9 @@ export default function Items() {
                         <input
                             type="checkbox"
                             checked={showZeroStock}
-                            onChange={(e) => setShowZeroStock(e.target.checked)}
+                            onChange={handleStockFilter}
                         />
-                        Stoksuzlar
+                        Stokluları Göster
                     </label>
 
                     <div className="search-box" style={{ position: 'relative' }}>
@@ -448,7 +444,7 @@ export default function Items() {
                             className="form-input"
                             style={{ paddingLeft: '40px', width: '250px' }}
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={handleSearch}
                         />
                     </div>
                 </div>
@@ -457,95 +453,114 @@ export default function Items() {
             <div className="card">
                 <div style={{ padding: '0 1rem 1rem 1rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', color: '#64748b', fontSize: '0.9rem' }}>
                     <span style={{ fontWeight: 500 }}>Toplam:</span>
-                    <span style={{ marginLeft: '0.5rem', backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: '12px', color: '#0f172a' }}>
-                        {filteredItems.length} kayıt
-                    </span>
-                    {filteredItems.length !== items.length && (
-                        <span style={{ marginLeft: '0.5rem', fontSize: '0.8rem', opacity: 0.8 }}>(Filtrelendi)</span>
-                    )}
-                </div>
-                <Table
-                    columns={columns}
-                    data={filteredItems}
-                    keyField="id"
-                    isLoading={itemsLoading}
-                    emptyMessage="Ürün bulunamadı"
-                />
-            </div>
-
-            {/* Detail Modal */}
-            <Modal
-                isOpen={showDetailModal}
-                onClose={() => setShowDetailModal(false)}
-                title={selectedItem ? `${selectedItem.item_code} - ${selectedItem.item_name}` : 'Ürün Detayı'}
-                size="lg"
-            >
-                {selectedItem && (
-                    <>
-                        <h4 style={{ marginBottom: '1rem' }}>Stok Dağılımı</h4>
-                        {detailData.length > 0 ? (
-                            <Table
-                                columns={detailColumns}
-                                data={detailData}
-                                keyField="id"
-                                emptyMessage="Stok kaydı bulunmuyor"
-                            />
-                        ) : (
-                            <p className="text-muted" style={{ padding: '1rem', fontStyle: 'italic' }}>Bu ürün için henüz stok kaydı bulunmuyor.</p>
-                        )}
-
-                        <div style={{ marginTop: '2rem', borderTop: '1px solid #eee', paddingTop: '1rem' }}>
-                            <h4>Yeni Stok Girişi</h4>
-                            <p className="text-small text-muted">Bu ürüne hiç stok olmayan yeni bir lokasyona giriş yapmak için:</p>
-                            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-                                <select
-                                    className="form-select"
-                                    style={{ maxWidth: '200px' }}
-                                    onChange={(e) => {
-                                        if (!e.target.value) return;
-                                        const locId = parseInt(e.target.value);
-                                        const loc = locations.find(l => l.id === locId);
-
-                                        // Set item context for NEW entry
-                                        setSelectedItem({
-                                            ...selectedItem,
-                                            current_zone_name: loc?.location_code,
-                                            current_zone_location_id: locId,
-                                            stock_at_zone: 0,
-                                            customer_code: null
-                                        });
-                                        setMovementForm({ type: MOVEMENT_TYPES.IN, quantity: '', toLocationId: locId, customer_code: '', notes: '' });
-                                        setShowMovementModal(true);
-                                        // Reset select
-                                        e.target.value = "";
-                                    }}
-                                >
-                                    <option value="">Lokasyon Seç...</option>
-                                    {locations.sort((a, b) => a.location_code.localeCompare(b.location_code)).map(l => (
-                                        <option key={l.id} value={l.id}>{l.location_code}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                    </>
+                    {pagination?.total || 0} kayıt
+                </span>
+                {pagination?.total !== items.length && (
+                    // If we are showing a page, items.length is just page size. 
+                    // No need to show 'Filtered' text in server-side pagination usually, 
+                    // but we can show 'Page X of Y' maybe?
+                    // Let's keep it simple for now.
+                    null
                 )}
-            </Modal>
-
-            <MovementModal
-                isOpen={showMovementModal}
-                onClose={() => setShowMovementModal(false)}
-                selectedItem={selectedItem}
-                movementForm={movementForm}
-                setMovementForm={setMovementForm}
-                handleMovement={handleMovement}
-                isProcessing={isProcessing}
-                locations={locations}
-                titlePrefix={selectedItem?.current_zone_name ? `(${selectedItem.current_zone_name})` : ''}
+            </div>
+            <Table
+                columns={columns}
+                data={items}
+                keyField="id"
+                isLoading={itemsLoading}
+                emptyMessage="Ürün bulunamadı"
             />
 
-            {toasts.map(t => (
-                <Toast key={t.id} {...t} onClose={() => removeToast(t.id)} />
-            ))}
+            {/* Server-Side Pagination */}
+            {pagination && pagination.totalPages > 1 && (
+                <div style={{ padding: '1rem', borderTop: '1px solid #f1f5f9' }}>
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={pagination.totalPages}
+                        onPageChange={setCurrentPage}
+                        totalItems={pagination.total}
+                    />
+                </div>
+            )}
         </div>
-    );
+                </div >
+
+        {/* Detail Modal */ }
+        < Modal
+    isOpen = { showDetailModal }
+    onClose = {() => setShowDetailModal(false)
+}
+title = { selectedItem? `${selectedItem.item_code} - ${selectedItem.item_name}` : 'Ürün Detayı'}
+size = "lg"
+    >
+    { selectedItem && (
+        <>
+            <h4 style={{ marginBottom: '1rem' }}>Stok Dağılımı</h4>
+            {detailData.length > 0 ? (
+                <Table
+                    columns={detailColumns}
+                    data={detailData}
+                    keyField="id"
+                    emptyMessage="Stok kaydı bulunmuyor"
+                />
+            ) : (
+                <p className="text-muted" style={{ padding: '1rem', fontStyle: 'italic' }}>Bu ürün için henüz stok kaydı bulunmuyor.</p>
+            )}
+
+            <div style={{ marginTop: '2rem', borderTop: '1px solid #eee', paddingTop: '1rem' }}>
+                <h4>Yeni Stok Girişi</h4>
+                <p className="text-small text-muted">Bu ürüne hiç stok olmayan yeni bir lokasyona giriş yapmak için:</p>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+                    <select
+                        className="form-select"
+                        style={{ maxWidth: '200px' }}
+                        onChange={(e) => {
+                            if (!e.target.value) return;
+                            const locId = parseInt(e.target.value);
+                            const loc = locations.find(l => l.id === locId);
+
+                            // Set item context for NEW entry
+                            setSelectedItem({
+                                ...selectedItem,
+                                current_zone_name: loc?.location_code,
+                                current_zone_location_id: locId,
+                                stock_at_zone: 0,
+                                customer_code: null
+                            });
+                            setMovementForm({ type: MOVEMENT_TYPES.IN, quantity: '', toLocationId: locId, customer_code: '', notes: '' });
+                            setShowMovementModal(true);
+                            // Reset select
+                            e.target.value = "";
+                        }}
+                    >
+                        <option value="">Lokasyon Seç...</option>
+                        {locations.sort((a, b) => a.location_code.localeCompare(b.location_code)).map(l => (
+                            <option key={l.id} value={l.id}>{l.location_code}</option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+        </>
+    )}
+                </Modal >
+
+    <MovementModal
+        isOpen={showMovementModal}
+        onClose={() => setShowMovementModal(false)}
+        selectedItem={selectedItem}
+        movementForm={movementForm}
+        setMovementForm={setMovementForm}
+        handleMovement={handleMovement}
+        isProcessing={isProcessing}
+        locations={locations}
+        titlePrefix={selectedItem?.current_zone_name ? `(${selectedItem.current_zone_name})` : ''}
+    />
+
+{
+    toasts.map(t => (
+        <Toast key={t.id} {...t} onClose={() => removeToast(t.id)} />
+    ))
+}
+            </div >
+            );
 }

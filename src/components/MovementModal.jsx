@@ -17,10 +17,16 @@ export default function MovementModal({
 }) {
     if (!selectedItem) return null;
 
+    const getVariant = () => {
+        if (movementForm.type === MOVEMENT_TYPES.IN) return 'success';
+        if (movementForm.type === MOVEMENT_TYPES.OUT) return 'danger';
+        return 'primary'; // Transfer
+    };
+
     const getTitle = () => {
-        if (movementForm.type === MOVEMENT_TYPES.IN) return <><ArrowUpCircle size={20} className="mr-2" /> {titlePrefix} Stok Girişi</>;
-        if (movementForm.type === MOVEMENT_TYPES.OUT) return <><ArrowDownCircle size={20} className="mr-2" /> {titlePrefix} Stok Çıkışı</>;
-        if (movementForm.type === MOVEMENT_TYPES.TRANSFER) return <><ArrowRightLeft size={20} className="mr-2" /> {titlePrefix} Transfer</>;
+        if (movementForm.type === MOVEMENT_TYPES.IN) return <span className="flex items-center text-emerald-600"><ArrowUpCircle size={20} className="mr-2" /> {titlePrefix} Stok Girişi</span>;
+        if (movementForm.type === MOVEMENT_TYPES.OUT) return <span className="flex items-center text-red-600"><ArrowDownCircle size={20} className="mr-2" /> {titlePrefix} Stok Çıkışı</span>;
+        if (movementForm.type === MOVEMENT_TYPES.TRANSFER) return <span className="flex items-center text-blue-600"><ArrowRightLeft size={20} className="mr-2" /> {titlePrefix} Transfer</span>;
         return 'Hareket İşlemi';
     };
 
@@ -29,8 +35,8 @@ export default function MovementModal({
             <Button variant="outline" onClick={onClose} disabled={isProcessing}>
                 İptal
             </Button>
-            <Button variant="primary" onClick={handleMovement} isLoading={isProcessing}>
-                Kaydet
+            <Button variant={getVariant()} onClick={handleMovement} isLoading={isProcessing}>
+                {movementForm.type === MOVEMENT_TYPES.IN ? 'Stok Ekle' : movementForm.type === MOVEMENT_TYPES.OUT ? 'Çıkış Yap' : 'Transfer Et'}
             </Button>
         </>
     );

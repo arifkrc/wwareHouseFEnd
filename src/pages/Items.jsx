@@ -453,114 +453,107 @@ export default function Items() {
             <div className="card">
                 <div style={{ padding: '0 1rem 1rem 1rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', color: '#64748b', fontSize: '0.9rem' }}>
                     <span style={{ fontWeight: 500 }}>Toplam:</span>
-                    {pagination?.total || 0} kayıt
-                </span>
-                {pagination?.total !== items.length && (
-                    // If we are showing a page, items.length is just page size. 
-                    // No need to show 'Filtered' text in server-side pagination usually, 
-                    // but we can show 'Page X of Y' maybe?
-                    // Let's keep it simple for now.
-                    null
+                    <span style={{ marginLeft: '0.5rem', backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: '12px', color: '#0f172a' }}>
+                        {pagination?.total || 0} kayıt
+                    </span>
+                    {pagination?.total !== items.length && items.length > 0 && (
+                        <span style={{ marginLeft: '0.5rem', fontSize: '0.8rem', opacity: 0.8 }}>(Sayfa {pagination?.page})</span>
+                    )}
+                </div>
+                <Table
+                    columns={columns}
+                    data={items}
+                    keyField="id"
+                    isLoading={itemsLoading}
+                    emptyMessage="Ürün bulunamadı"
+                />
+
+                {/* Server-Side Pagination */}
+                {pagination && pagination.totalPages > 1 && (
+                    <div style={{ padding: '1rem', borderTop: '1px solid #f1f5f9' }}>
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={pagination.totalPages}
+                            onPageChange={setCurrentPage}
+                            totalItems={pagination.total}
+                        />
+                    </div>
                 )}
             </div>
-            <Table
-                columns={columns}
-                data={items}
-                keyField="id"
-                isLoading={itemsLoading}
-                emptyMessage="Ürün bulunamadı"
+
+            {/* Detail Modal */}
+            <Modal
+                isOpen={showDetailModal}
+                onClose={() => setShowDetailModal(false)}
+                title={selectedItem ? `${selectedItem.item_code} - ${selectedItem.item_name}` : 'Ürün Detayı'}
+                size="lg"
+            >
+                {selectedItem && (
+                    <>
+                        <h4 style={{ marginBottom: '1rem' }}>Stok Dağılımı</h4>
+                        {detailData.length > 0 ? (
+                            <Table
+                                columns={detailColumns}
+                                data={detailData}
+                                keyField="id"
+                                emptyMessage="Stok kaydı bulunmuyor"
+                            />
+                        ) : (
+                            <p className="text-muted" style={{ padding: '1rem', fontStyle: 'italic' }}>Bu ürün için henüz stok kaydı bulunmuyor.</p>
+                        )}
+
+                        <div style={{ marginTop: '2rem', borderTop: '1px solid #eee', paddingTop: '1rem' }}>
+                            <h4>Yeni Stok Girişi</h4>
+                            <p className="text-small text-muted">Bu ürüne hiç stok olmayan yeni bir lokasyona giriş yapmak için:</p>
+                            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+                                <select
+                                    className="form-select"
+                                    style={{ maxWidth: '200px' }}
+                                    onChange={(e) => {
+                                        if (!e.target.value) return;
+                                        const locId = parseInt(e.target.value);
+                                        const loc = locations.find(l => l.id === locId);
+
+                                        // Set item context for NEW entry
+                                        setSelectedItem({
+                                            ...selectedItem,
+                                            current_zone_name: loc?.location_code,
+                                            current_zone_location_id: locId,
+                                            stock_at_zone: 0,
+                                            customer_code: null
+                                        });
+                                        setMovementForm({ type: MOVEMENT_TYPES.IN, quantity: '', toLocationId: locId, customer_code: '', notes: '' });
+                                        setShowMovementModal(true);
+                                        // Reset select
+                                        e.target.value = "";
+                                    }}
+                                >
+                                    <option value="">Lokasyon Seç...</option>
+                                    {locations.sort((a, b) => a.location_code.localeCompare(b.location_code)).map(l => (
+                                        <option key={l.id} value={l.id}>{l.location_code}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    </>
+                )}
+            </Modal>
+
+            <MovementModal
+                isOpen={showMovementModal}
+                onClose={() => setShowMovementModal(false)}
+                selectedItem={selectedItem}
+                movementForm={movementForm}
+                setMovementForm={setMovementForm}
+                handleMovement={handleMovement}
+                isProcessing={isProcessing}
+                locations={locations}
+                titlePrefix={selectedItem?.current_zone_name ? `(${selectedItem.current_zone_name})` : ''}
             />
 
-            {/* Server-Side Pagination */}
-            {pagination && pagination.totalPages > 1 && (
-                <div style={{ padding: '1rem', borderTop: '1px solid #f1f5f9' }}>
-                    <Pagination
-                        currentPage={currentPage}
-                        totalPages={pagination.totalPages}
-                        onPageChange={setCurrentPage}
-                        totalItems={pagination.total}
-                    />
-                </div>
-            )}
+            {toasts.map(t => (
+                <Toast key={t.id} {...t} onClose={() => removeToast(t.id)} />
+            ))}
         </div>
-                </div >
-
-        {/* Detail Modal */ }
-        < Modal
-    isOpen = { showDetailModal }
-    onClose = {() => setShowDetailModal(false)
-}
-title = { selectedItem? `${selectedItem.item_code} - ${selectedItem.item_name}` : 'Ürün Detayı'}
-size = "lg"
-    >
-    { selectedItem && (
-        <>
-            <h4 style={{ marginBottom: '1rem' }}>Stok Dağılımı</h4>
-            {detailData.length > 0 ? (
-                <Table
-                    columns={detailColumns}
-                    data={detailData}
-                    keyField="id"
-                    emptyMessage="Stok kaydı bulunmuyor"
-                />
-            ) : (
-                <p className="text-muted" style={{ padding: '1rem', fontStyle: 'italic' }}>Bu ürün için henüz stok kaydı bulunmuyor.</p>
-            )}
-
-            <div style={{ marginTop: '2rem', borderTop: '1px solid #eee', paddingTop: '1rem' }}>
-                <h4>Yeni Stok Girişi</h4>
-                <p className="text-small text-muted">Bu ürüne hiç stok olmayan yeni bir lokasyona giriş yapmak için:</p>
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-                    <select
-                        className="form-select"
-                        style={{ maxWidth: '200px' }}
-                        onChange={(e) => {
-                            if (!e.target.value) return;
-                            const locId = parseInt(e.target.value);
-                            const loc = locations.find(l => l.id === locId);
-
-                            // Set item context for NEW entry
-                            setSelectedItem({
-                                ...selectedItem,
-                                current_zone_name: loc?.location_code,
-                                current_zone_location_id: locId,
-                                stock_at_zone: 0,
-                                customer_code: null
-                            });
-                            setMovementForm({ type: MOVEMENT_TYPES.IN, quantity: '', toLocationId: locId, customer_code: '', notes: '' });
-                            setShowMovementModal(true);
-                            // Reset select
-                            e.target.value = "";
-                        }}
-                    >
-                        <option value="">Lokasyon Seç...</option>
-                        {locations.sort((a, b) => a.location_code.localeCompare(b.location_code)).map(l => (
-                            <option key={l.id} value={l.id}>{l.location_code}</option>
-                        ))}
-                    </select>
-                </div>
-            </div>
-        </>
-    )}
-                </Modal >
-
-    <MovementModal
-        isOpen={showMovementModal}
-        onClose={() => setShowMovementModal(false)}
-        selectedItem={selectedItem}
-        movementForm={movementForm}
-        setMovementForm={setMovementForm}
-        handleMovement={handleMovement}
-        isProcessing={isProcessing}
-        locations={locations}
-        titlePrefix={selectedItem?.current_zone_name ? `(${selectedItem.current_zone_name})` : ''}
-    />
-
-{
-    toasts.map(t => (
-        <Toast key={t.id} {...t} onClose={() => removeToast(t.id)} />
-    ))
-}
-            </div >
-            );
+    );
 }

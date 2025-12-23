@@ -476,9 +476,9 @@ export default function Items() {
                 isLoading={itemsLoading}
                 emptyMessage="Ürün bulunamadı"
             />
-        </div>
 
-            {/* Detail Modal */ }
+
+            {/* Detail Modal */}
             <Modal
                 isOpen={showDetailModal}
                 onClose={() => setShowDetailModal(false)}
@@ -548,11 +548,11 @@ export default function Items() {
                 titlePrefix={selectedItem?.current_zone_name ? `(${selectedItem.current_zone_name})` : ''}
             />
 
-    {
-        toasts.map(t => (
-            <Toast key={t.id} {...t} onClose={() => removeToast(t.id)} />
-        ))
-    }
+            {
+                toasts.map(t => (
+                    <Toast key={t.id} {...t} onClose={() => removeToast(t.id)} />
+                ))
+            }
         </div >
     );
 }

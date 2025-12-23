@@ -186,8 +186,8 @@ export default function Dashboard() {
             <Package size={24} color="#2563eb" />
           </div>
           <div className="stat-content">
-            <div className="dashboard-stat-value">{widgetStats.totalItemCount || 0}</div>
-            <div className="dashboard-stat-label">Toplam Ürün</div>
+            <div className="dashboard-stat-value">{widgetStats.totalStockCount || 0}</div>
+            <div className="dashboard-stat-label">Toplam Stok</div>
           </div>
         </div>
 
@@ -237,9 +237,9 @@ export default function Dashboard() {
           </div>
           <div className="stat-content">
             <div className="dashboard-stat-value">
-
+              -
             </div>
-            <div className="dashboard-stat-label">Toplam Stok (Detaylar Ürünler Sayfasında)</div>
+            <div className="dashboard-stat-label">Stok Değeri (Yakında)</div>
           </div>
         </div>
       </div>

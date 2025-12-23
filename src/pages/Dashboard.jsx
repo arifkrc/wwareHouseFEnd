@@ -186,7 +186,7 @@ export default function Dashboard() {
             <Package size={24} color="#2563eb" />
           </div>
           <div className="stat-content">
-            <div className="dashboard-stat-value">-</div>
+            <div className="dashboard-stat-value">{widgetStats.totalItemCount || 0}</div>
             <div className="dashboard-stat-label">Toplam Ürün</div>
           </div>
         </div>

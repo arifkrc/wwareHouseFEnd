@@ -189,10 +189,24 @@ export default function Table({
                                     const renderCell = col.render || col.cell;
                                     const value = renderCell ? renderCell(row) : getValue(row, col.accessor);
 
-                                    // Safety check for objects
-                                    const safeValue = (typeof value === 'object' && value !== null && !React.isValidElement(value))
-                                        ? JSON.stringify(value)
-                                        : value;
+                                    // Safety check logic inline or helper
+                                    let safeValue = value;
+
+                                    if (value === null || value === undefined) {
+                                        safeValue = '';
+                                    } else if (React.isValidElement(value)) {
+                                        safeValue = value;
+                                    } else if (Array.isArray(value)) {
+                                        // If array contains objects, React will crash. Stringify if unsafe.
+                                        const isSafeArray = value.every(item =>
+                                            ['string', 'number', 'boolean'].includes(typeof item) ||
+                                            item === null ||
+                                            React.isValidElement(item)
+                                        );
+                                        safeValue = isSafeArray ? value : JSON.stringify(value);
+                                    } else if (typeof value === 'object') {
+                                        safeValue = JSON.stringify(value);
+                                    }
 
                                     return (
                                         <td key={colIndex}>

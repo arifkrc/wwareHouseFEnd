@@ -33,6 +33,18 @@ const generateZoneConfig = () => {
 
   // Right Side (B1-B14)
   for (let i = 1; i <= 14; i++) {
+    // B1 is now PAKETLEME
+    if (i === 1) {
+      const code = 'PAKETLEME';
+      config[code] = {
+        section: 'right',
+        name: 'Paketleme',
+        color: '#506d95',
+        passive: false
+      };
+      continue;
+    }
+
     const code = `B${i}`;
     let name = code;
     let passive = false;

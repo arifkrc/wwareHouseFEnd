@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Package, Plus, CheckSquare, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft } from 'lucide-react';
 import ItemSearchSelect from './ItemSearchSelect';
 import ExpandableText from './ExpandableText';
+import Modal from './common/Modal';
+import Table from './common/Table';
+import Badge from './common/Badge';
+import Button from './common/Button';
 
 export default function ZoneModal({
     isOpen,
@@ -40,8 +44,6 @@ export default function ZoneModal({
         }
     }, [isOpen, zone]);
 
-    if (!isOpen || !zone) return null;
-
     const handleDescSave = async () => {
         await onUpdateDescription(zone.locationId, tempDesc);
         setIsEditingDesc(false);
@@ -54,245 +56,229 @@ export default function ZoneModal({
         setActiveTab('assigned');
     };
 
-    return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal modal-large" onClick={(e) => e.stopPropagation()}>
+    if (!zone) return null;
 
-                {/* Header */}
-                <div className="modal-header">
-                    <div style={{ flex: 1 }}>
-                        <h3 className="modal-title">
-                            <Package size={20} />
-                            {zone.name}
-                        </h3>
+    // Table Columns Definition
+    const columns = [
+        {
+            header: 'Ürün Kodu',
+            accessor: 'item_code',
+            render: (row) => <strong>{row.item_code}</strong>
+        },
+        {
+            header: 'Ürün Adı',
+            accessor: 'item_name',
+            render: (row) => <ExpandableText text={row.item_name} limit={20} />
+        },
+        {
+            header: 'Firma / Müşteri',
+            accessor: 'customer_code',
+            render: (row) => row.customer_code ? (
+                <Badge variant="warning">{row.customer_code}</Badge>
+            ) : (
+                <span className="text-muted text-small">Genel</span>
+            )
+        },
+        {
+            header: 'Not',
+            accessor: 'movement_note',
+            render: (row) => {
+                const displayNote = row.movement_note
+                    ? (row.movement_note.includes(':')
+                        ? row.movement_note.split(':').slice(1).join(':').trim()
+                        : row.movement_note)
+                    : '-';
+                return <span style={{ fontSize: '0.9em', color: '#475569' }}>{displayNote}</span>;
+            }
+        },
+        {
+            header: 'Stok',
+            accessor: 'quantity',
+            render: (row) => <Badge variant="success">{row.quantity}</Badge>
+        },
+        {
+            header: 'Açıklama',
+            accessor: 'description',
+            render: (row) => <ExpandableText text={row.description || '-'} limit={40} />
+        },
+        {
+            header: 'İşlemler',
+            render: (row) => (
+                <div className="action-buttons">
+                    <Button variant="icon" className="btn-success" onClick={() => onOpenMovementModal(row, 'IN')} title="Stok Arttır">
+                        <ArrowUpCircle size={16} />
+                    </Button>
+                    <Button variant="icon" className="btn-danger" onClick={() => onOpenMovementModal(row, 'OUT')} title="Stok Çıkışı">
+                        <ArrowDownCircle size={16} />
+                    </Button>
+                    <Button variant="icon" className="btn-warning" onClick={() => onOpenMovementModal(row, 'TRANSFER')} title="Transfer">
+                        <ArrowRightLeft size={16} />
+                    </Button>
+                </div>
+            )
+        }
+    ];
 
-                        {/* Editable Description */}
-                        <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            {isEditingDesc ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <input
-                                        type="text"
-                                        className="form-input"
-                                        style={{ padding: '4px 8px', fontSize: '14px', width: '200px' }}
-                                        value={tempDesc}
-                                        onChange={(e) => setTempDesc(e.target.value)}
-                                        placeholder="Açıklama girin..."
-                                        autoFocus
-                                    />
-                                    <button
-                                        className="btn-icon btn-success"
-                                        onClick={handleDescSave}
-                                        disabled={isProcessing}
-                                        title="Kaydet"
-                                    >
-                                        <CheckSquare size={16} />
-                                    </button>
-                                    <button
-                                        className="btn-icon btn-danger"
-                                        onClick={() => setIsEditingDesc(false)}
-                                        disabled={isProcessing}
-                                        title="İptal"
-                                    >
-                                        <span style={{ fontSize: '16px', fontWeight: 'bold' }}>×</span>
-                                    </button>
-                                </div>
-                            ) : (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ fontSize: '14px', color: '#64748b', fontStyle: 'italic' }}>
-                                        {zone.description || 'Stok'}
-                                    </span>
-                                    <button
-                                        className="btn-icon"
-                                        onClick={() => { setTempDesc(zone.description || ''); setIsEditingDesc(true); }}
-                                        title="Açıklamayı Düzenle"
-                                        style={{ opacity: 0.5 }}
-                                    >
-                                        <EditIcon size={14} />
-                                    </button>
-                                </div>
-                            )}
-                        </div>
+    // Modal Title Component
+    const ModalTitle = (
+        <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Package size={20} />
+                <span>{zone.name}</span>
+            </div>
+
+            {/* Editable Description */}
+            <div style={{ marginTop: '8px', fontSize: '14px' }}>
+                {isEditingDesc ? (
+                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        <input
+                            type="text"
+                            className="form-input"
+                            style={{ padding: '4px 8px', fontSize: '14px', width: '200px' }}
+                            value={tempDesc}
+                            onChange={(e) => setTempDesc(e.target.value)}
+                            placeholder="Açıklama girin..."
+                            autoFocus
+                        />
+                        <Button variant="success" size="sm" onClick={handleDescSave} disabled={isProcessing} className="p-1">
+                            <CheckSquare size={14} />
+                        </Button>
+                        <Button variant="danger" size="sm" onClick={() => setIsEditingDesc(false)} disabled={isProcessing} className="p-1">
+                            <span style={{ fontWeight: 'bold' }}>×</span>
+                        </Button>
                     </div>
-                    <button className="modal-close" onClick={onClose}>×</button>
-                </div>
+                ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ color: '#64748b', fontStyle: 'italic' }}>
+                            {zone.description || 'Stok'}
+                        </span>
+                        <button
+                            className="btn-icon"
+                            onClick={() => { setTempDesc(zone.description || ''); setIsEditingDesc(true); }}
+                            title="Açıklamayı Düzenle"
+                            style={{ opacity: 0.5 }}
+                        >
+                            <EditIcon size={14} />
+                        </button>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
 
-                {/* Tabs */}
-                <div className="tabs">
-                    <button
-                        className={`tab ${activeTab === 'assigned' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('assigned')}
-                    >
-                        Bu Alandaki Ürünler ({zoneItems.length})
-                    </button>
 
-                    <button
-                        className={`tab ${activeTab === 'add_stock' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('add_stock')}
-                        style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-                    >
-                        <Plus size={16} /> Stok Ekle
-                    </button>
-                </div>
+    return (
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={ModalTitle} // We pass the JSX title
+            size="lg"
+        >
+            {/* Tabs */}
+            <div className="tabs" style={{ marginBottom: '1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: '1rem' }}>
+                <button
+                    className={`tab ${activeTab === 'assigned' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('assigned')}
+                    style={{ paddingBottom: '0.5rem', borderBottom: activeTab === 'assigned' ? '2px solid #2563eb' : 'none', fontWeight: activeTab === 'assigned' ? 600 : 400 }}
+                >
+                    Bu Alandaki Ürünler ({zoneItems.length})
+                </button>
 
-                {/* Content */}
-                <div className="zone-items-container">
-                    {activeTab === 'assigned' && (
-                        zoneItems.length > 0 ? (
-                            <div className="table-container">
-                                <table className="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Ürün Kodu</th>
-                                            <th>Ürün Adı</th>
-                                            <th>Not</th>
-                                            <th>Stok</th>
-                                            <th>Açıklama</th>
-                                            <th>İşlemler</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {zoneItems.map((item, index) => {
-                                            const displayNote = item.movement_note
-                                                ? (item.movement_note.includes(':')
-                                                    ? item.movement_note.split(':').slice(1).join(':').trim()
-                                                    : item.movement_note)
-                                                : '-';
+                <button
+                    className={`tab ${activeTab === 'add_stock' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('add_stock')}
+                    style={{ paddingBottom: '0.5rem', borderBottom: activeTab === 'add_stock' ? '2px solid #2563eb' : 'none', fontWeight: activeTab === 'add_stock' ? 600 : 400, display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                    <Plus size={16} /> Stok Ekle
+                </button>
+            </div>
 
-                                            return (
-                                                <tr key={item.allocation_id || index}>
-                                                    <td><strong>{item.item_code}</strong></td>
-                                                    <td><ExpandableText text={item.item_name} limit={20} /></td>
-                                                    <td>
-                                                        <span style={{ fontSize: '0.9em', color: '#475569' }}>
-                                                            {displayNote}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <span className="badge badge-success">
-                                                            {item.quantity}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <span className="item-description">
-                                                            <ExpandableText text={item.description || '-'} limit={50} />
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <div className="action-buttons">
-                                                            <button
-                                                                className="btn-icon btn-success"
-                                                                onClick={() => onOpenMovementModal(item, 'IN')}
-                                                                title="Stok Arttır"
-                                                            >
-                                                                <ArrowUpCircle size={16} />
-                                                            </button>
-                                                            <button
-                                                                className="btn-icon btn-danger"
-                                                                onClick={() => onOpenMovementModal(item, 'OUT')}
-                                                                title="Stok Çıkışı"
-                                                            >
-                                                                <ArrowDownCircle size={16} />
-                                                            </button>
-                                                            <button
-                                                                className="btn-icon btn-warning"
-                                                                onClick={() => onOpenMovementModal(item, 'TRANSFER')}
-                                                                title="Transfer"
-                                                            >
-                                                                <ArrowRightLeft size={16} />
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        ) : (
-                            <div className="empty-state">
-                                <Package size={48} />
-                                <p>Bu bölgede henüz ürün yok</p>
-                                <small>Atanmamış Ürünler sekmesinden ürün atayabilirsiniz</small>
-                            </div>
-                        )
-                    )}
+            {/* Content */}
+            <div className="zone-items-container">
+                {activeTab === 'assigned' && (
+                    <Table
+                        columns={columns}
+                        data={zoneItems}
+                        emptyMessage="Bu bölgede henüz ürün yok"
+                    />
+                )}
 
-                    {activeTab === 'add_stock' && (
-                        <div className="add-stock-panel" style={{ padding: '1rem' }}>
-                            <div className="alert alert-info" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <Package size={18} />
-                                <span><strong>{zone.name}</strong> alanına yeni stok girişi yapıyorsunuz.</span>
+                {activeTab === 'add_stock' && (
+                    <div className="add-stock-panel" style={{ padding: '0.5rem' }}>
+                        <div className="alert alert-info" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px', padding: '1rem', background: '#eff6ff', borderRadius: '8px', color: '#1e40af' }}>
+                            <Package size={18} />
+                            <span><strong>{zone.name}</strong> alanına yeni stok girişi yapıyorsunuz.</span>
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Ürün Seç *</label>
+                            <ItemSearchSelect
+                                items={allItems}
+                                value={addStockForm.itemId}
+                                onChange={(newId) => setAddStockForm({ ...addStockForm, itemId: newId })}
+                                placeholder="Ürün kodu ara..."
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Miktar *</label>
+                            <input
+                                type="number"
+                                className="form-input"
+                                value={addStockForm.quantity}
+                                onChange={(e) => setAddStockForm({ ...addStockForm, quantity: e.target.value })}
+                                placeholder="Adet girin"
+                                min="1"
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <div
+                                style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', marginBottom: '8px', color: '#64748b' }}
+                                onClick={() => setAddStockForm(prev => ({ ...prev, showCustomerInput: !prev.showCustomerInput }))}
+                            >
+                                {addStockForm.showCustomerInput ? <CheckSquare size={16} style={{ marginRight: 6, color: '#2563eb' }} /> : <Plus size={16} style={{ marginRight: 6 }} />}
+                                <span style={{ fontSize: '14px', fontWeight: 500 }}>Firma / Müşteri Ata</span>
                             </div>
 
-                            <div className="form-group">
-                                <label className="form-label">Ürün Seç *</label>
-                                <ItemSearchSelect
-                                    items={allItems}
-                                    value={addStockForm.itemId}
-                                    onChange={(newId) => setAddStockForm({ ...addStockForm, itemId: newId })}
-                                    placeholder="Ürün kodu ara..."
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label className="form-label">Miktar *</label>
-                                <input
-                                    type="number"
-                                    className="form-input"
-                                    value={addStockForm.quantity}
-                                    onChange={(e) => setAddStockForm({ ...addStockForm, quantity: e.target.value })}
-                                    placeholder="Adet girin"
-                                    min="1"
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <div
-                                    style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', marginBottom: '8px', color: '#64748b' }}
-                                    onClick={() => setAddStockForm(prev => ({ ...prev, showCustomerInput: !prev.showCustomerInput }))}
-                                >
-                                    {addStockForm.showCustomerInput ? <CheckSquare size={16} style={{ marginRight: 6, color: '#2563eb' }} /> : <Plus size={16} style={{ marginRight: 6 }} />}
-                                    <span style={{ fontSize: '14px', fontWeight: 500 }}>Firma / Müşteri Ata</span>
-                                </div>
-
-                                {addStockForm.showCustomerInput && (
-                                    <input
-                                        type="text"
-                                        className="form-input"
-                                        value={addStockForm.customerCode}
-                                        onChange={(e) => setAddStockForm({ ...addStockForm, customerCode: e.target.value })}
-                                        placeholder="Örn: Firma A (Sevkiyat yapılacak yer)"
-                                        autoFocus
-                                    />
-                                )}
-                            </div>
-
-                            <div className="form-group">
-                                <label className="form-label">Not</label>
+                            {addStockForm.showCustomerInput && (
                                 <input
                                     type="text"
                                     className="form-input"
-                                    value={addStockForm.notes}
-                                    onChange={(e) => setAddStockForm({ ...addStockForm, notes: e.target.value })}
-                                    placeholder="Opsiyonel açıklama"
+                                    value={addStockForm.customerCode}
+                                    onChange={(e) => setAddStockForm({ ...addStockForm, customerCode: e.target.value })}
+                                    placeholder="Örn: Firma A (Sevkiyat yapılacak yer)"
+                                    autoFocus
                                 />
-                            </div>
-
-                            <div style={{ marginTop: '1.5rem' }}>
-                                <button
-                                    className="btn btn-primary btn-large"
-                                    style={{ width: '100%' }}
-                                    onClick={handleStockSubmit}
-                                    disabled={isProcessing}
-                                >
-                                    {isProcessing ? 'Ekleniyor...' : 'Stoğa Ekle'}
-                                </button>
-                            </div>
+                            )}
                         </div>
-                    )}
-                </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Not</label>
+                            <input
+                                type="text"
+                                className="form-input"
+                                value={addStockForm.notes}
+                                onChange={(e) => setAddStockForm({ ...addStockForm, notes: e.target.value })}
+                                placeholder="Opsiyonel açıklama"
+                            />
+                        </div>
+
+                        <div style={{ marginTop: '1.5rem' }}>
+                            <Button
+                                variant="primary"
+                                size="lg"
+                                style={{ width: '100%' }}
+                                onClick={handleStockSubmit}
+                                isLoading={isProcessing}
+                            >
+                                Stoğa Ekle
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </div>
-        </div>
+        </Modal>
     );
 }
 

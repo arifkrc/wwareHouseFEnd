@@ -6,12 +6,22 @@ export const useItems = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchItems = useCallback(async () => {
+  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 20, totalPages: 1 });
+
+  const fetchItems = useCallback(async (params = {}) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.get('/items');
-      setItems(Array.isArray(response.data) ? response.data : []);
+      const queryString = new URLSearchParams(params).toString();
+      const response = await api.get(`/items?${queryString}`);
+
+      if (response.data.pagination) {
+        setItems(response.data.data || []);
+        setPagination(response.data.pagination);
+      } else {
+        // Fallback for non-paginated endpoints (if any) or old structure
+        setItems(Array.isArray(response.data) ? response.data : []);
+      }
       return response.data;
     } catch (err) {
       setError(err.message || 'Ürünler yüklenemedi');
@@ -78,6 +88,7 @@ export const useItems = () => {
     updateItem,
     deleteItem,
     bulkCreateItems,
+    pagination,
     // bulkAssignLocation removed - use movements/in instead
   };
 };

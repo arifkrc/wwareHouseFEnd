@@ -415,8 +415,6 @@ export default function Items() {
                         <select
                             className="form-select"
                             style={{ paddingLeft: '32px', minWidth: '140px', height: '40px' }}
-                            className="form-select"
-                            style={{ paddingLeft: '32px', minWidth: '140px', height: '40px' }}
                             value={filterType}
                             onChange={handleFilterType}
                         >

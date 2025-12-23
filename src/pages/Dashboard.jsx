@@ -237,9 +237,9 @@ export default function Dashboard() {
           </div>
           <div className="stat-content">
             <div className="dashboard-stat-value">
-              -
+              {widgetStats.totalItemCount || 0}
             </div>
-            <div className="dashboard-stat-label">Stok Değeri (Yakında)</div>
+            <div className="dashboard-stat-label">Ürün Çeşidi (Kalem)</div>
           </div>
         </div>
       </div>

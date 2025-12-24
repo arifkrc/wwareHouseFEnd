@@ -442,7 +442,7 @@ export default function Items() {
                             checked={showZeroStock}
                             onChange={handleStockFilter}
                         />
-                        Stokluları Göster
+                        Stoksuzları Göster
                     </label>
 
                     <div className="search-box" style={{ position: 'relative' }}>

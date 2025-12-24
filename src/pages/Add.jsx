@@ -5,7 +5,8 @@ import { useItems } from '../hooks/useItems';
 import { useLocations } from '../hooks/useLocations';
 import { useToast } from '../hooks/useToast';
 import api from '../services/api';
-import './Add.css';
+import { parseCSV } from '../utils/csvParser';
+import './Add.scss';
 
 
 export default function Add() {
@@ -147,31 +148,12 @@ export default function Add() {
                     if (!file) return;
                     const reader = new FileReader();
                     reader.onload = (ev) => {
-                      // parse CSV (header expected: item_code,item_name,description,initial_quantity,location_code)
                       const text = ev.target.result;
-                      const lines = text.trim().split('\n');
-                      const parsed = [];
-                      const errors = [];
-                      lines.forEach((line, idx) => {
-                        if (idx === 0) return; // header
-                        const cols = line.split(',').map(s => s.trim());
-                        const [item_code, item_name, description, initial_quantity, location_code] = cols;
-                        if (!item_code || !item_name) {
-                          errors.push(`Satır ${idx + 1}: eksik item_code veya item_name`);
-                          return;
-                        }
-                        const qty = parseInt(initial_quantity) || 0;
-                        parsed.push({
-                          item_code: item_code.slice(0, 100),
-                          item_name: item_name.slice(0, 255),
-                          description: (description || '').slice(0, 1000),
-                          quantity: qty,
-                          location_code: location_code || null
-                        });
-                      });
+                      const { parsedItems, errors } = parseCSV(text);
+
                       if (errors.length) setBulkError(errors.join('; ')); else setBulkError('');
-                      setBulkItems(parsed);
-                      setBulkSuccess(parsed.length > 0 ? `${parsed.length} satır yüklendi` : '');
+                      setBulkItems(parsedItems);
+                      setBulkSuccess(parsedItems.length > 0 ? `${parsedItems.length} satır yüklendi` : '');
                     };
                     reader.readAsText(file);
                   }}

@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { Upload, Plus, Trash2, Save, MapPin } from 'lucide-react';
 import { useLocations } from '../hooks/useLocations';
 import { useItems } from '../hooks/useItems';
-import './BulkImport.css';
+import { parseCSV } from '../utils/csvParser';
+import './BulkImport.scss';
 
 export default function BulkImport() {
   const { locations } = useLocations();
   const { bulkCreateItems } = useItems();
-  
+
   const [items, setItems] = useState([
     { item_code: '', item_name: '', quantity: 0, location_id: '', description: '' }
   ]);
@@ -26,7 +27,7 @@ export default function BulkImport() {
 
   const updateItem = (index, field, value) => {
     const newItems = [...items];
-    
+
     // Validate quantity field
     if (field === 'quantity') {
       const numValue = parseInt(value);
@@ -51,7 +52,7 @@ export default function BulkImport() {
     } else {
       newItems[index][field] = value;
     }
-    
+
     setItems(newItems);
   };
 
@@ -75,7 +76,7 @@ export default function BulkImport() {
         quantity: typeof item.quantity === 'number' ? item.quantity : 0,
         location_id: item.location_id && item.location_id !== '' ? item.location_id : null
       }));
-      
+
       if (validItems.length === 0) {
         setError('En az bir geçerli ürün girmelisiniz (Ürün kodu ve adı zorunludur)');
         setLoading(false);
@@ -101,55 +102,37 @@ export default function BulkImport() {
     }
   };
 
-  const parseCSV = (text) => {
-    const lines = text.trim().split('\n');
-    const parsedItems = [];
-    const errors = [];
-
-    lines.forEach((line, index) => {
-      if (index === 0) return; // Skip header
-      
-      const [item_code, item_name, quantity, description] = line.split(',').map(s => s.trim());
-      
-      if (!item_code || !item_name) {
-        errors.push(`Satır ${index + 1}: Ürün kodu ve adı zorunludur`);
-        return;
-      }
-
-      const qty = parseInt(quantity);
-      if (isNaN(qty) || qty < 0) {
-        errors.push(`Satır ${index + 1}: Geçersiz miktar değeri`);
-        return;
-      }
-
-      parsedItems.push({
-        item_code: item_code.slice(0, 100),
-        item_name: item_name.slice(0, 255),
-        quantity: Math.min(qty, 1000000),
-        location_id: '',
-        description: (description || '').slice(0, 1000)
-      });
-    });
-
-    if (errors.length > 0) {
-      setError(errors.join(', '));
-    }
-
-    if (parsedItems.length > 0) {
-      setItems(parsedItems);
-      setSuccess(`${parsedItems.length} satır CSV'den yüklendi${errors.length > 0 ? ` (${errors.length} hata atlandı)` : ''}`);
-    } else if (errors.length > 0) {
-      setError('CSV dosyası geçerli ürün içermiyor');
-    }
-  };
-
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      parseCSV(event.target.result);
+      const { parsedItems, errors } = parseCSV(event.target.result);
+
+      if (parsedItems.length > 0) {
+        // Map parsed items to BulkImport specific structure if needed, or stick to shared format.
+        // The shared format returns { item_code, item_name, quantity, description, location_code }.
+        // BulkImport state uses { location_id }, but parsed has location_code.
+        // We'll map location_code to location_id if possible, or leave blank for user to select.
+
+        // Wait, BulkImport component logic uses `location_id`. Ideally we should map codes to IDs.
+        // For now, let's just populate the fields we have.
+
+        const mappedItems = parsedItems.map(p => ({
+          ...p,
+          location_id: '' // Reset location ID as we only have code from CSV potentially
+        }));
+
+        setItems(mappedItems);
+        setSuccess(`${mappedItems.length} satır CSV'den yüklendi${errors.length > 0 ? ` (${errors.length} hata atlandı)` : ''}`);
+      }
+
+      if (errors.length > 0) {
+        setError(errors.join(', '));
+      } else if (parsedItems.length === 0) {
+        setError('CSV dosyası geçerli ürün içermiyor');
+      }
     };
     reader.readAsText(file);
   };
@@ -292,9 +275,9 @@ export default function BulkImport() {
         <h4>CSV Formatı</h4>
         <p>CSV dosyanız şu formatta olmalıdır:</p>
         <pre>
-item_code,item_name,quantity,description
-PRD-001,Laptop Dell XPS,10,15 inch
-PRD-002,Mouse Logitech,50,Kablosuz
+          item_code,item_name,quantity,description
+          PRD-001,Laptop Dell XPS,10,15 inch
+          PRD-002,Mouse Logitech,50,Kablosuz
         </pre>
       </div>
     </div>

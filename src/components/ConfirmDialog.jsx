@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import './ConfirmDialog.css';
+import './ConfirmDialog.scss';
 
 export default function ConfirmDialog({ isOpen, onClose, onConfirm, title, message, confirmText = 'Onayla', cancelText = 'İptal', type = 'danger' }) {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -27,21 +27,21 @@ export default function ConfirmDialog({ isOpen, onClose, onConfirm, title, messa
           </div>
           <h3>{title}</h3>
         </div>
-        
+
         <div className="confirm-body">
           <p>{message}</p>
         </div>
-        
+
         <div className="confirm-footer">
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="btn btn-secondary"
             disabled={isProcessing}
           >
             {cancelText}
           </button>
-          <button 
-            onClick={handleConfirm} 
+          <button
+            onClick={handleConfirm}
             className={`btn btn-${type === 'danger' ? 'danger' : 'primary'}`}
             disabled={isProcessing}
           >

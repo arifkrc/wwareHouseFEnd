@@ -10,7 +10,8 @@ import { MOVEMENT_TYPES } from '../utils/movementHelpers';
 import api from '../services/api';
 import ZoneModal from '../components/ZoneModal';
 import MovementModal from '../components/MovementModal';
-import './FactoryLayout.css';
+import ZoneSection from '../components/ZoneSection';
+import './FactoryLayout.scss';
 
 
 
@@ -251,95 +252,29 @@ export default function FactoryLayout() {
 
       <div className="warehouse-container">
         {/* STREÇ */}
-        <div className="warehouse-section left-section">
-          <div className="section-header">STREÇ</div>
-          {zones.filter(z => z.section === 'left').map(zone => (
-            <div
-              key={zone.id}
-              className={`warehouse-zone ${zone.passive ? 'zone-passive' : ''}`}
-              style={{ backgroundColor: zone.color }}
-              onClick={() => editZone(zone)}
-            >
-              <div className="zone-content-wrapper">
-                <div className="zone-label-center">{zone.name}</div>
-                {!zone.passive && (
-                  zone.itemCount > 0 ? (
-                    <div className="zone-stats-left">
-                      <div className="zone-stat-item">
-                        <span className="stat-value">{zone.itemCount}</span>
-                        <span className="stat-label">ürün</span>
-                      </div>
-                      <div className="zone-stat-item">
-                        <span className="stat-value">{zone.totalQuantity}</span>
-                        <span className="stat-label">adet</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="zone-empty">Boş</div>
-                  )
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        <ZoneSection
+          title="STREÇ"
+          zones={zones.filter(z => z.section === 'left')}
+          className="warehouse-section left-section"
+          onZoneClick={editZone}
+        />
 
         {/* KORİDOR */}
-        <div className="corridor-section">
-          <div className="section-header">KORİDOR</div>
-          {zones.filter(z => z.section === 'corridor').map(zone => (
-            <div
-              key={zone.id}
-              className={`warehouse-zone corridor-zone ${zone.passive ? 'zone-passive' : ''}`}
-              style={{ backgroundColor: zone.color }}
-              onClick={() => editZone(zone)}
-            >
-              <div className="zone-name-badge">{zone.name}</div>
-              {!zone.passive && (
-                zone.itemCount > 0 ? (
-                  <div className="corridor-stats-bottom">
-                    <span className="stat-compact">{zone.itemCount} Ürün</span>
-                    <span className="stat-compact">{zone.totalQuantity} Adet</span>
-                  </div>
-                ) : (
-                  <div className="zone-empty-corridor">Boş</div>
-                )
-              )}
-            </div>
-          ))}
-        </div>
+        <ZoneSection
+          title="KORİDOR"
+          zones={zones.filter(z => z.section === 'corridor')}
+          className="corridor-section"
+          type="corridor"
+          onZoneClick={editZone}
+        />
 
         {/* KARŞI DUVAR */}
-        <div className="warehouse-section right-section">
-          <div className="section-header">KARŞI DUVAR</div>
-          {zones.filter(z => z.section === 'right').map(zone => (
-            <div
-              key={zone.id}
-              className={`warehouse-zone ${zone.passive ? 'zone-passive' : ''}`}
-              style={{ backgroundColor: zone.color }}
-              onClick={() => editZone(zone)}
-            >
-              <div className="zone-content-wrapper">
-                <div className="zone-label-center">{zone.name}</div>
-                {!zone.passive && (
-                  zone.itemCount > 0 ? (
-                    <div className="zone-stats-left">
-                      <div className="zone-stat-item">
-                        <span className="stat-value">{zone.itemCount}</span>
-                        <span className="stat-label">ürün</span>
-                      </div>
-                      <div className="zone-stat-item">
-                        <span className="stat-value">{zone.totalQuantity}</span>
-                        <span className="stat-label">adet</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="zone-empty">Boş</div>
-                  )
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        <ZoneSection
+          title="KARŞI DUVAR"
+          zones={zones.filter(z => z.section === 'right')}
+          className="warehouse-section right-section"
+          onZoneClick={editZone}
+        />
       </div>
 
       <div className="layout-info">

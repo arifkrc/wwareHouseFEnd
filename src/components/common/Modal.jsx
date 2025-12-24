@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
-import './Modal.css'; // We will create this CSS
+import './Modal.scss'; // We will create this CSS
 
 export default function Modal({
     isOpen,

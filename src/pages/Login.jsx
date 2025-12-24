@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { LogIn, Package } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 import Toast from '../components/Toast';
-import './Login.css';
+import './Login.scss';
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -13,7 +13,7 @@ export default function Login() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toasts, removeToast, error: showError } = useToast();

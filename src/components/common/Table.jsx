@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ArrowUp, ArrowDown, Filter, Search, X } from 'lucide-react';
-import './Table.css';
+import Skeleton from './Skeleton';
+import './Table.scss';
 
 export default function Table({
     columns,
@@ -86,10 +87,13 @@ export default function Table({
     // Handlers
     const handleSort = (accessor) => {
         if (!accessor) return;
-        setSortConfig(current => ({
-            key: accessor,
-            direction: current.key === accessor && current.direction === 'asc' ? 'desc' : 'asc'
-        }));
+        setSortConfig(current => {
+            if (current.key === accessor) {
+                if (current.direction === 'asc') return { key: accessor, direction: 'desc' };
+                if (current.direction === 'desc') return { key: null, direction: 'asc' }; // Reset
+            }
+            return { key: accessor, direction: 'asc' };
+        });
     };
 
     const toggleFilterDropdown = (e, accessor) => {
@@ -173,11 +177,15 @@ export default function Table({
                 </thead>
                 <tbody>
                     {isLoading ? (
-                        <tr>
-                            <td colSpan={columns.length} className="text-center py-8 text-muted">
-                                <div className="spinner" style={{ margin: '0 auto' }}></div>
-                            </td>
-                        </tr>
+                        Array.from({ length: 5 }).map((_, idx) => (
+                            <tr key={`skeleton-${idx}`}>
+                                {columns.map((_, colIdx) => (
+                                    <td key={colIdx} style={{ padding: '1rem', borderBottom: '1px solid #f1f5f9' }}>
+                                        <Skeleton height="20px" width={`${Math.floor(Math.random() * 40 + 60)}%`} borderRadius="4px" />
+                                    </td>
+                                ))}
+                            </tr>
+                        ))
                     ) : (processedData && processedData.length > 0) ? (
                         processedData.map((row, rowIndex) => (
                             <tr

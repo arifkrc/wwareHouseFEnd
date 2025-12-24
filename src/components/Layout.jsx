@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LayoutGrid, Package, History, BarChart3, Plus, LogOut, User, Menu, X, Settings } from 'lucide-react';
-import './Layout.css';
+import './Layout.scss';
 
 export default function Layout({ children }) {
   const { user, logout, isAdmin } = useAuth();

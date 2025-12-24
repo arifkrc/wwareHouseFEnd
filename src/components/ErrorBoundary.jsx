@@ -1,10 +1,10 @@
 import React from 'react';
-import './ErrorBoundary.css';
+import './ErrorBoundary.scss';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { 
+    this.state = {
       hasError: false,
       error: null,
       errorInfo: null
@@ -24,7 +24,7 @@ class ErrorBoundary extends React.Component {
   }
 
   handleReset = () => {
-    this.setState({ 
+    this.setState({
       hasError: false,
       error: null,
       errorInfo: null
@@ -42,7 +42,7 @@ class ErrorBoundary extends React.Component {
             <p className="error-message">
               Üzgünüz, bir şeyler ters gitti. Lütfen sayfayı yenileyin veya ana sayfaya dönün.
             </p>
-            
+
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details className="error-details">
                 <summary>Hata Detayları (Geliştirici Modu)</summary>

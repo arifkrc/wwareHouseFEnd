@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { CheckCircle, XCircle, Info, AlertTriangle } from 'lucide-react';
-import './Toast.css';
+import './Toast.scss';
 
 export default function Toast({ message, type = 'success', duration = 3000, onClose }) {
   useEffect(() => {

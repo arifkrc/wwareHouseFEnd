@@ -1,0 +1,174 @@
+.section-header {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    padding: 0.5rem;
+    background: var(--surface);
+    border-radius: 0.5rem;
+    border: 2px solid var(--border);
+    box-shadow: var(--shadow);
+    flex-shrink: 0;
+}
+
+.warehouse-zone {
+    position: relative;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    text-align: center;
+    box-shadow: var(--shadow);
+    border: 2px solid transparent;
+    height: 65px;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+    overflow: hidden;
+    gap: 0.25rem;
+}
+
+.warehouse-zone:active {
+    transform: scale(0.98);
+}
+
+.warehouse-zone:hover {
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.warehouse-zone.zone-passive {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.warehouse-zone.zone-passive:hover {
+    box-shadow: var(--shadow);
+    border-color: transparent;
+    transform: none;
+}
+
+.zone-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 100%;
+}
+
+.zone-label-center {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
+.zone-stats-left {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 0.25rem;
+}
+
+.zone-stat-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.stat-value {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.stat-label {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.zone-empty {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
+    text-align: left;
+    padding-left: 0.25rem;
+}
+
+/* Corridor Specific */
+.corridor-zone {
+    height: 65px;
+    padding: 0.4rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.zone-name-badge {
+    position: absolute;
+    top: 0.25rem;
+    left: 0.25rem;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+}
+
+.corridor-stats-bottom {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.25rem;
+}
+
+.stat-compact {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+}
+
+.zone-empty-corridor {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
+    margin-bottom: 0.25rem;
+}
+
+@media (max-width: 1200px) {
+    .section-header {
+        font-size: 0.65rem;
+        padding: 0.4rem;
+    }
+
+    .warehouse-zone {
+        min-height: 55px;
+        padding: 0.5rem;
+    }
+
+    .corridor-zone {
+        min-height: 45px;
+        padding: 0.4rem;
+    }
+}

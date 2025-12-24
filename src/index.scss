@@ -102,6 +102,25 @@ body {
   background: var(--bg);
 }
 
+.btn-icon {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.75rem;
+}
+
+.btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+}
+
 /* Forms */
 .form-group {
   margin-bottom: 1.25rem;

@@ -1,70 +1,60 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 
 export const useLocations = () => {
-  const [locations, setLocations] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
 
-  const fetchLocations = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
+  // Query: Fetch Locations
+  const { data: locations = [], isLoading: loading, error } = useQuery({
+    queryKey: ['locations'],
+    queryFn: async () => {
       const response = await api.get('/locations');
-      setLocations(response.data);
       return response.data;
-    } catch (err) {
-      setError(err.message || 'Lokasyonlar yüklenemedi');
-      console.error('Lokasyon yükleme hatası:', err);
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
 
-  useEffect(() => {
-    fetchLocations();
-  }, [fetchLocations]);
+  // Mutation: Create Location
+  const createMutation = useMutation({
+    mutationFn: (locationData) => api.post('/locations', locationData),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['locations']);
+    },
+  });
 
-  const createLocation = useCallback(async (locationData) => {
-    try {
-      const response = await api.post('/locations', locationData);
-      await fetchLocations(); // Refresh list
-      return response.data;
-    } catch (err) {
-      setError(err.message || 'Lokasyon oluşturulamadı');
-      throw err;
-    }
-  }, [fetchLocations]);
+  // Mutation: Update Location
+  const updateMutation = useMutation({
+    mutationFn: ({ id, ...data }) => api.put(`/locations/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['locations']);
+    },
+  });
 
-  const updateLocation = useCallback(async (id, locationData) => {
-    try {
-      const response = await api.put(`/locations/${id}`, locationData);
-      await fetchLocations(); // Refresh list
-      return response.data;
-    } catch (err) {
-      setError(err.message || 'Lokasyon güncellenemedi');
-      throw err;
-    }
-  }, [fetchLocations]);
-
-  const deleteLocation = useCallback(async (id) => {
-    try {
-      await api.delete(`/locations/${id}`);
-      await fetchLocations(); // Refresh list
-    } catch (err) {
-      setError(err.message || 'Lokasyon silinemedi');
-      throw err;
-    }
-  }, [fetchLocations]);
+  // Mutation: Delete Location
+  const deleteMutation = useMutation({
+    mutationFn: (id) => api.delete(`/locations/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['locations']);
+    },
+  });
 
   return {
     locations,
     loading,
-    error,
-    refresh: fetchLocations,
-    createLocation,
-    updateLocation,
-    deleteLocation,
+    error: error ? (error.message || 'Lokasyonlar yüklenemedi') : null,
+    refresh: () => queryClient.invalidateQueries(['locations']), // Manual refresh if needed
+
+    // Wrappers to maintain API compatibility with old hook
+    createLocation: async (data) => {
+      const res = await createMutation.mutateAsync(data);
+      return res.data;
+    },
+    updateLocation: async (id, data) => {
+      const res = await updateMutation.mutateAsync({ id, ...data });
+      return res.data;
+    },
+    deleteLocation: async (id) => {
+      await deleteMutation.mutateAsync(id);
+    }
   };
 };

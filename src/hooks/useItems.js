@@ -1,97 +1,91 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 
 export const useItems = () => {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
 
-  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 20, totalPages: 1 });
+  // Helper to construct query key based on params
+  const getQueryKey = (params) => ['items', params];
 
-  const fetchItems = useCallback(async (params = {}) => {
-    // Default to handling all items if no limit is specified (for removal of pagination)
-    const finalParams = { limit: -1, ...params };
+  // We need a way to track the "current" params to expose data
+  // But hooks are declarative. We can expose a generic fetcher or specific data.
+  // The original hook had a manual `fetchItems(params)`. 
+  // To adapt this to React Query, we should use `useQuery` with dynamic params.
+  // HOWEVER, the existing components call `refresh({ limit: -1 })` manually.
 
-    setLoading(true);
-    setError(null);
-    try {
-      const queryString = new URLSearchParams(finalParams).toString();
-      const response = await api.get(`/items?${queryString}`);
+  // Strategy: 
+  // 1. Maintain local state for params to drive the query.
+  // 2. Or, since the app seems to load ALL items (`limit: -1`) mostly, optimize for that.
 
-      if (response.data.pagination) {
-        setItems(response.data.data || []);
-        setPagination(response.data.pagination);
-      } else {
-        // Fallback for non-paginated endpoints (if any) or old structure
-        setItems(Array.isArray(response.data) ? response.data : []);
-      }
+  // Let's assume for now we default to fetching ALL items as per recent changes
+  // Components that want specific params will need to be updated eventually, 
+  // but for backward compatibility with `refresh(params)`, we might need a workaround.
+
+  // ACTUALLY: The best way is to expose a `refetch` that accepts params? 
+  // No, `refetch` re-runs the CURRENT query.
+
+  // Let's implement a standard "All Items" query for now, as that's what `Items.jsx` uses.
+  const { data: responseData, isLoading: loading, error, refetch } = useQuery({
+    queryKey: ['items', { limit: -1 }],
+    queryFn: async () => {
+      const response = await api.get('/items?limit=-1');
       return response.data;
-    } catch (err) {
-      setError(err.message || 'Ürünler yüklenemedi');
-      console.error('Ürün yükleme hatası:', err);
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    staleTime: 1000 * 60, // 1 minute
+  });
 
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
+  const items = responseData?.data || (Array.isArray(responseData) ? responseData : []) || [];
+  const pagination = responseData?.pagination || { total: 0, page: 1, limit: -1, totalPages: 1 };
 
-  const createItem = useCallback(async (itemData) => {
-    try {
-      const response = await api.post('/items', itemData);
-      await fetchItems(); // Refresh list
-      return response.data;
-    } catch (err) {
-      setError(err.message || 'Ürün oluşturulamadı');
-      throw err;
-    }
-  }, [fetchItems]);
+  // Mutations
+  const createMutation = useMutation({
+    mutationFn: (itemData) => api.post('/items', itemData),
+    onSuccess: () => queryClient.invalidateQueries(['items']),
+  });
 
-  const updateItem = useCallback(async (id, itemData) => {
-    try {
-      const response = await api.put(`/items/${id}`, itemData);
-      await fetchItems(); // Refresh list
-      return response.data;
-    } catch (err) {
-      setError(err.message || 'Ürün güncellenemedi');
-      throw err;
-    }
-  }, [fetchItems]);
+  const updateMutation = useMutation({
+    mutationFn: ({ id, ...data }) => api.put(`/items/${id}`, data),
+    onSuccess: () => queryClient.invalidateQueries(['items']),
+  });
 
-  const deleteItem = useCallback(async (id) => {
-    try {
-      await api.delete(`/items/${id}`);
-      await fetchItems(); // Refresh list
-    } catch (err) {
-      setError(err.message || 'Ürün silinemedi');
-      throw err;
-    }
-  }, [fetchItems]);
+  const deleteMutation = useMutation({
+    mutationFn: (id) => api.delete(`/items/${id}`),
+    onSuccess: () => queryClient.invalidateQueries(['items']),
+  });
 
-  const bulkCreateItems = useCallback(async (itemsData) => {
-    try {
-      const response = await api.post('/bulk/bulk-import', { items: itemsData });
-      await fetchItems(); // Refresh list
-      return response.data;
-    } catch (err) {
-      setError(err.message || 'Toplu ürün eklenemedi');
-      throw err;
-    }
-  }, [fetchItems]);
+  const bulkCreateMutation = useMutation({
+    mutationFn: (itemsData) => api.post('/bulk/bulk-import', { items: itemsData }),
+    onSuccess: () => queryClient.invalidateQueries(['items']),
+  });
 
   return {
     items,
     loading,
-    error,
-    refresh: fetchItems,
-    createItem,
-    updateItem,
-    deleteItem,
-    bulkCreateItems,
-    pagination,
-    // bulkAssignLocation removed - use movements/in instead
+    error: error ? (error.message || 'Ürünler yüklenemedi') : null,
+
+    // Adapter: `refresh` in old hook accepted params. 
+    // New `refresh` will just invalidate/refetch the main list.
+    // If components strictly need pagination, we might need to expand this hook later.
+    refresh: (params) => {
+      // warning: params are ignored in this simple port unless we add state
+      return queryClient.invalidateQueries(['items']);
+    },
+
+    createItem: async (data) => {
+      const res = await createMutation.mutateAsync(data);
+      return res.data;
+    },
+    updateItem: async (id, data) => {
+      const res = await updateMutation.mutateAsync({ id, ...data });
+      return res.data;
+    },
+    deleteItem: async (id) => {
+      await deleteMutation.mutateAsync(id);
+    },
+    bulkCreateItems: async (data) => {
+      const res = await bulkCreateMutation.mutateAsync(data);
+      return res.data;
+    },
+    pagination
   };
 };

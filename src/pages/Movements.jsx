@@ -3,7 +3,10 @@ import { History, RefreshCw } from 'lucide-react';
 import { useMovements } from '../hooks/useMovements';
 import { getMovementTypeLabel, getMovementTypeBadge, MOVEMENT_TYPES } from '../utils/movementHelpers';
 import { formatDate } from '../utils/dateHelper';
-import './Movements.css';
+import Button from '../components/common/Button';
+import Pagination from '../components/Pagination';
+import Skeleton from '../components/common/Skeleton';
+import './Movements.scss';
 
 export default function Movements() {
   const { movements, pagination, refresh: refreshMovements, loading } = useMovements();
@@ -87,13 +90,14 @@ export default function Movements() {
             onChange={(e) => setSearch(e.target.value)}
             style={{ width: '200px' }}
           />
-          <button
-            className="btn btn-secondary"
+          <Button
+            variant="secondary"
             onClick={() => refreshMovements({ page: 1, limit: 20, search, sortBy, order, start_date: dateRange.startDate, end_date: dateRange.endDate })}
             disabled={loading}
+            icon={RefreshCw}
           >
-            <RefreshCw size={18} /> Yenile
-          </button>
+            Yenile
+          </Button>
         </div>
       </div>
 
@@ -114,11 +118,15 @@ export default function Movements() {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', padding: '2rem' }}>
-                    <div className="spinner"></div>
-                  </td>
-                </tr>
+                Array.from({ length: 5 }).map((_, idx) => (
+                  <tr key={`skeleton-${idx}`}>
+                    {Array.from({ length: 8 }).map((_, colIdx) => (
+                      <td key={colIdx} style={{ padding: '1rem', borderBottom: '1px solid #f1f5f9' }}>
+                        <Skeleton height="20px" width={`${Math.floor(Math.random() * 40 + 60)}%`} borderRadius="4px" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
               ) : movements.length === 0 ? (
                 <tr>
                   <td colSpan="8" style={{ textAlign: 'center', padding: '2rem' }}>
@@ -150,23 +158,13 @@ export default function Movements() {
         </div>
 
         {/* Pagination Footer */}
-        <div className="pagination" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', padding: '1rem' }}>
-          <button
-            className="btn btn-outline"
-            disabled={page === 1 || loading}
-            onClick={() => handlePageChange(page - 1)}
-          >
-            Önceki
-          </button>
-          <span>Sayfa {pagination.page} / {pagination.totalPages} (Toplam {pagination.total})</span>
-          <button
-            className="btn btn-outline"
-            disabled={page === pagination.totalPages || loading}
-            onClick={() => handlePageChange(page + 1)}
-          >
-            Sonraki
-          </button>
-        </div>
+        <Pagination
+          currentPage={page}
+          totalPages={pagination.totalPages}
+          onPageChange={handlePageChange}
+          totalItems={pagination.total}
+          itemsPerPage={20}
+        />
       </div>
     </div>
   );

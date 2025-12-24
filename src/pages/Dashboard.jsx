@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { BarChart3, Package, MapPin, TrendingUp, ArrowDownToLine, ArrowUpFromLine, Download, Filter } from 'lucide-react';
+import { BarChart3, Download, Filter } from 'lucide-react';
 
 import { useLocations } from '../hooks/useLocations';
 import { useMovements } from '../hooks/useMovements';
@@ -8,12 +8,15 @@ import { getProductType, PRODUCT_TYPES } from '../utils/productHelpers';
 import { formatDate } from '../utils/dateHelper';
 import { useTableExport } from '../hooks/useTableExport';
 import { useToast } from '../hooks/useToast';
-import './Dashboard.css';
+import './Dashboard.scss';
 
 import Pagination from '../components/Pagination';
 import api from '../services/api';
 import Table from '../components/common/Table';
+import StatsGrid from '../components/dashboard/StatsGrid';
+
 import Badge from '../components/common/Badge';
+import Button from '../components/common/Button';
 
 export default function Dashboard() {
 
@@ -51,8 +54,6 @@ export default function Dashboard() {
     if (movementFilterType === 'ALL') return movements;
 
     return movements.filter(m => {
-      // m.items is undefined, but m.item_code is available from our backend join
-      // Wait, movements.js:87 says "item_code: m.items?.item_code"
       if (!m.item_code) return false;
       const type = getProductType(m.item_code);
 
@@ -158,16 +159,16 @@ export default function Dashboard() {
             value={filters.endDate}
             onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
           />
-          <button
-            className="btn btn-primary"
+          <Button
+            variant="primary"
             onClick={handleFilterApply}
             disabled={movementsLoading}
           >
             Filtrele
-          </button>
+          </Button>
           {(filters.startDate || filters.endDate || search) && (
-            <button
-              className="btn btn-outline"
+            <Button
+              variant="outline"
               onClick={() => {
                 setFilters({ startDate: '', endDate: '' });
                 setSearch('');
@@ -175,84 +176,28 @@ export default function Dashboard() {
               }}
             >
               Temizle
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#dbeafe' }}>
-            <Package size={24} color="#2563eb" />
-          </div>
-          <div className="stat-content">
-            <div className="dashboard-stat-value">{widgetStats.totalStockCount || 0}</div>
-            <div className="dashboard-stat-label">Toplam Stok</div>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#dcfce7' }}>
-            <MapPin size={24} color="#16a34a" />
-          </div>
-          <div className="stat-content">
-            <div className="dashboard-stat-value">{locations.length}</div>
-            <div className="dashboard-stat-label">Lokasyon</div>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#d1fae5' }}>
-            <ArrowDownToLine size={24} color="#059669" />
-          </div>
-          <div className="stat-content">
-            <div className="dashboard-stat-value">{stats.totalIn}</div>
-            <div className="dashboard-stat-label">Giriş ({filters.startDate ? 'Seçilen' : '30 Gün'})</div>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#fee2e2' }}>
-            <ArrowUpFromLine size={24} color="#dc2626" />
-          </div>
-          <div className="stat-content">
-            <div className="dashboard-stat-value">{stats.totalOut}</div>
-            <div className="dashboard-stat-label">Çıkış ({filters.startDate ? 'Seçilen' : '30 Gün'})</div>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#e0e7ff' }}>
-            <TrendingUp size={24} color="#4f46e5" />
-          </div>
-          <div className="stat-content">
-            <div className="dashboard-stat-value">{stats.totalTransfer}</div>
-            <div className="dashboard-stat-label">Transfer ({filters.startDate ? 'Seçilen' : '30 Gün'})</div>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon" style={{ background: '#fef3c7' }}>
-            <Package size={24} color="#d97706" />
-          </div>
-          <div className="stat-content">
-            <div className="dashboard-stat-value">
-              {widgetStats.totalItemCount || 0}
-            </div>
-            <div className="dashboard-stat-label">Ürün Çeşidi (Kalem)</div>
-          </div>
-        </div>
-      </div>
+      <StatsGrid
+        stats={stats}
+        widgetStats={widgetStats}
+        locationCount={locations.length}
+        filters={filters}
+      />
 
       <div className="dashboard-grid">
         <div className="card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3>Düşük Stoklu Ürünler</h3>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
+              <Button
+                variant="outline"
+                size="sm"
+                icon={Download}
+                onClick={() => {
                   downloadCSV(
                     widgetStats.lowStock,
                     ['Ürün Kodu', 'Ürün Adı', 'Stok'],
@@ -260,11 +205,9 @@ export default function Dashboard() {
                     'dusuk_stok'
                   ) && success('Düşük stok listesi indirildi');
                 }}
-                className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                style={{ fontSize: '0.9rem', textDecoration: 'none', display: 'flex', alignItems: 'center' }}
               >
-                <Download size={16} /> Excel
-              </a>
+                Excel
+              </Button>
               <span style={{ fontSize: '0.8rem', backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: '12px' }}>
                 {widgetStats.lowStock.length}
               </span>
@@ -290,10 +233,11 @@ export default function Dashboard() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <h3>En Fazla Stoklu Ürünler</h3>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <a
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
+              <Button
+                variant="outline"
+                size="sm"
+                icon={Download}
+                onClick={() => {
                   downloadCSV(
                     widgetStats.highStock,
                     ['Ürün Kodu', 'Ürün Adı', 'Stok'],
@@ -301,11 +245,9 @@ export default function Dashboard() {
                     'yuksek_stok'
                   ) && success('Yüksek stok listesi indirildi');
                 }}
-                className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                style={{ fontSize: '0.9rem', textDecoration: 'none', display: 'flex', alignItems: 'center' }}
               >
-                <Download size={16} /> Excel
-              </a>
+                Excel
+              </Button>
               <span style={{ fontSize: '0.8rem', backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: '12px' }}>
                 {widgetStats.highStock.length}
               </span>
@@ -348,8 +290,10 @@ export default function Dashboard() {
               </select>
             </div>
 
-            <button
-              className="btn btn-outline btn-sm"
+            <Button
+              variant="outline"
+              size="sm"
+              icon={Download}
               onClick={() => {
                 downloadCSV(
                   filteredMovements,
@@ -366,10 +310,9 @@ export default function Dashboard() {
                   'hareket_gecmisi'
                 ) && success('Hareket listesi indirildi');
               }}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             >
-              <Download size={14} /> Excel
-            </button>
+              Excel
+            </Button>
 
             <span style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: 500 }}>
               Toplam: {filteredMovements.length}

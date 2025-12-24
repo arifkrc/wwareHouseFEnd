@@ -16,6 +16,7 @@ import Table from '../components/common/Table';
 import Modal from '../components/common/Modal';
 import Badge from '../components/common/Badge';
 
+import Button from '../components/common/Button';
 
 
 export default function Items() {

@@ -71,7 +71,8 @@
 .filter-dropdown {
     position: absolute;
     top: 100%;
-    right: 0;
+    left: 0;
+    right: auto;
     margin-top: 4px;
     background: white;
     border: 1px solid #e2e8f0;
@@ -81,7 +82,14 @@
     max-width: 300px;
     z-index: 50;
     display: flex;
+    display: flex;
     flex-direction: column;
+}
+
+/* Align right for the last column to prevent overflow */
+.table th:last-child .filter-dropdown {
+    right: 0;
+    left: auto;
 }
 
 .filter-header {

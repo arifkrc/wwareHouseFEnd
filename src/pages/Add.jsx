@@ -10,12 +10,12 @@ import './Add.css';
 
 export default function Add() {
   const { isAdmin } = useAuth();
-  const {  items,  refresh: refreshItems,  createItem,  bulkCreateItems,  loading: itemsLoading } = useItems();
+  const { items, refresh: refreshItems, createItem, bulkCreateItems, loading: itemsLoading } = useItems();
   const { locations, loading: locationsLoading } = useLocations();
   const { showToast } = useToast();
 
   const [activeTab, setActiveTab] = useState('stock');
-  
+
   // Ürün ekleme formu
   const [productForm, setProductForm] = useState({
     item_code: '',
@@ -62,7 +62,7 @@ export default function Add() {
   // Stok ekleme
   const handleStockSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!stockForm.item_id || !stockForm.quantity || !stockForm.to_location_id) {
       showToast('Lütfen tüm alanları doldurun', 'error');
       return;
@@ -84,7 +84,7 @@ export default function Add() {
         to_location_id: '',
         movement_note: ''
       });
-      
+
       await refreshItems();
     } catch (error) {
       showToast(error.response?.data?.error || 'Stok eklenirken hata oluştu', 'error');
@@ -106,7 +106,7 @@ export default function Add() {
   }
 
   return (
-    <div className="add-page">
+    <div className="container add-page" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
       <div className="page-header">
         <h1><Plus size={28} /> Ekle</h1>
         <p>Yeni ürün ve stok ekleyin</p>
@@ -114,7 +114,7 @@ export default function Add() {
 
       <div className="add-tabs">
         {isAdmin && (
-          <button 
+          <button
             className={`tab-button ${activeTab === 'product' ? 'active' : ''}`}
             onClick={() => setActiveTab('product')}
           >
@@ -122,7 +122,7 @@ export default function Add() {
             Ürün Ekle
           </button>
         )}
-        <button 
+        <button
           className={`tab-button ${activeTab === 'stock' ? 'active' : ''}`}
           onClick={() => setActiveTab('stock')}
         >
@@ -162,9 +162,9 @@ export default function Add() {
                         }
                         const qty = parseInt(initial_quantity) || 0;
                         parsed.push({
-                          item_code: item_code.slice(0,100),
-                          item_name: item_name.slice(0,255),
-                          description: (description || '').slice(0,1000),
+                          item_code: item_code.slice(0, 100),
+                          item_name: item_name.slice(0, 255),
+                          description: (description || '').slice(0, 1000),
                           quantity: qty,
                           location_code: location_code || null
                         });
@@ -225,14 +225,14 @@ export default function Add() {
                 />
               </div>
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="btn btn-primary btn-large"
                 disabled={productSubmitting}
               >
                 {productSubmitting ? 'Ekleniyor...' : 'Ürün Ekle'}
               </button>
-              
+
               {/* Bulk import action */}
               {bulkItems.length > 0 && (
                 <div style={{ marginTop: '0.75rem' }}>
@@ -274,7 +274,7 @@ export default function Add() {
           <div className="card">
             <h3><Archive size={20} /> Stok Ekle</h3>
             <p className="help-text">Mevcut bir ürüne lokasyona stok ekleyin.</p>
-            
+
             <form onSubmit={handleStockSubmit} className="add-form">
               <div className="form-group">
                 <label htmlFor="item_id">Ürün Seç *</label>
@@ -352,14 +352,14 @@ export default function Add() {
                 />
               </div>
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="btn btn-primary btn-large"
                 disabled={stockSubmitting || items.length === 0 || locations.length === 0}
               >
                 {stockSubmitting ? 'Ekleniyor...' : 'Stok Ekle'}
               </button>
-              
+
               {(items.length === 0 || locations.length === 0) && (
                 <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.5rem' }}>
                   {items.length === 0 && 'Önce ürün ekleyin. '}

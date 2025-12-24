@@ -58,7 +58,7 @@ export default function Movements() {
   };
 
   return (
-    <div className="movements-page">
+    <div className="container movements-page" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
       <div className="page-header">
         <div>
           <h1><History size={28} /> Hareket Geçmişi</h1>

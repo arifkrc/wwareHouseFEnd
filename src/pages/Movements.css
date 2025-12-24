@@ -1,8 +1,4 @@
-.movements-page {
-  padding: 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
-}
+/* .movements-page uses standard .container class now */
 
 .page-header {
   display: flex;
@@ -29,9 +25,7 @@
 }
 
 @media (max-width: 768px) {
-  .movements-page {
-    padding: 1rem;
-  }
+
 
   .page-header {
     flex-direction: column;

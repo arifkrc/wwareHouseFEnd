@@ -1,8 +1,4 @@
-.add-page {
-  padding: 2rem;
-  max-width: 800px;
-  margin: 0 auto;
-}
+/* .add-page uses standard .container class now */
 
 .page-header {
   margin-bottom: 2rem;
@@ -119,6 +115,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -126,9 +123,7 @@
 }
 
 @media (max-width: 768px) {
-  .add-page {
-    padding: 1rem;
-  }
+
 
   .add-tabs {
     flex-direction: column;

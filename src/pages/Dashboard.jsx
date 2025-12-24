@@ -128,7 +128,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="dashboard">
+    <div className="container dashboard" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
       <div className="dashboard-header">
         <h1><BarChart3 size={28} /> Dashboard</h1>
         <p>Depo takip sistemi genel görünümü</p>

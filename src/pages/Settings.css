@@ -1,8 +1,4 @@
-.settings-page {
-  padding: 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
-}
+/* .settings-page uses standard .container class now */
 
 .settings-tabs {
   display: flex;
@@ -131,9 +127,7 @@
 
 /* Mobile responsive */
 @media (max-width: 768px) {
-  .settings-page {
-    padding: 1rem;
-  }
+
 
   .content-header {
     flex-direction: column;

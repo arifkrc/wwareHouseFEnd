@@ -14,7 +14,7 @@ export default function Settings() {
   const { locations, loading: locationsLoading, createLocation, updateLocation, deleteLocation } = useLocations();
   const { items, loading: itemsLoading, createItem, updateItem, deleteItem } = useItems();
   const { toasts, removeToast, success, error } = useToast();
-  
+
   const [activeTab, setActiveTab] = useState('locations');
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [showItemModal, setShowItemModal] = useState(false);
@@ -27,7 +27,7 @@ export default function Settings() {
     location_code: '',
     description: ''
   });
-  
+
   const [editingItem, setEditingItem] = useState(null);
   const [itemForm, setItemForm] = useState({
     item_code: '',
@@ -103,7 +103,7 @@ export default function Settings() {
       error(`Bu lokasyonda ${itemCount} ürün var. Önce ürünleri başka lokasyona taşıyın.`);
       return;
     }
-    
+
     setConfirmDialog({
       isOpen: true,
       title: 'Lokasyon Sil',
@@ -258,17 +258,17 @@ export default function Settings() {
   // Password change functions
   const handleChangePassword = async (e) => {
     e.preventDefault();
-    
+
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       error('Yeni şifreler eşleşmiyor');
       return;
     }
-    
+
     if (passwordForm.newPassword.length < 6) {
       error('Şifre en az 6 karakter olmalı');
       return;
     }
-    
+
     try {
       await api.put('/auth/change-password', {
         currentPassword: passwordForm.currentPassword,
@@ -284,17 +284,17 @@ export default function Settings() {
 
   const handleAdminChangeUserPassword = async (e) => {
     e.preventDefault();
-    
+
     if (adminPasswordForm.newPassword !== adminPasswordForm.confirmPassword) {
       error('Şifreler eşleşmiyor');
       return;
     }
-    
+
     if (adminPasswordForm.newPassword.length < 6) {
       error('Şifre en az 6 karakter olmalı');
       return;
     }
-    
+
     try {
       await api.put(`/auth/users/${selectedUserForPassword.id}/password`, {
         newPassword: adminPasswordForm.newPassword
@@ -323,28 +323,28 @@ export default function Settings() {
   }
 
   return (
-    <div className="settings-page">
+    <div className="container settings-page" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
       <div className="page-header">
         <h1><SettingsIcon size={28} /> Sistem Ayarları</h1>
         <p>Lokasyonları ve ürünleri yönetin</p>
       </div>
 
       <div className="settings-tabs">
-        <button 
+        <button
           className={`tab-button ${activeTab === 'locations' ? 'active' : ''}`}
           onClick={() => setActiveTab('locations')}
         >
           <MapPin size={18} />
           Lokasyonlar ({locations.length})
         </button>
-        <button 
+        <button
           className={`tab-button ${activeTab === 'items' ? 'active' : ''}`}
           onClick={() => setActiveTab('items')}
         >
           <Package size={18} />
           Ürünler ({items.length})
         </button>
-        <button 
+        <button
           className={`tab-button ${activeTab === 'password' ? 'active' : ''}`}
           onClick={() => setActiveTab('password')}
         >
@@ -352,7 +352,7 @@ export default function Settings() {
           Şifre Değiştir
         </button>
         {isAdmin && (
-          <button 
+          <button
             className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
             onClick={() => {
               setActiveTab('users');
@@ -397,14 +397,14 @@ export default function Settings() {
                     </td>
                     <td>
                       <div className="action-buttons">
-                        <button 
+                        <button
                           className="btn-icon btn-primary"
                           onClick={() => openLocationModal(location)}
                           title="Düzenle"
                         >
                           <Edit2 size={16} />
                         </button>
-                        <button 
+                        <button
                           className="btn-icon btn-danger"
                           onClick={() => handleDeleteLocation(location)}
                           title="Sil"
@@ -458,7 +458,7 @@ export default function Settings() {
                             type="text"
                             className="form-input"
                             value={itemForm.item_code}
-                            onChange={(e) => setItemForm({...itemForm, item_code: e.target.value})}
+                            onChange={(e) => setItemForm({ ...itemForm, item_code: e.target.value })}
                             disabled
                           />
                         </td>
@@ -467,7 +467,7 @@ export default function Settings() {
                             type="text"
                             className="form-input"
                             value={itemForm.item_name}
-                            onChange={(e) => setItemForm({...itemForm, item_name: e.target.value})}
+                            onChange={(e) => setItemForm({ ...itemForm, item_name: e.target.value })}
                           />
                         </td>
                         <td>
@@ -475,20 +475,20 @@ export default function Settings() {
                             type="text"
                             className="form-input"
                             value={itemForm.description}
-                            onChange={(e) => setItemForm({...itemForm, description: e.target.value})}
+                            onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
                             placeholder="Açıklama..."
                           />
                         </td>
                         <td>
                           <div className="action-buttons">
-                            <button 
+                            <button
                               className="btn-icon btn-success"
                               onClick={handleItemSubmit}
                               title="Kaydet"
                             >
                               <Save size={16} />
                             </button>
-                            <button 
+                            <button
                               className="btn-icon btn-outline"
                               onClick={cancelItemEdit}
                               title="İptal"
@@ -505,14 +505,14 @@ export default function Settings() {
                         <td>{item.description || '-'}</td>
                         <td>
                           <div className="action-buttons">
-                            <button 
+                            <button
                               className="btn-icon btn-primary"
                               onClick={() => openItemEdit(item)}
                               title="Düzenle"
                             >
                               <Edit2 size={16} />
                             </button>
-                            <button 
+                            <button
                               className="btn-icon btn-danger"
                               onClick={() => handleDeleteItem(item)}
                               title="Sil"
@@ -583,14 +583,14 @@ export default function Settings() {
                       </td>
                       <td>
                         <div className="action-buttons">
-                          <button 
+                          <button
                             className="btn-icon btn-warning"
                             onClick={() => openAdminPasswordModal(user)}
                             title="Şifre Değiştir"
                           >
                             <Key size={16} />
                           </button>
-                          <button 
+                          <button
                             className="btn-icon btn-danger"
                             onClick={() => handleDeleteUser(user)}
                             title="Sil"
@@ -623,7 +623,7 @@ export default function Settings() {
                   type="password"
                   className="form-input"
                   value={passwordForm.currentPassword}
-                  onChange={(e) => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
                   required
                 />
               </div>
@@ -634,7 +634,7 @@ export default function Settings() {
                   type="password"
                   className="form-input"
                   value={passwordForm.newPassword}
-                  onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
                   minLength="6"
                   required
                 />
@@ -647,7 +647,7 @@ export default function Settings() {
                   type="password"
                   className="form-input"
                   value={passwordForm.confirmPassword}
-                  onChange={(e) => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
                   minLength="6"
                   required
                 />
@@ -681,7 +681,7 @@ export default function Settings() {
                   type="text"
                   className="form-input"
                   value={locationForm.location_code}
-                  onChange={(e) => setLocationForm({...locationForm, location_code: e.target.value})}
+                  onChange={(e) => setLocationForm({ ...locationForm, location_code: e.target.value })}
                   placeholder="Örn: SOL-1, SAG-2, KORIDOR-3"
                   required
                   disabled={!!editingLocation}
@@ -693,7 +693,7 @@ export default function Settings() {
                 <textarea
                   className="form-textarea"
                   value={locationForm.description}
-                  onChange={(e) => setLocationForm({...locationForm, description: e.target.value})}
+                  onChange={(e) => setLocationForm({ ...locationForm, description: e.target.value })}
                   placeholder="Lokasyon açıklaması..."
                   rows="3"
                 />
@@ -732,7 +732,7 @@ export default function Settings() {
                   type="text"
                   className="form-input"
                   value={itemForm.item_code}
-                  onChange={(e) => setItemForm({...itemForm, item_code: e.target.value})}
+                  onChange={(e) => setItemForm({ ...itemForm, item_code: e.target.value })}
                   placeholder="Örn: PROD-001"
                   required
                   disabled={!!editingItem}
@@ -745,7 +745,7 @@ export default function Settings() {
                   type="text"
                   className="form-input"
                   value={itemForm.item_name}
-                  onChange={(e) => setItemForm({...itemForm, item_name: e.target.value})}
+                  onChange={(e) => setItemForm({ ...itemForm, item_name: e.target.value })}
                   placeholder="Ürün adı girin..."
                   required
                 />
@@ -756,7 +756,7 @@ export default function Settings() {
                 <textarea
                   className="form-textarea"
                   value={itemForm.description}
-                  onChange={(e) => setItemForm({...itemForm, description: e.target.value})}
+                  onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
                   placeholder="Ürün açıklaması..."
                   rows="3"
                 />
@@ -795,7 +795,7 @@ export default function Settings() {
                   type="text"
                   className="form-input"
                   value={userForm.username}
-                  onChange={(e) => setUserForm({...userForm, username: e.target.value})}
+                  onChange={(e) => setUserForm({ ...userForm, username: e.target.value })}
                   placeholder="Kullanıcı adı..."
                   required
                 />
@@ -807,7 +807,7 @@ export default function Settings() {
                   type="text"
                   className="form-input"
                   value={userForm.full_name}
-                  onChange={(e) => setUserForm({...userForm, full_name: e.target.value})}
+                  onChange={(e) => setUserForm({ ...userForm, full_name: e.target.value })}
                   placeholder="Ad Soyad..."
                   required
                 />
@@ -819,7 +819,7 @@ export default function Settings() {
                   type="password"
                   className="form-input"
                   value={userForm.password}
-                  onChange={(e) => setUserForm({...userForm, password: e.target.value})}
+                  onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
                   placeholder="Şifre..."
                   required
                   minLength="6"
@@ -831,7 +831,7 @@ export default function Settings() {
                 <select
                   className="form-input"
                   value={userForm.role}
-                  onChange={(e) => setUserForm({...userForm, role: e.target.value})}
+                  onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
                   required
                 >
                   <option value="user">Kullanıcı</option>
@@ -876,7 +876,7 @@ export default function Settings() {
                   type="password"
                   className="form-input"
                   value={adminPasswordForm.newPassword}
-                  onChange={(e) => setAdminPasswordForm({...adminPasswordForm, newPassword: e.target.value})}
+                  onChange={(e) => setAdminPasswordForm({ ...adminPasswordForm, newPassword: e.target.value })}
                   placeholder="Yeni şifre..."
                   required
                   minLength="6"
@@ -890,7 +890,7 @@ export default function Settings() {
                   type="password"
                   className="form-input"
                   value={adminPasswordForm.confirmPassword}
-                  onChange={(e) => setAdminPasswordForm({...adminPasswordForm, confirmPassword: e.target.value})}
+                  onChange={(e) => setAdminPasswordForm({ ...adminPasswordForm, confirmPassword: e.target.value })}
                   placeholder="Şifre tekrar..."
                   required
                   minLength="6"

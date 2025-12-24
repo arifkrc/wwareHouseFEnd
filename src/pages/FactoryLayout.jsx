@@ -233,7 +233,7 @@ export default function FactoryLayout() {
   const totalStock = zones?.reduce((total, zone) => total + (zone.totalQuantity || 0), 0) || 0;
 
   return (
-    <div className="factory-layout">
+    <div className="container factory-layout">
       <div className="layout-toolbar">
         <div className="toolbar-left">
           <h2><Warehouse size={24} /> Depo Yerleşimi</h2>

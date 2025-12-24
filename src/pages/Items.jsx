@@ -403,7 +403,7 @@ export default function Items() {
     ];
 
     return (
-        <div className="page-container" style={{ padding: '2rem' }}>
+        <div className="container" style={{ paddingBottom: '2rem', paddingTop: '2rem' }}>
             <div className="page-header" style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                     <h1><Package size={28} style={{ marginRight: '10px', verticalAlign: 'middle' }} /> Ürün Listesi</h1>

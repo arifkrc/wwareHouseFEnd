@@ -1,8 +1,4 @@
-.dashboard {
-  padding: 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
-}
+/* .dashboard uses standard .container class now */
 
 .dashboard-header {
   margin-bottom: 2rem;
@@ -85,9 +81,7 @@
 }
 
 @media (max-width: 768px) {
-  .dashboard {
-    padding: 1rem;
-  }
+
 
   .stats-grid {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));

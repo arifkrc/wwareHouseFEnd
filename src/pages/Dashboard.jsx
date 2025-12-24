@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { BarChart3, Package, MapPin, TrendingUp, ArrowDownToLine, ArrowUpFromLine, Download, Filter } from 'lucide-react';
-import { useItems } from '../hooks/useItems';
+
 import { useLocations } from '../hooks/useLocations';
 import { useMovements } from '../hooks/useMovements';
 import { getMovementTypeLabel, getMovementTypeBadge, MOVEMENT_TYPES } from '../utils/movementHelpers';
@@ -16,7 +16,7 @@ import Table from '../components/common/Table';
 import Badge from '../components/common/Badge';
 
 export default function Dashboard() {
-  const { items, loading: itemsLoading } = useItems(); // Note: useItems now fetches paginated, so relying on "items" for total stats is WRONG.
+
   // We will NOT use useItems for dashboard widgets anymore.
 
   const { locations, loading: locationsLoading } = useLocations();

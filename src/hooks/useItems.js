@@ -9,10 +9,13 @@ export const useItems = () => {
   const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 20, totalPages: 1 });
 
   const fetchItems = useCallback(async (params = {}) => {
+    // Default to handling all items if no limit is specified (for removal of pagination)
+    const finalParams = { limit: -1, ...params };
+
     setLoading(true);
     setError(null);
     try {
-      const queryString = new URLSearchParams(params).toString();
+      const queryString = new URLSearchParams(finalParams).toString();
       const response = await api.get(`/items?${queryString}`);
 
       if (response.data.pagination) {

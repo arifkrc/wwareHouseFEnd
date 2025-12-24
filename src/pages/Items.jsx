@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Package, Search, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Info, Download, Filter } from 'lucide-react';
 import { useItems } from '../hooks/useItems';
 import { useLocations } from '../hooks/useLocations';

@@ -111,18 +111,15 @@ export default function BulkImport() {
       const { parsedItems, errors } = parseCSV(event.target.result);
 
       if (parsedItems.length > 0) {
-        // Map parsed items to BulkImport specific structure if needed, or stick to shared format.
-        // The shared format returns { item_code, item_name, quantity, description, location_code }.
-        // BulkImport state uses { location_id }, but parsed has location_code.
-        // We'll map location_code to location_id if possible, or leave blank for user to select.
-
-        // Wait, BulkImport component logic uses `location_id`. Ideally we should map codes to IDs.
-        // For now, let's just populate the fields we have.
-
-        const mappedItems = parsedItems.map(p => ({
-          ...p,
-          location_id: '' // Reset location ID as we only have code from CSV potentially
-        }));
+        // Map parsed items: Try to find location_id from location_code
+        const mappedItems = parsedItems.map(p => {
+          const locCode = p.location_code ? p.location_code.trim().toUpperCase() : '';
+          const foundLoc = locations.find(l => l.location_code === locCode);
+          return {
+            ...p,
+            location_id: foundLoc ? foundLoc.id : ''
+          };
+        });
 
         setItems(mappedItems);
         setSuccess(`${mappedItems.length} satır CSV'den yüklendi${errors.length > 0 ? ` (${errors.length} hata atlandı)` : ''}`);
@@ -138,7 +135,7 @@ export default function BulkImport() {
   };
 
   const exportTemplate = () => {
-    const csv = 'item_code,item_name,quantity,description\nPRD-001,Örnek Ürün,10,Açıklama';
+    const csv = 'item_code,item_name,quantity,location_code,description\nPRD-001,Örnek Ürün,10,A-1,Açıklama';
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -275,9 +272,9 @@ export default function BulkImport() {
         <h4>CSV Formatı</h4>
         <p>CSV dosyanız şu formatta olmalıdır:</p>
         <pre>
-          item_code,item_name,quantity,description
-          PRD-001,Laptop Dell XPS,10,15 inch
-          PRD-002,Mouse Logitech,50,Kablosuz
+          item_code,item_name,quantity,location_code,description
+          PRD-001,Laptop Dell XPS,10,A-1,15 inch
+          PRD-002,Mouse Logitech,50,B-2,Kablosuz
         </pre>
       </div>
     </div>

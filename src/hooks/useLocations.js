@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 
@@ -38,23 +39,29 @@ export const useLocations = () => {
     },
   });
 
+  const refresh = useCallback(() => queryClient.invalidateQueries(['locations']), [queryClient]);
+
+  const createLocation = useCallback(async (data) => {
+    const res = await createMutation.mutateAsync(data);
+    return res.data;
+  }, [createMutation]);
+
+  const updateLocation = useCallback(async (id, data) => {
+    const res = await updateMutation.mutateAsync({ id, ...data });
+    return res.data;
+  }, [updateMutation]);
+
+  const deleteLocation = useCallback(async (id) => {
+    await deleteMutation.mutateAsync(id);
+  }, [deleteMutation]);
+
   return {
     locations,
     loading,
     error: error ? (error.message || 'Lokasyonlar yüklenemedi') : null,
-    refresh: () => queryClient.invalidateQueries(['locations']), // Manual refresh if needed
-
-    // Wrappers to maintain API compatibility with old hook
-    createLocation: async (data) => {
-      const res = await createMutation.mutateAsync(data);
-      return res.data;
-    },
-    updateLocation: async (id, data) => {
-      const res = await updateMutation.mutateAsync({ id, ...data });
-      return res.data;
-    },
-    deleteLocation: async (id) => {
-      await deleteMutation.mutateAsync(id);
-    }
+    refresh,
+    createLocation,
+    updateLocation,
+    deleteLocation
   };
 };

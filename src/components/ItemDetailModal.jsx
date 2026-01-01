@@ -1,12 +1,31 @@
 import { useMemo } from 'react';
+import { useMovements } from '../hooks/useMovements';
+import { useToast } from '../hooks/useToast';
 import { ArrowUpCircle, ArrowDownCircle, ArrowRightLeft } from 'lucide-react';
 import Modal from './common/Modal';
 import Table from './common/Table';
 import Badge from './common/Badge';
 import Button from './common/Button';
+import EditableCell from './common/EditableCell';
+import Toast from './Toast';
 import { MOVEMENT_TYPES } from '../utils/movementHelpers';
 
-export default function ItemDetailModal({ isOpen, onClose, item, locations, onMovementRequest }) {
+export default function ItemDetailModal({ isOpen, onClose, item, locations, onMovementRequest, onRefresh }) {
+    const { updateMovement } = useMovements();
+    const { toasts, removeToast, success, error } = useToast();
+
+    // We strictly use EditableCell now, no local modal state needed for notes
+    const handleCellNoteUpdate = async (alloc, newNote) => {
+        if (!alloc.latest_movement_id) return;
+        try {
+            await updateMovement(alloc.latest_movement_id, newNote);
+            success('Not güncellendi');
+            if (onRefresh) onRefresh();
+        } catch (err) {
+            console.error('Note update failed:', err);
+            error('Not güncellenemedi');
+        }
+    };
 
     // Prepare Detail Modal Data
     const detailData = useMemo(() => {
@@ -32,7 +51,7 @@ export default function ItemDetailModal({ isOpen, onClose, item, locations, onMo
                     locId,
                     locationName: location?.location_code || 'Bilinmiyor',
                     isFirstInGroup: idx === 0,
-                    alloc, // { quantity, customer_code, latest_note }
+                    alloc, // { quantity, customer_code, latest_note, latest_movement_id }
                     originalItem: item
                 });
             });
@@ -67,10 +86,20 @@ export default function ItemDetailModal({ isOpen, onClose, item, locations, onMo
             header: 'Not',
             cell: (row) => {
                 const rawNote = row.alloc.latest_note;
-                const displayNote = rawNote
-                    ? (rawNote.includes(':') ? rawNote.split(':').slice(1).join(':').trim() : rawNote)
-                    : '-';
-                return <span className="text-muted text-small">{displayNote}</span>;
+                let displayNote = rawNote;
+
+                // Trim logic: match user preference for cleaner display
+                if (displayNote && displayNote.includes(':')) {
+                    displayNote = displayNote.split(':').slice(1).join(':').trim();
+                }
+
+                return (
+                    <EditableCell
+                        value={displayNote}
+                        onSave={(val) => handleCellNoteUpdate(row.alloc, val)}
+                        placeholder="Not..."
+                    />
+                );
             }
         },
         {
@@ -161,6 +190,9 @@ export default function ItemDetailModal({ isOpen, onClose, item, locations, onMo
                     </div>
                 </>
             )}
+            {toasts.map(toast => (
+                <Toast key={toast.id} {...toast} onClose={() => removeToast(toast.id)} />
+            ))}
         </Modal>
     );
 }

@@ -30,11 +30,11 @@ export const useTableExport = () => {
                         return `"${str.replace(/"/g, '""')}"`;
                     }
                     return str;
-                }).join(',');
+                }).join(';');
             });
 
             // Combine headers and rows
-            const csvContent = [headers.join(','), ...rows].join('\n');
+            const csvContent = [headers.join(';'), ...rows].join('\n');
 
             // Create download link with BOM for Excel UTF-8 support
             const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' });

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutGrid, Package, History, BarChart3, Plus, LogOut, User, Menu, X, Settings } from 'lucide-react';
+import { LayoutGrid, Package, History, BarChart3, Plus, LogOut, User, Menu, X, Settings, Upload } from 'lucide-react';
 import './Layout.scss';
 
 export default function Layout({ children }) {
@@ -61,6 +61,10 @@ export default function Layout({ children }) {
           <Link to="/add" className="nav-link" onClick={closeMobileMenu}>
             <Plus size={20} />
             <span>Ekle</span>
+          </Link>
+          <Link to="/bulk-import" className="nav-link" onClick={closeMobileMenu}>
+            <Upload size={20} />
+            <span>Toplu Ekle</span>
           </Link>
           <Link to="/movements" className="nav-link" onClick={closeMobileMenu}>
             <History size={20} />

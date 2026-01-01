@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Package, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Warehouse, RefreshCw } from 'lucide-react';
 import { useWarehouseZones } from '../hooks/useWarehouseZones';
 import { useLocations } from '../hooks/useLocations';
@@ -18,7 +18,7 @@ import './FactoryLayout.scss';
 export default function FactoryLayout() {
   const { zones, loading: zonesLoading, refresh: refreshZones } = useWarehouseZones();
   const { locations, updateLocation } = useLocations();
-  const { items, refresh: refreshItems } = useItems();
+  const { items, refresh: refreshItems, updateItem } = useItems(); // Added updateItem
   const { movements, createMovement, refresh: refreshMovements } = useMovements();
   const { toasts, removeToast, success, error, warning } = useToast();
 
@@ -40,23 +40,23 @@ export default function FactoryLayout() {
 
 
 
+  // Define fetchZoneAllocations with useCallback so it can be called manually
+  const fetchZoneAllocations = useCallback(async () => {
+    if (!currentZone?.locationId) return;
+
+    try {
+      const response = await api.get(`/locations/${currentZone.locationId}/items`);
+      setZoneItems(response.data);
+    } catch (err) {
+      console.error('Bölge ürünleri yüklenemedi:', err);
+      // Don't spam error toast on auto-refresh
+    }
+  }, [currentZone]);
+
   // Update zone items when items or currentZone changes
-  // Fetch detailed zone items (with customer allocations) whenever zone or refresh trigger changes
   useEffect(() => {
-    const fetchZoneAllocations = async () => {
-      if (!currentZone?.locationId) return;
-
-      try {
-        const response = await api.get(`/locations/${currentZone.locationId}/items`);
-        setZoneItems(response.data);
-      } catch (err) {
-        console.error('Bölge ürünleri yüklenemedi:', err);
-        error('Bölge verileri alınamadı');
-      }
-    };
-
     fetchZoneAllocations();
-  }, [currentZone, movements]); // Refresh when movements change (which includes add stock)
+  }, [fetchZoneAllocations, movements]); // Refresh when movements change
 
   // Auto-refresh data every 5 seconds
   useEffect(() => {
@@ -86,6 +86,9 @@ export default function FactoryLayout() {
     await refreshMovements();
     await refreshItems();
     await refreshZones();
+    if (currentZone) {
+      await fetchZoneAllocations();
+    }
     success('Yerleşim güncellendi!');
   };
 
@@ -292,6 +295,10 @@ export default function FactoryLayout() {
         onAddStock={onAddStock}
         onOpenMovementModal={openMovementModal} // Parent handles movement modal
         isProcessing={isProcessing}
+        onRefresh={handleRefresh} // Refresh everything when note is edited in modal
+        onUpdateItem={updateItem} // Added prop
+        showSuccess={success} // Pass global toast handler
+        showError={error} // Pass global toast handler
       />
 
       {/* Reused Movement Modal */}
@@ -306,7 +313,7 @@ export default function FactoryLayout() {
         locations={locations}
       />
 
-      {/* Toast Notifications */}
+      {/* Toast Notifications - Rendered at root level to avoid z-index/transform issues */}
       {
         toasts.map(toast => (
           <Toast

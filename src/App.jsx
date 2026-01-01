@@ -9,6 +9,7 @@ import Add from './pages/Add';
 import Items from './pages/Items';
 import Movements from './pages/Movements';
 import Settings from './pages/Settings';
+import BulkImport from './pages/BulkImport';
 
 function PrivateRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -87,6 +88,16 @@ function App() {
                 <PrivateRoute>
                   <Layout>
                     <Settings />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/bulk-import"
+              element={
+                <PrivateRoute>
+                  <Layout>
+                    <BulkImport />
                   </Layout>
                 </PrivateRoute>
               }

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Plus, CheckSquare, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft } from 'lucide-react';
+import { Package, Plus, CheckSquare, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Edit2 } from 'lucide-react';
+import { useMovements } from '../hooks/useMovements';
 import ItemSearchSelect from './ItemSearchSelect';
 import ExpandableText from './ExpandableText';
 import Modal from './common/Modal';
 import Table from './common/Table';
 import Badge from './common/Badge';
 import Button from './common/Button';
+import EditableCell from './common/EditableCell';
 
 export default function ZoneModal({
     isOpen,
@@ -16,8 +18,43 @@ export default function ZoneModal({
     onUpdateDescription,
     onAddStock,
     onOpenMovementModal,
-    isProcessing
+    isProcessing,
+    onRefresh, // New prop to trigger parent refresh
+    onUpdateItem, // New prop for updating item details
+    showSuccess, // Parent toast handler
+    showError // Parent toast handler
 }) {
+    if (!zone) return null;
+    const { updateMovement } = useMovements();
+    // ... existing state ...
+
+    // ... (keep generic handlers) ...
+
+    const handleCellNoteUpdate = async (row, newNote) => {
+        if (!row.latest_movement_id) return;
+        try {
+            await updateMovement(row.latest_movement_id, newNote);
+            if (showSuccess) showSuccess('Not güncellendi');
+            if (onRefresh) onRefresh();
+        } catch (err) {
+            console.error('Note update failed:', err);
+            if (showError) showError('Not güncellenemedi');
+        }
+    };
+
+    const handleCellDescriptionUpdate = async (row, newDesc) => {
+        if (!onUpdateItem || !row.item_id) return;
+        try {
+            await onUpdateItem(row.item_id, { description: newDesc });
+            if (showSuccess) showSuccess('Açıklama güncellendi');
+            if (onRefresh) onRefresh();
+        } catch (err) {
+            console.error('Item description update failed:', err);
+            if (showError) showError('Açıklama güncellenemedi');
+        }
+    };
+    // ... existing effects ...
+
     const [activeTab, setActiveTab] = useState('assigned');
 
     // Description editing state
@@ -55,11 +92,11 @@ export default function ZoneModal({
         setAddStockForm({ itemId: '', quantity: '', customerCode: '', notes: '', showCustomerInput: false });
         setActiveTab('assigned');
     };
-
-    if (!zone) return null;
+    // ... existing effects ...
 
     // Table Columns Definition
     const columns = [
+        // ... (keep first 3 columns) ...
         {
             header: 'Ürün Kodu',
             accessor: 'item_code',
@@ -87,8 +124,15 @@ export default function ZoneModal({
                     ? (row.movement_note.includes(':')
                         ? row.movement_note.split(':').slice(1).join(':').trim()
                         : row.movement_note)
-                    : '-';
-                return <span style={{ fontSize: '0.9em', color: '#475569' }}>{displayNote}</span>;
+                    : '';
+
+                return (
+                    <EditableCell
+                        value={displayNote}
+                        onSave={(val) => handleCellNoteUpdate(row, val)}
+                        placeholder="Not ekle..."
+                    />
+                );
             }
         },
         {
@@ -99,8 +143,16 @@ export default function ZoneModal({
         {
             header: 'Açıklama',
             accessor: 'description',
-            render: (row) => <ExpandableText text={row.description || '-'} limit={40} />
+            render: (row) => (
+                <EditableCell
+                    value={row.description}
+                    onSave={(val) => handleCellDescriptionUpdate(row, val)}
+                    placeholder="Açıklama..."
+                    type="textarea"
+                />
+            )
         },
+
         {
             header: 'İşlemler',
             render: (row) => (
@@ -158,7 +210,7 @@ export default function ZoneModal({
                             title="Açıklamayı Düzenle"
                             style={{ opacity: 0.5 }}
                         >
-                            <EditIcon size={14} />
+                            <Edit2 size={14} />
                         </button>
                     </div>
                 )}
@@ -277,25 +329,8 @@ export default function ZoneModal({
                         </div>
                     </div>
                 )}
+
             </div>
         </Modal>
     );
 }
-
-// Helper icon component since I used it above
-const EditIcon = ({ size }) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-    >
-        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-    </svg>
-);

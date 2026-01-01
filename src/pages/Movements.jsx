@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react';
-import { History, RefreshCw } from 'lucide-react';
+import { History, RefreshCw, Edit2 } from 'lucide-react';
 import { useMovements } from '../hooks/useMovements';
+import { useToast } from '../hooks/useToast';
+import { useTableExport } from '../hooks/useTableExport';
 import { getMovementTypeLabel, getMovementTypeBadge, MOVEMENT_TYPES } from '../utils/movementHelpers';
 import { formatDate } from '../utils/dateHelper';
 import Button from '../components/common/Button';
 import Pagination from '../components/Pagination';
 import Skeleton from '../components/common/Skeleton';
+import Modal from '../components/common/Modal';
 import './Movements.scss';
 
 export default function Movements() {
   const { movements, pagination, refresh: refreshMovements, loading } = useMovements();
+  const { downloadCSV } = useTableExport();
 
   // Local state for filters
   const [search, setSearch] = useState('');
@@ -60,6 +64,55 @@ export default function Movements() {
     }
   };
 
+  // Edit Note State
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedMovement, setSelectedMovement] = useState(null);
+  const [editNote, setEditNote] = useState('');
+  const { updateMovement } = useMovements();
+  const { success, error: showError } = useToast();
+
+  const handleEditClick = (movement) => {
+    setSelectedMovement(movement);
+    setEditNote(movement.movement_note || '');
+    setEditModalOpen(true);
+  };
+
+  const handleSaveNote = async () => {
+    if (!selectedMovement) return;
+    try {
+      await updateMovement(selectedMovement.id, editNote);
+      success('Not güncellendi');
+      setEditModalOpen(false);
+      refreshMovements(); // Refresh list to show new note
+    } catch (err) {
+      console.error(err);
+      showError('Not güncellenemedi');
+    }
+  };
+
+  const handleExport = () => {
+    if (!movements || movements.length === 0) {
+      showError('Dışa aktarılacak veri yok');
+      return;
+    }
+
+    const headers = ['Tarih', 'İşlem Tipi', 'Ürün Kodu', 'Ürün Adı', 'Miktar', 'Kaynak Depo', 'Hedef Depo', 'Kullanıcı', 'Not'];
+
+    const rowMapper = (m) => [
+      formatDate(m.created_at),
+      getMovementTypeLabel(m.movement_type),
+      m.item_code,
+      m.item_name,
+      m.quantity,
+      m.from_location_code || '-',
+      m.to_location_code || '-',
+      m.full_name,
+      m.movement_note || ''
+    ];
+
+    downloadCSV(movements, headers, rowMapper, 'hareket_gecmisi');
+  };
+
   return (
     <div className="container movements-page" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
       <div className="page-header">
@@ -97,6 +150,14 @@ export default function Movements() {
             icon={RefreshCw}
           >
             Yenile
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            disabled={loading || movements.length === 0}
+            title="Listeyi Excel olarak indir"
+          >
+            Excel İndir
           </Button>
         </div>
       </div>
@@ -149,7 +210,16 @@ export default function Movements() {
                     <td>{movement.from_location_code || '-'}</td>
                     <td>{movement.to_location_code || '-'}</td>
                     <td>{movement.full_name}</td>
-                    <td>{movement.movement_note || '-'}</td>
+                    <td style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ flex: 1 }}>{movement.movement_note || '-'}</span>
+                      <button
+                        onClick={() => handleEditClick(movement)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#94a3b8' }}
+                        title="Notu Düzenle"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -166,6 +236,31 @@ export default function Movements() {
           itemsPerPage={20}
         />
       </div>
+
+      <Modal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        title="Notu Düzenle"
+        size="sm"
+        footer={(
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+            <Button variant="outline" onClick={() => setEditModalOpen(false)}>İptal</Button>
+            <Button variant="primary" onClick={handleSaveNote}>Kaydet</Button>
+          </div>
+        )}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <label style={{ fontSize: '0.9rem', fontWeight: 500, color: '#475569' }}>Hareket Notu</label>
+          <textarea
+            className="form-input"
+            rows={3}
+            value={editNote}
+            onChange={(e) => setEditNote(e.target.value)}
+            placeholder="Not giriniz..."
+            autoFocus
+          />
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useItems } from '../hooks/useItems';
 import { useLocations } from '../hooks/useLocations';
 import { useMovements } from '../hooks/useMovements';
 import { useToast } from '../hooks/useToast';
+import { useTableExport } from '../hooks/useTableExport';
 import { MOVEMENT_TYPES } from '../utils/movementHelpers';
 import { getProductType, PRODUCT_TYPES } from '../utils/productHelpers';
 import api from '../services/api';
@@ -25,6 +26,7 @@ export default function Items() {
     const { locations } = useLocations();
     const { createMovement, refresh: refreshMovements } = useMovements();
     const { toasts, success, error, warning, removeToast } = useToast();
+    const { downloadCSV } = useTableExport();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [showZeroStock, setShowZeroStock] = useState(false);
@@ -34,6 +36,15 @@ export default function Items() {
     useEffect(() => {
         refreshItems({ limit: -1 });
     }, [refreshItems]);
+
+    // Keep selectedItem in sync with items list (for live updates)
+    useEffect(() => {
+        if (selectedItem && items.length > 0) {
+            const updated = items.find(i => i.id === selectedItem.id);
+            if (updated) setSelectedItem(updated);
+        }
+    }, [items]);
+
 
     // Movement Modal State
     const [showMovementModal, setShowMovementModal] = useState(false);
@@ -93,38 +104,26 @@ export default function Items() {
             return;
         }
 
-        // Define CSV headers
-        const headers = ['Ürün Kodu', 'Ürün Adı', 'Toplam Stok', 'Birincil Lokasyon', 'Ürün Türü'];
+        const headers = ['Ürün Kodu', 'Ürün Adı', 'Stok Miktarı', 'Lokasyon', 'Kategori', 'Açıklama'];
 
-        // Map data to CSV rows
-        const rows = filteredItems.map(item => {
+        const rowMapper = (item) => {
             const type = getProductType(item.item_code);
             return [
                 item.item_code,
-                `"${item.item_name.replace(/"/g, '""')}"`, // Escape quotes
+                item.item_name,
                 item.quantity,
                 item.location_code || '-',
-                type.label
-            ].join(',');
-        });
+                type.label,
+                item.description || ''
+            ];
+        };
 
-        // Combine headers and rows
-        const csvContent = [headers.join(','), ...rows].join('\n');
-
-        // Create download link
-        const blob = new Blob([`\uFEFF${csvContent}`], { type: 'text/csv;charset=utf-8;' }); // Add BOM for Excel
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-
-        link.setAttribute('href', url);
-        link.setAttribute('download', `urunler_export_${new Date().toISOString().slice(0, 10)}.csv`);
-        link.style.visibility = 'hidden';
-
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        success('Excel dosyası indirildi');
+        const successExport = downloadCSV(filteredItems, headers, rowMapper, 'urunler_listesi');
+        if (successExport) {
+            success('Excel dosyası indirildi');
+        } else {
+            error('İndirme başarısız');
+        }
     };
 
     // Handlers
@@ -387,6 +386,7 @@ export default function Items() {
                 item={selectedItem}
                 locations={locations}
                 onMovementRequest={handleOpenMovementGroup}
+                onRefresh={() => refreshItems({ limit: -1 })}
             />
 
             <MovementModal

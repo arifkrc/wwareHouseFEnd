@@ -228,10 +228,17 @@ export default function FactoryLayout() {
 
       await createMovement(MOVEMENT_TYPES.IN, movementData);
 
-      // Refresh hierarchy
-      await refreshMovements();
-      await refreshItems();
-      await refreshZones();
+      // 1. FAST UPDATE: Refresh hierarchy
+      if (currentZone) {
+        await fetchZoneAllocations();
+      }
+
+      // 2. BACKGROUND UPDATE
+      Promise.all([
+        refreshMovements(),
+        refreshItems(),
+        refreshZones()
+      ]).catch(err => console.warn('Background refresh failed', err));
 
       success(`Stok girişi başarılı!`);
     } catch (err) {

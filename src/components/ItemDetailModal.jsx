@@ -36,6 +36,10 @@ export default function ItemDetailModal({ isOpen, onClose, item, locations, onMo
             const location = locations.find(l => l.id === parseInt(locId));
             let allocations = data.allocations || [];
 
+            if (!Array.isArray(allocations)) {
+                allocations = [];
+            }
+
             // Normalize if no allocations array
             if (allocations.length === 0 && data.quantity > 0) {
                 allocations = [{

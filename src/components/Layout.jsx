@@ -84,8 +84,15 @@ export default function Layout({ children }) {
               <User size={20} />
             </div>
             <div className="user-details">
-              <div className="user-name">{user?.full_name}</div>
+              <div className="user-name">
+                {user?.full_name}
+                {user?.role === 'superadmin' && <span className="sidebar-badge badge-primary" style={{ ml: '6px', fontSize: '10px' }}>SA</span>}
+                {user?.role === 'admin' && <span className="sidebar-badge badge-info" style={{ ml: '6px', fontSize: '10px' }}>ADM</span>}
+              </div>
               <div className="user-username">@{user?.username}</div>
+              <div className="user-role-label" style={{ fontSize: '11px', color: '#888', marginTop: '2px', textTransform: 'capitalize' }}>
+                {user?.role === 'superadmin' ? 'Süper Admin' : user?.role === 'admin' ? 'Yönetici' : 'Kullanıcı'}
+              </div>
             </div>
           </div>
           <button className="btn-logout" onClick={handleLogout}>

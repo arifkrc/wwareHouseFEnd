@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
-    
+
     if (token && savedUser) {
       setUser(JSON.parse(savedUser));
     }
@@ -20,11 +20,11 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     const response = await api.post('/auth/login', { username, password });
     const { token, user } = response.data;
-    
+
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
     setUser(user);
-    
+
     return response.data;
   };
 
@@ -46,7 +46,8 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin',
+    isAdmin: user?.role === 'admin' || user?.role === 'superadmin',
+    isSuperAdmin: user?.role === 'superadmin',
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

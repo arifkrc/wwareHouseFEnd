@@ -283,9 +283,7 @@ export default function FactoryLayout() {
           </div>
         </div>
         <div className="toolbar-right">
-          <button className="btn btn-primary" onClick={handleRefresh} disabled={zonesLoading}>
-            <RefreshCw size={20} strokeWidth={2.5} /> {zonesLoading ? 'Yükleniyor...' : 'Yenile'}
-          </button>
+
         </div>
       </div>
 

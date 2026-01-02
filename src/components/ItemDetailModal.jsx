@@ -34,13 +34,12 @@ export default function ItemDetailModal({ isOpen, onClose, item, locations, onMo
         const rows = [];
         Object.entries(item.stock_distribution).forEach(([locId, data]) => {
             const location = locations.find(l => l.id === parseInt(locId));
-            let allocations = data.allocations || [];
+            let rawAllocations = data.allocations || {};
+            let allocations = Array.isArray(rawAllocations)
+                ? rawAllocations
+                : Object.values(rawAllocations);
 
-            if (!Array.isArray(allocations)) {
-                allocations = [];
-            }
-
-            // Normalize if no allocations array
+            // Normalize if no allocations found but quantity exists
             if (allocations.length === 0 && data.quantity > 0) {
                 allocations = [{
                     quantity: data.quantity,

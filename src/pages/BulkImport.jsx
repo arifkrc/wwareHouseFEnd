@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, Plus, Trash2, Save, MapPin } from 'lucide-react';
+import { Upload, Plus, Trash2, Save } from 'lucide-react';
 import { useLocations } from '../hooks/useLocations';
 import { useItems } from '../hooks/useItems';
 import { parseCSV } from '../utils/csvParser';

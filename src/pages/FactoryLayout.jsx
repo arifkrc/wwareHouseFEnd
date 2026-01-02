@@ -236,19 +236,35 @@ export default function FactoryLayout() {
   // Calculate total stock from zones (more accurate and robust than summing partial movements)
   const totalStock = zones?.reduce((total, zone) => total + (zone.totalQuantity || 0), 0) || 0;
 
+  // Granular refresh for ZoneModal - Fast UX
+  const handleModalRefresh = async () => {
+    // 1. Await critical data for the modal immediate view
+    if (currentZone) {
+      await fetchZoneAllocations();
+    }
+
+    // 2. Refresh global data in background (Fire & Forget)
+    // This ensures the "Total Stock" badge eventually updates without blocking the user
+    Promise.all([
+      refreshMovements(),
+      refreshItems(),
+      refreshZones()
+    ]).catch(err => console.warn('Background refresh failed', err));
+  };
+
   return (
     <div className="container factory-layout">
       <div className="layout-toolbar">
         <div className="toolbar-left">
-          <h2><Warehouse size={24} /> Depo Yerleşimi</h2>
+          <h2><Warehouse size={28} strokeWidth={2} fill="#e2e8f0" style={{ color: '#1e293b' }} /> Depo Yerleşimi</h2>
           <div className="total-stock-badge">
-            <Package size={16} />
+            <Package size={20} strokeWidth={2} fill="#bae6fd" style={{ color: '#0369a1' }} />
             Toplam Stok: <strong>{totalStock}</strong>
           </div>
         </div>
         <div className="toolbar-right">
           <button className="btn btn-primary" onClick={handleRefresh} disabled={zonesLoading}>
-            <RefreshCw size={18} /> {zonesLoading ? 'Yükleniyor...' : 'Yenile'}
+            <RefreshCw size={20} strokeWidth={2.5} /> {zonesLoading ? 'Yükleniyor...' : 'Yenile'}
           </button>
         </div>
       </div>
@@ -295,7 +311,7 @@ export default function FactoryLayout() {
         onAddStock={onAddStock}
         onOpenMovementModal={openMovementModal} // Parent handles movement modal
         isProcessing={isProcessing}
-        onRefresh={handleRefresh} // Refresh everything when note is edited in modal
+        onRefresh={handleModalRefresh} // Use FAST refresh
         onUpdateItem={updateItem} // Added prop
         showSuccess={success} // Pass global toast handler
         showError={error} // Pass global toast handler

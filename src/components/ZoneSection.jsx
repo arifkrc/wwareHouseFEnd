@@ -1,5 +1,6 @@
 import React from 'react';
-import './ZoneSection.scss'; // We will create this or rely on FactoryLayout.css if we move styles
+import { Package } from 'lucide-react'; // Import Package icon
+import './ZoneSection.scss';
 
 export default function ZoneSection({
     title,
@@ -21,7 +22,10 @@ export default function ZoneSection({
                     {type === 'corridor' ? (
                         // Corridor Content
                         <>
-                            <div className="zone-name-badge">{zone.name}</div>
+                            <div className="zone-name-badge">
+                                <Package size={14} strokeWidth={2.5} style={{ marginRight: 4, opacity: 0.7 }} />
+                                {zone.name}
+                            </div>
                             {!zone.passive && (
                                 zone.itemCount > 0 ? (
                                     <div className="corridor-stats-bottom">
@@ -36,7 +40,10 @@ export default function ZoneSection({
                     ) : (
                         // Standard Content (Left/Right)
                         <div className="zone-content-wrapper">
-                            <div className="zone-label-center">{zone.name}</div>
+                            <div className="zone-label-center">
+                                <Package size={16} strokeWidth={2.5} style={{ display: 'block', margin: '0 auto 1px auto', opacity: 0.4 }} />
+                                {zone.name}
+                            </div>
                             {!zone.passive && (
                                 zone.itemCount > 0 ? (
                                     <div className="zone-stats-left">

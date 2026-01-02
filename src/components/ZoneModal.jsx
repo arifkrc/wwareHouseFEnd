@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Plus, CheckSquare, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Edit2 } from 'lucide-react';
+import api from '../services/api';
 import { useMovements } from '../hooks/useMovements';
 import ItemSearchSelect from './ItemSearchSelect';
 import ExpandableText from './ExpandableText';
@@ -51,6 +52,34 @@ export default function ZoneModal({
         } catch (err) {
             console.error('Item description update failed:', err);
             if (showError) showError('Açıklama güncellenemedi');
+        }
+    };
+
+    const handleStockQuantityUpdate = async (row, newQty) => {
+        if (!row.item_id || !zone.locationId) return;
+        try {
+            // newQty comes as string from input usually
+            const qty = parseInt(newQty);
+            if (isNaN(qty) || qty < 0) {
+                if (showError) showError('Geçersiz miktar');
+                return;
+            }
+
+            await api.post('/movements/adjust', {
+                item_id: row.item_id,
+                location_id: zone.locationId,
+                new_quantity: qty,
+                movement_note: row.movement_note, // Pass original note to target specific batch
+                customer_code: row.customer_code
+            });
+
+            if (showSuccess) showSuccess('Stok güncellendi');
+            if (onRefresh) await onRefresh();
+        } catch (err) {
+            console.error('Stock adjustment failed:', err);
+            // Extract error message if available
+            const msg = err.response?.data?.error || 'Stok güncellenemedi';
+            if (showError) showError(msg);
         }
     };
     // ... existing effects ...
@@ -138,7 +167,13 @@ export default function ZoneModal({
         {
             header: 'Stok',
             accessor: 'quantity',
-            render: (row) => <Badge variant="success">{row.quantity}</Badge>
+            render: (row) => (
+                <EditableCell
+                    value={row.quantity}
+                    onSave={(val) => handleStockQuantityUpdate(row, val)}
+                    type="number"
+                />
+            )
         },
         {
             header: 'Açıklama',
@@ -158,13 +193,13 @@ export default function ZoneModal({
             render: (row) => (
                 <div className="action-buttons">
                     <Button variant="icon" className="btn-success" onClick={() => onOpenMovementModal(row, 'IN')} title="Stok Arttır">
-                        <ArrowUpCircle size={16} />
+                        <ArrowUpCircle size={20} strokeWidth={2.5} />
                     </Button>
                     <Button variant="icon" className="btn-danger" onClick={() => onOpenMovementModal(row, 'OUT')} title="Stok Çıkışı">
-                        <ArrowDownCircle size={16} />
+                        <ArrowDownCircle size={20} strokeWidth={2.5} />
                     </Button>
                     <Button variant="icon" className="btn-warning" onClick={() => onOpenMovementModal(row, 'TRANSFER')} title="Transfer">
-                        <ArrowRightLeft size={16} />
+                        <ArrowRightLeft size={20} strokeWidth={2.5} />
                     </Button>
                 </div>
             )
@@ -175,7 +210,7 @@ export default function ZoneModal({
     const ModalTitle = (
         <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Package size={20} />
+                <Package size={24} strokeWidth={2} fill="#e2e8f0" />
                 <span>{zone.name}</span>
             </div>
 
@@ -193,7 +228,7 @@ export default function ZoneModal({
                             autoFocus
                         />
                         <Button variant="success" size="sm" onClick={handleDescSave} disabled={isProcessing} className="p-1">
-                            <CheckSquare size={14} />
+                            <CheckSquare size={16} strokeWidth={2.5} />
                         </Button>
                         <Button variant="danger" size="sm" onClick={() => setIsEditingDesc(false)} disabled={isProcessing} className="p-1">
                             <span style={{ fontWeight: 'bold' }}>×</span>
@@ -210,7 +245,7 @@ export default function ZoneModal({
                             title="Açıklamayı Düzenle"
                             style={{ opacity: 0.5 }}
                         >
-                            <Edit2 size={14} />
+                            <Edit2 size={16} strokeWidth={2.5} />
                         </button>
                     </div>
                 )}
@@ -241,7 +276,7 @@ export default function ZoneModal({
                     onClick={() => setActiveTab('add_stock')}
                     style={{ paddingBottom: '0.5rem', borderBottom: activeTab === 'add_stock' ? '2px solid #2563eb' : 'none', fontWeight: activeTab === 'add_stock' ? 600 : 400, display: 'flex', alignItems: 'center', gap: '4px' }}
                 >
-                    <Plus size={16} /> Stok Ekle
+                    <Plus size={16} strokeWidth={3} /> Stok Ekle
                 </button>
             </div>
 
@@ -251,6 +286,7 @@ export default function ZoneModal({
                     <Table
                         columns={columns}
                         data={zoneItems}
+                        keyField="allocation_id"
                         emptyMessage="Bu bölgede henüz ürün yok"
                     />
                 )}
@@ -258,7 +294,7 @@ export default function ZoneModal({
                 {activeTab === 'add_stock' && (
                     <div className="add-stock-panel" style={{ padding: '0.5rem' }}>
                         <div className="alert alert-info" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px', padding: '1rem', background: '#eff6ff', borderRadius: '8px', color: '#1e40af' }}>
-                            <Package size={18} />
+                            <Package size={20} strokeWidth={2} fill="#bae6fd" />
                             <span><strong>{zone.name}</strong> alanına yeni stok girişi yapıyorsunuz.</span>
                         </div>
 

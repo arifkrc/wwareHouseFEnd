@@ -127,6 +127,31 @@ export default function UserSettings() {
         }
     };
 
+    // Change Role State (Superadmin only)
+    const [showRoleModal, setShowRoleModal] = useState(false);
+    const [roleForm, setRoleForm] = useState({ role: 'user' });
+
+    const openRoleModal = (user) => {
+        setSelectedUser(user);
+        setRoleForm({ role: user.role });
+        setShowRoleModal(true);
+    };
+
+    const handleRoleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await api.put(`/auth/users/${selectedUser.id}/role`, {
+                role: roleForm.role
+            });
+            success(`${selectedUser.username} kullanıcısının rolü güncellendi`);
+            setShowRoleModal(false);
+            setSelectedUser(null);
+            fetchUsers();
+        } catch (err) {
+            error(err.response?.data?.error || 'Rol güncellenemedi');
+        }
+    };
+
     // Derived Logic for Permissions
     const canManageRole = (targetRole) => {
         if (currentUser.role === 'superadmin') return true;
@@ -171,9 +196,19 @@ export default function UserSettings() {
                                 const isSelf = row.id === currentUser.id;
                                 const canDelete = !isSelf && canManageRole(row.role);
                                 const canEdit = !isSelf && canManageRole(row.role); // Same logic for password
+                                const canChangeRole = !isSelf && currentUser.role === 'superadmin';
 
                                 return (
                                     <div className="action-buttons">
+                                        {canChangeRole && (
+                                            <Button
+                                                variant="icon"
+                                                className="btn-primary"
+                                                onClick={() => openRoleModal(row)}
+                                                title="Rol Değiştir"
+                                                icon={Shield}
+                                            />
+                                        )}
                                         {canEdit && (
                                             <Button
                                                 variant="icon"
@@ -202,6 +237,45 @@ export default function UserSettings() {
                     emptyMessage="Henüz kullanıcı yok."
                 />
             </div>
+
+            {/* Role Change Modal */}
+            {showRoleModal && selectedUser && (
+                <div className="modal-overlay" onClick={() => setShowRoleModal(false)}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3 className="modal-title">
+                                <Shield size={20} />
+                                Rol Değiştir ({selectedUser.username})
+                            </h3>
+                            <button className="modal-close" onClick={() => setShowRoleModal(false)}>×</button>
+                        </div>
+
+                        <form onSubmit={handleRoleSubmit}>
+                            <div className="form-group">
+                                <label className="form-label">Yeni Rol</label>
+                                <select
+                                    className="form-select"
+                                    value={roleForm.role}
+                                    onChange={(e) => setRoleForm({ ...roleForm, role: e.target.value })}
+                                >
+                                    <option value="user">Kullanıcı</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="superadmin">Süper Admin</option>
+                                </select>
+                            </div>
+
+                            <div className="modal-footer">
+                                <Button variant="outline" type="button" onClick={() => setShowRoleModal(false)}>
+                                    İptal
+                                </Button>
+                                <Button type="submit" icon={Save}>
+                                    Güncelle
+                                </Button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Create User Modal */}
             {showCreateModal && (

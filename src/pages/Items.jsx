@@ -180,8 +180,13 @@ export default function Items() {
 
             await createMovement(movementForm.type, movementData);
 
-            await refreshMovements();
-            await refreshItems();
+            await createMovement(movementForm.type, movementData);
+
+            // Parallel refresh for speed
+            Promise.all([
+                refreshMovements(),
+                refreshItems()
+            ]).catch(err => console.error(err));
 
             // If we are in detail view, we might want to refresh the selected item details?
             // The detail view relies on 'selectedItem' object. 
@@ -191,10 +196,6 @@ export default function Items() {
             // Simple fix: Close detail modal if it's open, or user can re-open.
             // Better: 'refreshItems' updates the 'items' array. If 'selectedItem' is just a reference, it won't update?
             // Actually 'selectedItem' is a separate state. We need to find the updated item from new 'items' list if we want to keep it open.
-
-            const updatedItem = items.find(i => i.id === selectedItem.id);
-            // Note: 'items' here is from closure, might be old until next render. 
-            // So simpler to just show success and let user see updated list.
 
             success('İşlem başarılı');
             setShowMovementModal(false);
@@ -229,7 +230,7 @@ export default function Items() {
 
         let initialForm = {
             type,
-            quantity: '',
+            quantity: type === MOVEMENT_TYPES.OUT ? alloc.quantity : '', // Auto-fill for OUT
             toLocationId: '',
             customer_code: '',
             notes: ''
@@ -309,7 +310,7 @@ export default function Items() {
         <div className="container" style={{ paddingBottom: '2rem', paddingTop: '2rem' }}>
             <div className="items-header">
                 <div>
-                    <h1><Package size={28} /> Ürün Listesi</h1>
+                    <h1><Package size={28} strokeWidth={2} fill="#e2e8f0" style={{ color: '#1e293b' }} /> Ürün Listesi</h1>
                     <p className="text-muted">Tüm ürünlerin stok durumu ve detayları</p>
                 </div>
 

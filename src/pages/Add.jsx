@@ -109,7 +109,7 @@ export default function Add() {
   return (
     <div className="container add-page" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
       <div className="page-header">
-        <h1><Plus size={28} /> Ekle</h1>
+        <h1><Plus size={28} strokeWidth={2} /> Ekle</h1>
         <p>Yeni ürün ve stok ekleyin</p>
       </div>
 
@@ -135,7 +135,7 @@ export default function Add() {
       <div className="add-content">
         {isAdmin && activeTab === 'product' && (
           <div className="card">
-            <h3><Package size={20} /> Yeni Ürün Ekle</h3>
+            <h3><Package size={20} strokeWidth={2} /> Yeni Ürün Ekle</h3>
             <p className="help-text">Sisteme yeni bir ürün ekleyin. Daha sonra bu ürüne stok atayabilirsiniz.</p>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
               <label className="btn btn-outline" style={{ cursor: 'pointer' }}>
@@ -254,7 +254,7 @@ export default function Add() {
 
         {activeTab === 'stock' && (
           <div className="card">
-            <h3><Archive size={20} /> Stok Ekle</h3>
+            <h3><Archive size={20} strokeWidth={2} /> Stok Ekle</h3>
             <p className="help-text">Mevcut bir ürüne lokasyona stok ekleyin.</p>
 
             <form onSubmit={handleStockSubmit} className="add-form">

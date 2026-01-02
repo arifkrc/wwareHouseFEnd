@@ -147,7 +147,7 @@ export default function BulkImport() {
   return (
     <div className="bulk-import-page">
       <div className="page-header">
-        <h1><Upload size={28} /> Toplu Ürün Girişi</h1>
+        <h1><Upload size={28} strokeWidth={2} /> Toplu Ürün Girişi</h1>
         <div className="header-actions">
           <button className="btn btn-outline" onClick={exportTemplate}>
             CSV Şablon İndir
@@ -172,7 +172,7 @@ export default function BulkImport() {
           <div className="table-header">
             <h3>Ürünler ({items.length})</h3>
             <button type="button" className="btn btn-primary" onClick={addRow}>
-              <Plus size={18} /> Satır Ekle
+              <Plus size={18} strokeWidth={2.5} /> Satır Ekle
             </button>
           </div>
 
@@ -262,7 +262,7 @@ export default function BulkImport() {
 
           <div className="form-footer">
             <button type="submit" className="btn btn-success" disabled={loading}>
-              <Save size={18} /> {loading ? 'Kaydediliyor...' : `${items.length} Ürün Kaydet`}
+              <Save size={18} strokeWidth={2.5} /> {loading ? 'Kaydediliyor...' : `${items.length} Ürün Kaydet`}
             </button>
           </div>
         </div>

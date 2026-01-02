@@ -49,7 +49,7 @@ export default function Settings() {
   return (
     <div className="container settings-page" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
       <div className="page-header">
-        <h1><SettingsIcon size={28} /> Sistem Ayarları</h1>
+        <h1><SettingsIcon size={28} strokeWidth={2} /> Sistem Ayarları</h1>
         <p>Lokasyonları ve ürünleri yönetin</p>
       </div>
 
@@ -58,21 +58,21 @@ export default function Settings() {
           className={`tab-button ${activeTab === 'locations' ? 'active' : ''}`}
           onClick={() => setActiveTab('locations')}
         >
-          <MapPin size={18} />
+          <MapPin size={18} strokeWidth={2} />
           Lokasyonlar
         </button>
         <button
           className={`tab-button ${activeTab === 'items' ? 'active' : ''}`}
           onClick={() => setActiveTab('items')}
         >
-          <Package size={18} />
+          <Package size={18} strokeWidth={2} />
           Ürünler
         </button>
         <button
           className={`tab-button ${activeTab === 'password' ? 'active' : ''}`}
           onClick={() => setActiveTab('password')}
         >
-          <Lock size={18} />
+          <Lock size={18} strokeWidth={2} />
           Şifre Değiştir
         </button>
         {isAdmin && (
@@ -80,7 +80,7 @@ export default function Settings() {
             className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
             onClick={() => setActiveTab('users')}
           >
-            <Users size={18} />
+            <Users size={18} strokeWidth={2} />
             Kullanıcılar
           </button>
         )}

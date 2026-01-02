@@ -117,7 +117,7 @@ export default function Movements() {
     <div className="container movements-page" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
       <div className="page-header">
         <div>
-          <h1><History size={28} /> Hareket Geçmişi</h1>
+          <h1><History size={28} strokeWidth={2} /> Hareket Geçmişi</h1>
           <p>Tüm stok hareketlerinin geçmişi</p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>

@@ -110,7 +110,7 @@ export default function ItemDetailModal({ isOpen, onClose, item, locations, onMo
                         variant="icon"
                         className="btn-success"
                         size="sm"
-                        icon={ArrowUpCircle}
+                        icon={(props) => <ArrowUpCircle {...props} strokeWidth={2.5} />}
                         onClick={() => onMovementRequest(MOVEMENT_TYPES.IN, row.originalItem, row.locId, row.locationName, row.alloc)}
                         title="Giriş"
                     />
@@ -118,7 +118,7 @@ export default function ItemDetailModal({ isOpen, onClose, item, locations, onMo
                         variant="icon"
                         className="btn-danger"
                         size="sm"
-                        icon={ArrowDownCircle}
+                        icon={(props) => <ArrowDownCircle {...props} strokeWidth={2.5} />}
                         onClick={() => onMovementRequest(MOVEMENT_TYPES.OUT, row.originalItem, row.locId, row.locationName, row.alloc)}
                         title="Çıkış"
                     />
@@ -126,7 +126,7 @@ export default function ItemDetailModal({ isOpen, onClose, item, locations, onMo
                         variant="icon"
                         className="btn-warning"
                         size="sm"
-                        icon={ArrowRightLeft}
+                        icon={(props) => <ArrowRightLeft {...props} strokeWidth={2.5} />}
                         onClick={() => onMovementRequest(MOVEMENT_TYPES.TRANSFER, row.originalItem, row.locId, row.locationName, row.alloc)}
                         title="Transfer"
                     />

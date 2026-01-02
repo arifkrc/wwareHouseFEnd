@@ -121,6 +121,12 @@ export default function FactoryLayout() {
       notes: ''
     });
     setShowMovementModal(true);
+    setMovementForm({
+      type: type,
+      quantity: type === MOVEMENT_TYPES.OUT ? item.quantity : '',
+      toLocationId: '',
+      notes: ''
+    });
   };
 
   const handleMovement = async () => {
@@ -171,10 +177,17 @@ export default function FactoryLayout() {
       setShowMovementModal(false);
       setSelectedItem(null);
 
-      // Refresh data in correct order: movements -> items -> zones
-      await refreshMovements();
-      await refreshItems();
-      await refreshZones();
+      // 1. FAST UPDATE: Refresh the current zone's list immediately (if we are in a zone)
+      if (currentZone) {
+        await fetchZoneAllocations();
+      }
+
+      // 2. BACKGROUND UPDATE: Refresh global counters without blocking logic
+      Promise.all([
+        refreshMovements(),
+        refreshItems(),
+        refreshZones()
+      ]).catch(err => console.warn('Background refresh failed', err));
 
       const typeLabel = type === MOVEMENT_TYPES.IN ? 'Giriş' :
         type === MOVEMENT_TYPES.OUT ? 'Çıkış' : 'Transfer';

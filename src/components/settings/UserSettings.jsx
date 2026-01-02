@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Users, Plus, Key, Trash2, Save } from 'lucide-react';
+import { Users, Plus, Key, Trash2, Save, Shield } from 'lucide-react';
 import Button from '../common/Button';
 import Table from '../common/Table';
 import api from '../../services/api';
 import { useToast } from '../../hooks/useToast';
+import { useAuth } from '../../context/AuthContext';
 import ConfirmDialog from '../ConfirmDialog';
 
 export default function UserSettings() {
     const { success, error } = useToast();
+    const { user: currentUser } = useAuth();
 
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -125,7 +127,12 @@ export default function UserSettings() {
         }
     };
 
-
+    // Derived Logic for Permissions
+    const canManageRole = (targetRole) => {
+        if (currentUser.role === 'superadmin') return true;
+        if (currentUser.role === 'admin' && targetRole === 'user') return true;
+        return false;
+    };
 
     return (
         <div className="settings-content">
@@ -151,31 +158,43 @@ export default function UserSettings() {
                             header: 'Rol',
                             accessor: 'role',
                             cell: (row) => (
-                                <span className={`badge ${row.role === 'admin' ? 'badge-primary' : 'badge-secondary'}`}>
-                                    {row.role === 'admin' ? 'Admin' : 'Kullanıcı'}
+                                <span className={`badge ${row.role === 'superadmin' ? 'badge-primary' : row.role === 'admin' ? 'badge-info' : 'badge-secondary'}`}>
+                                    {row.role === 'superadmin' ? <><Shield size={12} style={{ marginRight: 4 }} /> Süper Admin</> :
+                                        row.role === 'admin' ? 'Admin' : 'Kullanıcı'}
                                 </span>
                             )
                         },
                         {
                             header: 'İşlemler',
-                            cell: (row) => (
-                                <div className="action-buttons">
-                                    <Button
-                                        variant="icon"
-                                        className="btn-warning"
-                                        onClick={() => openPasswordModal(row)}
-                                        title="Şifre Değiştir"
-                                        icon={Key}
-                                    />
-                                    <Button
-                                        variant="icon"
-                                        className="btn-danger"
-                                        onClick={() => handleDelete(row)}
-                                        title="Sil"
-                                        icon={Trash2}
-                                    />
-                                </div>
-                            )
+                            cell: (row) => {
+                                // Prevent actions on self or higher roles
+                                const isSelf = row.id === currentUser.id;
+                                const canDelete = !isSelf && canManageRole(row.role);
+                                const canEdit = !isSelf && canManageRole(row.role); // Same logic for password
+
+                                return (
+                                    <div className="action-buttons">
+                                        {canEdit && (
+                                            <Button
+                                                variant="icon"
+                                                className="btn-warning"
+                                                onClick={() => openPasswordModal(row)}
+                                                title="Şifre Değiştir"
+                                                icon={Key}
+                                            />
+                                        )}
+                                        {canDelete && (
+                                            <Button
+                                                variant="icon"
+                                                className="btn-danger"
+                                                onClick={() => handleDelete(row)}
+                                                title="Sil"
+                                                icon={Trash2}
+                                            />
+                                        )}
+                                    </div>
+                                );
+                            }
                         }
                     ]}
                     data={users}
@@ -240,7 +259,13 @@ export default function UserSettings() {
                                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                                 >
                                     <option value="user">Kullanıcı</option>
-                                    <option value="admin">Admin</option>
+                                    {/* Only Superadmin can create Admin */}
+                                    {currentUser?.role === 'superadmin' && (
+                                        <>
+                                            <option value="admin">Admin</option>
+                                            <option value="superadmin">Süper Admin</option>
+                                        </>
+                                    )}
                                 </select>
                             </div>
 

@@ -114,19 +114,26 @@ export default function FactoryLayout() {
     };
 
     setSelectedItem(itemWithLocation);
+
+    // Auto-fill logic
+    let initialQuantity = '';
+    let initialNote = '';
+
+    if (type === MOVEMENT_TYPES.OUT || type === MOVEMENT_TYPES.PATLATMA || type === MOVEMENT_TYPES.SEVK) {
+      initialQuantity = item.quantity; // Default to full stock for out/patlatma/sevk
+    }
+
+    if (type === MOVEMENT_TYPES.PATLATMA) {
+      initialNote = 'Patlatma';
+    }
+
     setMovementForm({
       type: type,
-      quantity: '',
+      quantity: initialQuantity,
       toLocationId: '',
-      notes: ''
+      notes: initialNote
     });
     setShowMovementModal(true);
-    setMovementForm({
-      type: type,
-      quantity: type === MOVEMENT_TYPES.OUT ? item.quantity : '',
-      toLocationId: '',
-      notes: ''
-    });
   };
 
   const handleMovement = async () => {

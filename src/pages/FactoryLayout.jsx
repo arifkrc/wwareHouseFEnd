@@ -164,9 +164,37 @@ export default function FactoryLayout() {
         // OUT: from current zone (ürün bu alandan çıkıyor)
         movementData.from_location_id = selectedItem.current_zone_location_id;
         movementData.movement_note = `${selectedItem.current_zone_name} alanından çıkarıldı: ${movementForm.notes}`;
+      } else if (movementForm.type === MOVEMENT_TYPES.PATLATMA) {
+        // PATLATMA: Special OUT
+        movementData.from_location_id = selectedItem.current_zone_location_id;
+        movementData.movement_note = `Patlatma/İmha: ${movementForm.notes}`;
+        movementData.movement_type = 'PATLATMA';
+        // Calls creation with 'OUT' endpoint usually, or we can use the generic creator.
+        // wait, useMovements hook's createMovement maps types to endpoints.
+        // We need to ensure useMovements handles custom types or we map it here.
+      } else if (movementForm.type === MOVEMENT_TYPES.SEVK) {
+        // SEVK: Special OUT
+        movementData.from_location_id = selectedItem.current_zone_location_id;
+        movementData.movement_note = `Sevk Edildi: ${movementForm.notes}`;
+        movementData.movement_type = 'SEVK';
       }
 
-      await createMovement(movementForm.type, movementData);
+      // If useMovements.createMovement strictly expects IN/OUT/TRANSFER as endpoint segments,
+      // we might need to change how we call it.
+      // Let's assume we mapped backend routes as:
+      // POST /in
+      // POST /out (accepts movement_type param)
+      // POST /transfer
+      // So checks below.
+
+      let endpointType = movementForm.type;
+      if (movementForm.type === MOVEMENT_TYPES.PATLATMA || movementForm.type === MOVEMENT_TYPES.SEVK) {
+        endpointType = MOVEMENT_TYPES.OUT; // Use the OUT endpoint
+        movementData.movement_type = movementForm.type; // Pass the real type
+        movementData.is_export = movementForm.isExport || false; // Pass export flag if we add it to modal later
+      }
+
+      await createMovement(endpointType, movementData);
 
       // Store item info before clearing state
       const itemName = selectedItem.item_name;
@@ -190,11 +218,55 @@ export default function FactoryLayout() {
       ]).catch(err => console.warn('Background refresh failed', err));
 
       const typeLabel = type === MOVEMENT_TYPES.IN ? 'Giriş' :
-        type === MOVEMENT_TYPES.OUT ? 'Çıkış' : 'Transfer';
+        type === MOVEMENT_TYPES.OUT ? 'Çıkış' :
+          type === MOVEMENT_TYPES.PATLATMA ? 'Patlatma' :
+            type === MOVEMENT_TYPES.SEVK ? 'Sevk' : 'Transfer';
       success(`${typeLabel}: ${quantity} adet ${itemName}`);
     } catch (err) {
       console.error('Hareket kaydedilemedi:', err);
       error('Hareket kaydedilirken hata oluştu');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const onBulkTransfer = async (fromLocationId, toLocationId, note) => {
+    setIsProcessing(true);
+    try {
+      await api.post('/movements/bulk-transfer', {
+        from_location_id: fromLocationId,
+        to_location_id: toLocationId,
+        note: note
+      });
+
+      // Refresh everything
+      await handleModalRefresh();
+      success('Toplu transfer başarılı');
+    } catch (err) {
+      console.error('Bulk transfer failed:', err);
+      // Extra safety check for error message
+      const msg = err.response?.data?.error || err.message || 'Toplu transfer başarısız';
+      error(msg);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const onClearZone = async (locationId, note) => {
+    setIsProcessing(true);
+    try {
+      await api.post('/movements/clear-zone', {
+        location_id: locationId,
+        note: note
+      });
+
+      // Refresh everything
+      await handleModalRefresh();
+      success('Alan başarıyla temizlendi');
+    } catch (err) {
+      console.error('Clear zone failed:', err);
+      const msg = err.response?.data?.error || err.message || 'Alan temizleme başarısız';
+      error(msg);
     } finally {
       setIsProcessing(false);
     }
@@ -223,7 +295,8 @@ export default function FactoryLayout() {
         quantity: parseInt(formData.quantity),
         to_location_id: locationId,
         customer_code: formData.customerCode || null,
-        movement_note: `Panelden Hızlı Giriş: ${formData.notes || ''}`
+        movement_note: `Panelden Hızlı Giriş: ${formData.notes || ''}`,
+        is_export: formData.isExport
       };
 
       await createMovement(MOVEMENT_TYPES.IN, movementData);
@@ -327,6 +400,9 @@ export default function FactoryLayout() {
         allItems={items} // Pass full items list for search
         onUpdateDescription={onUpdateDescription}
         onAddStock={onAddStock}
+        onBulkTransfer={onBulkTransfer}
+        onClearZone={onClearZone}
+        locations={locations} // Pass locations for transfer selection
         onOpenMovementModal={openMovementModal} // Parent handles movement modal
         isProcessing={isProcessing}
         onRefresh={handleModalRefresh} // Use FAST refresh

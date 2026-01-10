@@ -6,7 +6,9 @@
 export const MOVEMENT_TYPES = {
   IN: 'IN',
   OUT: 'OUT',
-  TRANSFER: 'TRANSFER'
+  TRANSFER: 'TRANSFER',
+  PATLATMA: 'PATLATMA',
+  SEVK: 'SEVK'
 };
 
 export const getMovementTypeLabel = (type) => {
@@ -17,6 +19,10 @@ export const getMovementTypeLabel = (type) => {
       return 'Çıkış';
     case MOVEMENT_TYPES.TRANSFER:
       return 'Transfer';
+    case MOVEMENT_TYPES.PATLATMA:
+      return 'Patlatma';
+    case MOVEMENT_TYPES.SEVK:
+      return 'Sevk';
     default:
       return type;
   }
@@ -30,6 +36,10 @@ export const getMovementTypeBadge = (type) => {
       return 'badge-danger';
     case MOVEMENT_TYPES.TRANSFER:
       return 'badge-info';
+    case MOVEMENT_TYPES.PATLATMA:
+      return 'badge-warning'; // or danger, but distinctive
+    case MOVEMENT_TYPES.SEVK:
+      return 'badge-primary';
     default:
       return '';
   }

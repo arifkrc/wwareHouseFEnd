@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Plus, CheckSquare, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Edit2 } from 'lucide-react';
+import { Package, Plus, CheckSquare, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Edit2, Bomb, Truck, RefreshCw, Trash2, AlertTriangle, ArrowRightCircle, Globe } from 'lucide-react';
 import api from '../services/api';
 import { useMovements } from '../hooks/useMovements';
 import ItemSearchSelect from './ItemSearchSelect';
@@ -23,7 +23,10 @@ export default function ZoneModal({
     onRefresh, // New prop to trigger parent refresh
     onUpdateItem, // New prop for updating item details
     showSuccess, // Parent toast handler
-    showError // Parent toast handler
+    showError, // Parent toast handler
+    onBulkTransfer, // New prop
+    onClearZone,    // New prop
+    locations       // New prop (list of all locations for transfer target)
 }) {
     if (!zone) return null;
     const { updateMovement } = useMovements();
@@ -97,7 +100,16 @@ export default function ZoneModal({
         customerId: '',
         customerCode: '',
         notes: '',
-        showCustomerInput: false
+
+        showCustomerInput: false,
+        isExport: false
+    });
+
+    // Bulk Actions State
+    const [bulkForm, setBulkForm] = useState({
+        targetLocationId: '',
+        note: '',
+        confirmClear: false
     });
 
     // Reset states when modal opens/closes or zone changes
@@ -106,7 +118,8 @@ export default function ZoneModal({
             setActiveTab('assigned');
             setTempDesc(zone.description || '');
             setIsEditingDesc(false);
-            setAddStockForm({ itemId: '', quantity: '', customerCode: '', notes: '', showCustomerInput: false });
+            setAddStockForm({ itemId: '', quantity: '', customerCode: '', notes: '', showCustomerInput: false, isExport: false });
+            setBulkForm({ targetLocationId: '', note: '', confirmClear: false });
         }
     }, [isOpen, zone]);
 
@@ -118,7 +131,8 @@ export default function ZoneModal({
     const handleStockSubmit = async () => {
         await onAddStock(zone.locationId, addStockForm);
         // Reset form on success (parent handles the actual API call and success notification)
-        setAddStockForm({ itemId: '', quantity: '', customerCode: '', notes: '', showCustomerInput: false });
+        // Reset form on success (parent handles the actual API call and success notification)
+        setAddStockForm({ itemId: '', quantity: '', customerCode: '', notes: '', showCustomerInput: false, isExport: false });
         setActiveTab('assigned');
     };
     // ... existing effects ...
@@ -198,7 +212,13 @@ export default function ZoneModal({
                     <Button variant="icon" className="btn-danger" onClick={() => onOpenMovementModal(row, 'OUT')} title="Stok Çıkışı">
                         <ArrowDownCircle size={20} strokeWidth={2.5} />
                     </Button>
-                    <Button variant="icon" className="btn-warning" onClick={() => onOpenMovementModal(row, 'TRANSFER')} title="Transfer">
+                    <Button variant="icon" className="btn-warning" onClick={() => onOpenMovementModal(row, 'PATLATMA')} title="Patlatma / İmha">
+                        <Bomb size={20} strokeWidth={2.5} />
+                    </Button>
+                    <Button variant="icon" className="btn-primary" onClick={() => onOpenMovementModal(row, 'SEVK')} title="Sevk Et">
+                        <Truck size={20} strokeWidth={2.5} />
+                    </Button>
+                    <Button variant="icon" className="btn-info" onClick={() => onOpenMovementModal(row, 'TRANSFER')} title="Transfer">
                         <ArrowRightLeft size={20} strokeWidth={2.5} />
                     </Button>
                 </div>
@@ -278,6 +298,14 @@ export default function ZoneModal({
                 >
                     <Plus size={16} strokeWidth={3} /> Stok Ekle
                 </button>
+
+                <button
+                    className={`tab ${activeTab === 'bulk_actions' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('bulk_actions')}
+                    style={{ paddingBottom: '0.5rem', borderBottom: activeTab === 'bulk_actions' ? '2px solid #2563eb' : 'none', fontWeight: activeTab === 'bulk_actions' ? 600 : 400, display: 'flex', alignItems: 'center', gap: '4px', color: '#b91c1c' }}
+                >
+                    <RefreshCw size={16} strokeWidth={3} /> Toplu İşlemler
+                </button>
             </div>
 
             {/* Content */}
@@ -341,6 +369,20 @@ export default function ZoneModal({
                             )}
                         </div>
 
+                        <div className="form-group checkbox-group" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setAddStockForm({ ...addStockForm, isExport: !addStockForm.isExport })}>
+                            <div style={{
+                                width: '20px', height: '20px', borderRadius: '4px', border: '2px solid #cbd5e1',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                background: addStockForm.isExport ? '#2563eb' : 'white',
+                                borderColor: addStockForm.isExport ? '#2563eb' : '#cbd5e1'
+                            }}>
+                                {addStockForm.isExport && <CheckSquare size={14} color="white" />}
+                            </div>
+                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#334155', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                Yurtdışı Siparişi <Globe size={16} strokeWidth={2} className="text-blue-600" />
+                            </span>
+                        </div>
+
                         <div className="form-group">
                             <label className="form-label">Not</label>
                             <input
@@ -363,6 +405,114 @@ export default function ZoneModal({
                                 Stoğa Ekle
                             </Button>
                         </div>
+                    </div>
+                )}
+
+                {activeTab === 'bulk_actions' && (
+                    <div className="bulk-actions-panel" style={{ padding: '0.5rem' }}>
+
+                        {/* Bulk Transfer Section */}
+                        <div style={{ marginBottom: '2rem', padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#f8fafc' }}>
+                            <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem', color: '#0f172a' }}>
+                                <ArrowRightCircle size={20} strokeWidth={2} className="text-primary" />
+                                Toplu Transfer
+                            </h4>
+                            <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '1rem' }}>
+                                Bu alandaki <strong>tüm ürünleri ({zoneItems.length} kalem)</strong> başka bir alana taşıyın.
+                            </p>
+
+                            <div className="form-group">
+                                <label className="form-label">Hedef Lokasyon</label>
+                                <select
+                                    className="form-input"
+                                    value={bulkForm.targetLocationId}
+                                    onChange={(e) => setBulkForm({ ...bulkForm, targetLocationId: e.target.value })}
+                                >
+                                    <option value="">Hedef Seç...</option>
+                                    {locations && locations
+                                        .filter(l => l.id !== zone.locationId && !l.passive) // Exclude current and passive
+                                        .sort((a, b) => a.location_code.localeCompare(b.location_code))
+                                        .map(loc => (
+                                            <option key={loc.id} value={loc.id}>
+                                                {loc.location_code} - {loc.description || ''}
+                                            </option>
+                                        ))
+                                    }
+                                </select>
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Not</label>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    placeholder="Opsiyonel transfer notu..."
+                                    value={bulkForm.note}
+                                    onChange={(e) => setBulkForm({ ...bulkForm, note: e.target.value })}
+                                />
+                            </div>
+
+                            <Button
+                                variant="primary"
+                                disabled={!bulkForm.targetLocationId || zoneItems.length === 0 || isProcessing}
+                                onClick={() => onBulkTransfer(zone.locationId, bulkForm.targetLocationId, bulkForm.note)}
+                                isLoading={isProcessing}
+                            >
+                                <RefreshCw size={16} style={{ marginRight: 6 }} />
+                                Hepsini Taşı
+                            </Button>
+                        </div>
+
+                        {/* Clear Zone Section */}
+                        <div style={{ padding: '1rem', border: '1px solid #fee2e2', borderRadius: '8px', background: '#fff1f2' }}>
+                            <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem', color: '#991b1b' }}>
+                                <Trash2 size={20} strokeWidth={2} />
+                                Alanı Boşalt
+                            </h4>
+
+                            <div className="alert alert-danger" style={{ display: 'flex', gap: '8px', padding: '0.75rem', background: '#fecaca', color: '#991b1b', borderRadius: '6px', fontSize: '14px', marginBottom: '1rem' }}>
+                                <AlertTriangle size={20} />
+                                <div>
+                                    <strong>DİKKAT:</strong> Bu işlem alandaki <strong>tüm stokları ({zoneItems.length} kalem)</strong> silecektir.
+                                    Bu işlem geri alınamaz ancak hareket geçmişinde "Alan Temizliği" olarak görünecektir.
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Not (Zorunlu)</label>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    placeholder="Neden boşaltılıyor? (Örn: Sayım düzeltmesi)"
+                                    value={bulkForm.note} // Use same note state or separate? Let's verify usage. separate might be safer but same for simplicity here.
+                                    onChange={(e) => setBulkForm({ ...bulkForm, note: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="form-group checkbox-group" style={{ marginBottom: '1rem' }}>
+                                <input
+                                    type="checkbox"
+                                    id="confirmClear"
+                                    checked={bulkForm.confirmClear}
+                                    onChange={(e) => setBulkForm({ ...bulkForm, confirmClear: e.target.checked })}
+                                    style={{ width: '16px', height: '16px' }}
+                                />
+                                <label htmlFor="confirmClear" style={{ marginLeft: '8px', fontWeight: 600, color: '#991b1b', cursor: 'pointer' }}>
+                                    Evet, bu alanı tamamen boşaltmak istiyorum
+                                </label>
+                            </div>
+
+                            <Button
+                                className="btn-danger"
+                                disabled={!bulkForm.confirmClear || !bulkForm.note || zoneItems.length === 0 || isProcessing}
+                                onClick={() => onClearZone(zone.locationId, bulkForm.note)}
+                                isLoading={isProcessing}
+                            >
+                                <Trash2 size={16} style={{ marginRight: 6 }} />
+                                Alanı Boşalt
+                            </Button>
+                        </div>
+
                     </div>
                 )}
 

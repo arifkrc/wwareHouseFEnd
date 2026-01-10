@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowUpCircle, ArrowDownCircle, ArrowRightLeft } from 'lucide-react';
+import { ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Bomb, Truck } from 'lucide-react';
 import { MOVEMENT_TYPES } from '../utils/movementHelpers';
 import Modal from './common/Modal';
 import Button from './common/Button';
@@ -20,6 +20,8 @@ export default function MovementModal({
     const getVariant = () => {
         if (movementForm.type === MOVEMENT_TYPES.IN) return 'success';
         if (movementForm.type === MOVEMENT_TYPES.OUT) return 'danger';
+        if (movementForm.type === MOVEMENT_TYPES.PATLATMA) return 'warning';
+        if (movementForm.type === MOVEMENT_TYPES.SEVK) return 'primary';
         return 'primary'; // Transfer
     };
 
@@ -27,6 +29,8 @@ export default function MovementModal({
         if (movementForm.type === MOVEMENT_TYPES.IN) return <span className="flex items-center text-emerald-600"><ArrowUpCircle size={20} className="mr-2" /> {titlePrefix} Stok Girişi</span>;
         if (movementForm.type === MOVEMENT_TYPES.OUT) return <span className="flex items-center text-red-600"><ArrowDownCircle size={20} className="mr-2" /> {titlePrefix} Stok Çıkışı</span>;
         if (movementForm.type === MOVEMENT_TYPES.TRANSFER) return <span className="flex items-center text-blue-600"><ArrowRightLeft size={20} className="mr-2" /> {titlePrefix} Transfer</span>;
+        if (movementForm.type === MOVEMENT_TYPES.PATLATMA) return <span className="flex items-center text-orange-600"><Bomb size={20} className="mr-2" /> {titlePrefix} Patlatma / İmha</span>;
+        if (movementForm.type === MOVEMENT_TYPES.SEVK) return <span className="flex items-center text-blue-600"><Truck size={20} className="mr-2" /> {titlePrefix} Sevk</span>;
         return 'Hareket İşlemi';
     };
 
@@ -36,7 +40,10 @@ export default function MovementModal({
                 İptal
             </Button>
             <Button variant={getVariant()} onClick={handleMovement} isLoading={isProcessing}>
-                {movementForm.type === MOVEMENT_TYPES.IN ? 'Stok Ekle' : movementForm.type === MOVEMENT_TYPES.OUT ? 'Çıkış Yap' : 'Transfer Et'}
+                {movementForm.type === MOVEMENT_TYPES.IN ? 'Stok Ekle' :
+                    movementForm.type === MOVEMENT_TYPES.OUT ? 'Çıkış Yap' :
+                        movementForm.type === MOVEMENT_TYPES.PATLATMA ? 'Patlat' :
+                            movementForm.type === MOVEMENT_TYPES.SEVK ? 'Sevk Et' : 'Transfer Et'}
             </Button>
         </>
     );

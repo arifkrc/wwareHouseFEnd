@@ -53,10 +53,7 @@ export const useItems = () => {
     onSuccess: () => queryClient.invalidateQueries(['items']),
   });
 
-  const bulkCreateMutation = useMutation({
-    mutationFn: (itemsData) => api.post('/bulk/bulk-import', { items: itemsData }),
-    onSuccess: () => queryClient.invalidateQueries(['items']),
-  });
+
 
   return {
     items,
@@ -82,10 +79,7 @@ export const useItems = () => {
     deleteItem: async (id) => {
       await deleteMutation.mutateAsync(id);
     },
-    bulkCreateItems: async (data) => {
-      const res = await bulkCreateMutation.mutateAsync(data);
-      return res.data;
-    },
+
     pagination
   };
 };

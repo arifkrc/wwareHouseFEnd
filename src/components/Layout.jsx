@@ -62,10 +62,7 @@ export default function Layout({ children }) {
             <Plus size={20} />
             <span>Ekle</span>
           </Link>
-          <Link to="/bulk-import" className="nav-link" onClick={closeMobileMenu}>
-            <Upload size={20} />
-            <span>Toplu Ekle</span>
-          </Link>
+
           <Link to="/movements" className="nav-link" onClick={closeMobileMenu}>
             <History size={20} />
             <span>Hareket Geçmişi</span>

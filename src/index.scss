@@ -84,12 +84,14 @@ body {
 }
 
 .btn-warning {
-  background: #3b82f6;
+  background: #f97316;
+  /* Orange-500 */
   color: white;
 }
 
 .btn-warning:hover:not(:disabled) {
-  background: #2563eb;
+  background: #ea580c;
+  /* Orange-600 */
 }
 
 .btn-outline {

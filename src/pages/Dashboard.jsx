@@ -27,8 +27,11 @@ export default function Dashboard() {
 
   const [stats, setStats] = useState({
     totalIn: 0,
+    totalIn: 0,
     totalOut: 0,
-    totalTransfer: 0
+    totalTransfer: 0,
+    total_patlatma: 0,
+    total_sevk: 0
   });
 
   const [widgetStats, setWidgetStats] = useState({

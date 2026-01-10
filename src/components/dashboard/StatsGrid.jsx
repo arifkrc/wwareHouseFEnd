@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, MapPin, ArrowDownToLine, ArrowUpFromLine, TrendingUp } from 'lucide-react';
+import { Package, MapPin, ArrowDownToLine, ArrowUpFromLine, TrendingUp, Truck } from 'lucide-react';
 
 export default function StatsGrid({ stats, widgetStats, locationCount, filters }) {
     return (
@@ -40,7 +40,27 @@ export default function StatsGrid({ stats, widgetStats, locationCount, filters }
                 </div>
                 <div className="stat-content">
                     <div className="dashboard-stat-value">{stats.totalOut}</div>
-                    <div className="dashboard-stat-label">Çıkış ({filters.startDate ? 'Seçilen' : '30 Gün'})</div>
+                    <div className="dashboard-stat-label">Toplam Çıkış</div>
+                </div>
+            </div>
+
+            <div className="stat-card">
+                <div className="stat-icon" style={{ background: '#ffedd5' }}>
+                    <Package size={24} color="#ea580c" />
+                </div>
+                <div className="stat-content">
+                    <div className="dashboard-stat-value">{stats.total_patlatma || 0}</div>
+                    <div className="dashboard-stat-label">İmha / Patlatma</div>
+                </div>
+            </div>
+
+            <div className="stat-card">
+                <div className="stat-icon" style={{ background: '#e0f2fe' }}>
+                    <Truck size={24} color="#0284c7" />
+                </div>
+                <div className="stat-content">
+                    <div className="dashboard-stat-value">{stats.total_sevk || 0}</div>
+                    <div className="dashboard-stat-label">Sevkiyat</div>
                 </div>
             </div>
 

@@ -366,3 +366,25 @@
   color: var(--primary);
   border-bottom-color: var(--primary);
 }
+
+.corner-ribbon {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  color: white;
+  padding: 4px;
+  border-radius: 4px 0 4px 0;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.corner-ribbon svg {
+  width: 14px;
+  height: 14px;
+}

@@ -9,7 +9,9 @@ export default function Table({
     keyField = 'id',
     isLoading = false,
     emptyMessage = 'Kayıt bulunamadı',
+    emptyMessage = 'Kayıt bulunamadı',
     onRowClick,
+    rowDecoration,
     children
 }) {
     // Sorting State
@@ -216,8 +218,11 @@ export default function Table({
                                         safeValue = JSON.stringify(value);
                                     }
 
+                                    const isFirstCell = colIndex === 0;
+
                                     return (
-                                        <td key={colIndex}>
+                                        <td key={colIndex} style={{ ... (col.style || {}), position: isFirstCell ? 'relative' : '' }}>
+                                            {isFirstCell && rowDecoration && rowDecoration(row)}
                                             {safeValue}
                                         </td>
                                     );

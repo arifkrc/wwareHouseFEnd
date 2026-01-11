@@ -30,7 +30,9 @@ export default function Items() {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [showZeroStock, setShowZeroStock] = useState(false);
+
     const [filterType, setFilterType] = useState('ALL'); // ALL, DISK, KAMPANA, POYRA
+    const [stockSourceFilter, setStockSourceFilter] = useState('ALL'); // ALL, DOMESTIC, EXPORT
 
     // Fetch all items on mount
     useEffect(() => {
@@ -85,6 +87,15 @@ export default function Items() {
             });
         }
 
+        // Filter by Stock Source (Domestic / Export)
+        if (stockSourceFilter !== 'ALL') {
+            result = result.filter(item => {
+                if (stockSourceFilter === 'DOMESTIC') return (item.quantity_domestic || 0) > 0;
+                if (stockSourceFilter === 'EXPORT') return (item.quantity_export || 0) > 0;
+                return true;
+            });
+        }
+
         if (!searchTerm) return result;
 
         const lowerSearch = searchTerm.toLowerCase();
@@ -92,7 +103,7 @@ export default function Items() {
             item.item_code.toLowerCase().includes(lowerSearch) ||
             item.item_name.toLowerCase().includes(lowerSearch)
         );
-    }, [items, searchTerm, showZeroStock, filterType]);
+    }, [items, searchTerm, showZeroStock, filterType, stockSourceFilter]);
 
     const handleSearch = (e) => setSearchTerm(e.target.value);
     const handleFilterType = (e) => setFilterType(e.target.value);
@@ -336,6 +347,17 @@ export default function Items() {
                             <option value="DISK">Disk</option>
                             <option value="KAMPANA">Kampana</option>
                             <option value="POYRA">Poyra</option>
+                        </select>
+
+                        <select
+                            className="form-select filter-select"
+                            value={stockSourceFilter}
+                            onChange={(e) => setStockSourceFilter(e.target.value)}
+                            style={{ marginLeft: '8px' }}
+                        >
+                            <option value="ALL">Tüm Kaynaklar</option>
+                            <option value="DOMESTIC">İç Piyasa</option>
+                            <option value="EXPORT">Yurtdışı</option>
                         </select>
                     </div>
 

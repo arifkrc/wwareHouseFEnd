@@ -49,8 +49,8 @@ export default function StatsGrid({ stats, widgetStats, locationCount, filters }
                     <Package size={24} color="#ea580c" />
                 </div>
                 <div className="stat-content">
-                    <div className="dashboard-stat-value">{stats.total_patlatma || 0}</div>
-                    <div className="dashboard-stat-label">İmha / Patlatma</div>
+                    <div className="dashboard-stat-value">{stats.totalPatlatmaQuantity || 0}</div>
+                    <div className="dashboard-stat-label">İmha / Patlatma (Adet)</div>
                 </div>
             </div>
 
@@ -59,8 +59,8 @@ export default function StatsGrid({ stats, widgetStats, locationCount, filters }
                     <Truck size={24} color="#0284c7" />
                 </div>
                 <div className="stat-content">
-                    <div className="dashboard-stat-value">{stats.total_sevk || 0}</div>
-                    <div className="dashboard-stat-label">Sevkiyat</div>
+                    <div className="dashboard-stat-value">{stats.totalSevkQuantity || 0}</div>
+                    <div className="dashboard-stat-label">Sevkiyat (Adet)</div>
                 </div>
             </div>
 

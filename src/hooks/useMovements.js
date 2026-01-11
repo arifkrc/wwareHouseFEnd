@@ -32,7 +32,11 @@ export const useMovements = () => {
         totalOut: parseInt(response.data.total_out || 0),
         totalTransfer: parseInt(response.data.total_transfer || 0),
         totalInQuantity: parseInt(response.data.total_in_quantity || 0),
-        totalOutQuantity: parseInt(response.data.total_out_quantity || 0)
+        totalOutQuantity: parseInt(response.data.total_out_quantity || 0),
+        total_patlatma: parseInt(response.data.total_patlatma || 0),
+        total_sevk: parseInt(response.data.total_sevk || 0),
+        totalPatlatmaQuantity: parseInt(response.data.total_patlatma_quantity || 0),
+        totalSevkQuantity: parseInt(response.data.total_sevk_quantity || 0)
       };
     } catch (err) {
       console.error('İstatistikler yüklenemedi:', err);

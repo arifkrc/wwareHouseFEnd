@@ -31,7 +31,9 @@ export default function Dashboard() {
     totalOut: 0,
     totalTransfer: 0,
     total_patlatma: 0,
-    total_sevk: 0
+    total_sevk: 0,
+    totalPatlatmaQuantity: 0,
+    totalSevkQuantity: 0
   });
 
   const [widgetStats, setWidgetStats] = useState({

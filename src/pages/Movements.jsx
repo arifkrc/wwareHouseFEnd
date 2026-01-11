@@ -40,6 +40,8 @@ export default function Movements() {
   }, [search, dateRange, refreshMovements]); // Include dateRange in debounce effect
 
   // Separate effect for Page/Sort changes
+  const [activeTab, setActiveTab] = useState('ALL');
+
   useEffect(() => {
     refreshMovements({
       page,
@@ -48,9 +50,10 @@ export default function Movements() {
       sortBy,
       order,
       start_date: dateRange.startDate,
-      end_date: dateRange.endDate
+      end_date: dateRange.endDate,
+      movement_type: activeTab === 'ALL' ? undefined : activeTab
     });
-  }, [page, sortBy, order, search, dateRange, refreshMovements]); // Added search, dateRange, refreshMovements to dependencies for completeness
+  }, [page, sortBy, order, search, dateRange, activeTab, refreshMovements]);
 
   const handleSort = (field) => {
     const newOrder = sortBy === field && order === 'desc' ? 'asc' : 'desc';
@@ -160,6 +163,35 @@ export default function Movements() {
             Excel İndir
           </Button>
         </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="tabs-container" style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' }}>
+        {[
+          { id: 'ALL', label: 'Tümü' },
+          { id: 'IN', label: 'Giriş' },
+          { id: 'OUT', label: 'Çıkış' },
+          { id: 'TRANSFER', label: 'Transfer' },
+          { id: 'PATLATMA', label: 'Patlatma' },
+          { id: 'SEVK', label: 'Sevkiyat' }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => { setActiveTab(tab.id); setPage(1); }}
+            style={{
+              padding: '0.5rem 1rem',
+              border: 'none',
+              background: 'none',
+              borderBottom: activeTab === tab.id ? '2px solid #2563eb' : '2px solid transparent',
+              color: activeTab === tab.id ? '#2563eb' : '#64748b',
+              fontWeight: activeTab === tab.id ? 600 : 500,
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       <div className="card">

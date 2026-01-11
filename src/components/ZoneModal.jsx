@@ -100,8 +100,6 @@ export default function ZoneModal({
         customerId: '',
         customerCode: '',
         notes: '',
-
-        showCustomerInput: false,
         isExport: false
     });
 
@@ -118,7 +116,7 @@ export default function ZoneModal({
             setActiveTab('assigned');
             setTempDesc(zone.description || '');
             setIsEditingDesc(false);
-            setAddStockForm({ itemId: '', quantity: '', customerCode: '', notes: '', showCustomerInput: false, isExport: false });
+            setAddStockForm({ itemId: '', quantity: '', customerCode: '', notes: '', isExport: false });
             setBulkForm({ targetLocationId: '', note: '', confirmClear: false });
         }
     }, [isOpen, zone]);
@@ -354,24 +352,14 @@ export default function ZoneModal({
                         </div>
 
                         <div className="form-group">
-                            <div
-                                style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', marginBottom: '8px', color: '#64748b' }}
-                                onClick={() => setAddStockForm(prev => ({ ...prev, showCustomerInput: !prev.showCustomerInput }))}
-                            >
-                                {addStockForm.showCustomerInput ? <CheckSquare size={16} style={{ marginRight: 6, color: '#2563eb' }} /> : <Plus size={16} style={{ marginRight: 6 }} />}
-                                <span style={{ fontSize: '14px', fontWeight: 500 }}>Firma / Müşteri Ata</span>
-                            </div>
-
-                            {addStockForm.showCustomerInput && (
-                                <input
-                                    type="text"
-                                    className="form-input"
-                                    value={addStockForm.customerCode}
-                                    onChange={(e) => setAddStockForm({ ...addStockForm, customerCode: e.target.value })}
-                                    placeholder="Örn: Firma A (Sevkiyat yapılacak yer)"
-                                    autoFocus
-                                />
-                            )}
+                            <label className="form-label">Firma / Müşteri (Opsiyonel)</label>
+                            <input
+                                type="text"
+                                className="form-input"
+                                value={addStockForm.customerCode}
+                                onChange={(e) => setAddStockForm({ ...addStockForm, customerCode: e.target.value })}
+                                placeholder="Örn: Firma A (Sevkiyat yapılacak yer)"
+                            />
                         </div>
 
                         <div className="form-group checkbox-group" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setAddStockForm({ ...addStockForm, isExport: !addStockForm.isExport })}>

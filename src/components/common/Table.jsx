@@ -9,7 +9,6 @@ export default function Table({
     keyField = 'id',
     isLoading = false,
     emptyMessage = 'Kayıt bulunamadı',
-    emptyMessage = 'Kayıt bulunamadı',
     onRowClick,
     rowDecoration,
     children

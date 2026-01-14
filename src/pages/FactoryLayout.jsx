@@ -148,7 +148,8 @@ export default function FactoryLayout() {
         item_id: selectedItem.id,
         quantity: parseInt(movementForm.quantity),
         movement_note: movementForm.notes,
-        customer_code: selectedItem.customer_code // Maintain customer allocation
+        customer_code: selectedItem.customer_code, // Maintain customer allocation
+        is_export: selectedItem.is_export // Maintain export status
       };
 
       if (movementForm.type === MOVEMENT_TYPES.TRANSFER) {

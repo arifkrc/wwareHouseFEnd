@@ -232,42 +232,12 @@ export default function ZoneModal({
                 <span>{zone.name}</span>
             </div>
 
-            {/* Editable Description */}
-            <div style={{ marginTop: '8px', fontSize: '14px' }}>
-                {isEditingDesc ? (
-                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                        <input
-                            type="text"
-                            className="form-input"
-                            style={{ padding: '4px 8px', fontSize: '14px', width: '200px' }}
-                            value={tempDesc}
-                            onChange={(e) => setTempDesc(e.target.value)}
-                            placeholder="Açıklama girin..."
-                            autoFocus
-                        />
-                        <Button variant="success" size="sm" onClick={handleDescSave} disabled={isProcessing} className="p-1">
-                            <CheckSquare size={16} strokeWidth={2.5} />
-                        </Button>
-                        <Button variant="danger" size="sm" onClick={() => setIsEditingDesc(false)} disabled={isProcessing} className="p-1">
-                            <span style={{ fontWeight: 'bold' }}>×</span>
-                        </Button>
-                    </div>
-                ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ color: '#64748b', fontStyle: 'italic' }}>
-                            {zone.description || 'Stok'}
-                        </span>
-                        <button
-                            className="btn-icon"
-                            onClick={() => { setTempDesc(zone.description || ''); setIsEditingDesc(true); }}
-                            title="Açıklamayı Düzenle"
-                            style={{ opacity: 0.5 }}
-                        >
-                            <Edit2 size={16} strokeWidth={2.5} />
-                        </button>
-                    </div>
-                )}
-            </div>
+            {/* Read-Only Description (if exists) */}
+            {zone.description && (
+                <div style={{ marginTop: '4px', fontSize: '13px', color: '#94a3b8', fontWeight: 400 }}>
+                    {zone.description}
+                </div>
+            )}
         </div>
     );
 

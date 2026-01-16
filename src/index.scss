@@ -261,6 +261,21 @@ body {
   color: #1e40af;
 }
 
+.badge-primary {
+  background: #dbeafe;
+  /* Use existing info blue or define a new one */
+  color: #1e40af;
+  /* Or use proper primary */
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.badge-secondary {
+  background: #f1f5f9;
+  color: #475569;
+}
+
 /* Table */
 .table-container {
   overflow-x: auto;

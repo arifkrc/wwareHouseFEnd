@@ -10,8 +10,11 @@ export const useMovements = () => {
   const { data: responseData, isLoading: loading, error, refetch } = useQuery({
     queryKey: ['movements', params],
     queryFn: async () => {
-      // Build query string from params object
-      const queryString = new URLSearchParams(params).toString();
+      // Build query string from params object (remove undefined/nulls)
+      const cleanParams = Object.fromEntries(
+        Object.entries(params).filter(([_, v]) => v != null)
+      );
+      const queryString = new URLSearchParams(cleanParams).toString();
       const response = await api.get(`/movements?${queryString}`);
       return response.data;
     },

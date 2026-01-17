@@ -333,10 +333,11 @@ export default function FactoryLayout() {
     }
   }, []);
 
-  // Initial fetch and periodic refresh
+  // Initial fetch only (movements refresh handled by handleModalRefresh)
   useEffect(() => {
     fetchTotalStock();
-  }, [fetchTotalStock, movements]); // Update when movements change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only on mount - manual refresh via handleModalRefresh
 
   // Granular refresh for ZoneModal - Fast UX
   const handleModalRefresh = async () => {

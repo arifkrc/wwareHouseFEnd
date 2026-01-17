@@ -191,8 +191,6 @@ export default function Items() {
 
             await createMovement(movementForm.type, movementData);
 
-            await createMovement(movementForm.type, movementData);
-
             // Parallel refresh for speed
             Promise.all([
                 refreshMovements(),

@@ -281,19 +281,6 @@ export default function FactoryLayout() {
   };
 
   /* ZoneModal Handlers (Delegated) */
-  const onUpdateDescription = async (locationId, newDesc) => {
-    setIsProcessing(true);
-    try {
-      await updateLocation(locationId, { description: newDesc });
-      await refreshZones();
-      success('Açıklama güncellendi');
-    } catch (err) {
-      console.error('Açıklama güncellenemedi:', err);
-      error('Açıklama güncellenirken hata oluştu');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   const onAddStock = async (locationId, formData) => {
     setIsProcessing(true);
@@ -334,8 +321,22 @@ export default function FactoryLayout() {
 
 
 
-  // Calculate total stock from zones (more accurate and robust than summing partial movements)
-  const totalStock = zones?.reduce((total, zone) => total + (zone.totalQuantity || 0), 0) || 0;
+  // Fetch authoritative total stock from backend (matches Telegram)
+  const [totalStock, setTotalStock] = useState(0);
+
+  const fetchTotalStock = useCallback(async () => {
+    try {
+      const res = await api.get('/items/total-stock');
+      setTotalStock(res.data.total);
+    } catch (err) {
+      console.error('Total stock fetch failed', err);
+    }
+  }, []);
+
+  // Initial fetch and periodic refresh
+  useEffect(() => {
+    fetchTotalStock();
+  }, [fetchTotalStock, movements]); // Update when movements change
 
   // Granular refresh for ZoneModal - Fast UX
   const handleModalRefresh = async () => {
@@ -349,7 +350,8 @@ export default function FactoryLayout() {
     Promise.all([
       refreshMovements(),
       refreshItems(),
-      refreshZones()
+      refreshZones(),
+      fetchTotalStock()
     ]).catch(err => console.warn('Background refresh failed', err));
   };
 
@@ -405,8 +407,7 @@ export default function FactoryLayout() {
         onClose={() => setShowZoneModal(false)}
         zone={currentZone}
         zoneItems={zoneItems}
-        allItems={items} // Pass full items list for search
-        onUpdateDescription={onUpdateDescription}
+        allItems={items}
         onAddStock={onAddStock}
         onBulkTransfer={onBulkTransfer}
         onClearZone={onClearZone}

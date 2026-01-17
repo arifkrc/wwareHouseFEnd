@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Plus, CheckSquare, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Edit2, Bomb, Truck, RefreshCw, Trash2, AlertTriangle, ArrowRightCircle, Globe, Ship } from 'lucide-react';
+import { Package, Plus, CheckSquare, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Bomb, Truck, RefreshCw, Trash2, AlertTriangle, ArrowRightCircle, Globe, Ship } from 'lucide-react';
 import api from '../services/api';
 import { useMovements } from '../hooks/useMovements';
 import ItemSearchSelect from './ItemSearchSelect';
@@ -15,8 +15,7 @@ export default function ZoneModal({
     onClose,
     zone,
     zoneItems,
-    allItems, // full item list for search
-    onUpdateDescription,
+    allItems,
     onAddStock,
     onOpenMovementModal,
     isProcessing,
@@ -30,9 +29,6 @@ export default function ZoneModal({
 }) {
     if (!zone) return null;
     const { updateMovement } = useMovements();
-    // ... existing state ...
-
-    // ... (keep generic handlers) ...
 
     const handleCellNoteUpdate = async (row, newNote) => {
         if (!row.latest_movement_id) return;
@@ -85,13 +81,12 @@ export default function ZoneModal({
             if (showError) showError(msg);
         }
     };
-    // ... existing effects ...
+
 
     const [activeTab, setActiveTab] = useState('assigned');
 
     // Description editing state
-    const [isEditingDesc, setIsEditingDesc] = useState(false);
-    const [tempDesc, setTempDesc] = useState('');
+
 
     // Add Stock Form state
     const [addStockForm, setAddStockForm] = useState({
@@ -114,30 +109,20 @@ export default function ZoneModal({
     useEffect(() => {
         if (isOpen && zone) {
             setActiveTab('assigned');
-            setTempDesc(zone.description || '');
-            setIsEditingDesc(false);
             setAddStockForm({ itemId: '', quantity: '', customerCode: '', notes: '', isExport: false });
             setBulkForm({ targetLocationId: '', note: '', confirmClear: false });
         }
     }, [isOpen, zone]);
 
-    const handleDescSave = async () => {
-        await onUpdateDescription(zone.locationId, tempDesc);
-        setIsEditingDesc(false);
-    };
-
     const handleStockSubmit = async () => {
         await onAddStock(zone.locationId, addStockForm);
-        // Reset form on success (parent handles the actual API call and success notification)
-        // Reset form on success (parent handles the actual API call and success notification)
+        // Reset form on success
         setAddStockForm({ itemId: '', quantity: '', customerCode: '', notes: '', showCustomerInput: false, isExport: false });
         setActiveTab('assigned');
     };
-    // ... existing effects ...
 
     // Table Columns Definition
     const columns = [
-        // ... (keep first 3 columns) ...
         {
             header: 'Ürün Kodu',
             accessor: 'item_code',

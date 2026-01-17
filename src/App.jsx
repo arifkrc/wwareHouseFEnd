@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/Layout';
@@ -32,66 +32,24 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+
+            {/* Protected Layout Route */}
             <Route
-              path="/"
               element={
                 <PrivateRoute>
                   <Layout>
-                    <Dashboard />
+                    <Outlet />
                   </Layout>
                 </PrivateRoute>
               }
-            />
-            <Route
-              path="/layout"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <FactoryLayout />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/add"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <Add />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/items"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <Items />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/movements"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <Movements />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <Settings />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
+            >
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/layout" element={<FactoryLayout />} />
+              <Route path="/add" element={<Add />} />
+              <Route path="/items" element={<Items />} />
+              <Route path="/movements" element={<Movements />} />
+              <Route path="/settings" element={<Settings />} />
+            </Route>
 
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>

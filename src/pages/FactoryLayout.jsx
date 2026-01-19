@@ -199,7 +199,7 @@ export default function FactoryLayout() {
       if (movementForm.type === MOVEMENT_TYPES.PATLATMA || movementForm.type === MOVEMENT_TYPES.SEVK) {
         endpointType = MOVEMENT_TYPES.OUT; // Use the OUT endpoint
         movementData.movement_type = movementForm.type; // Pass the real type
-        movementData.is_export = movementForm.isExport || false; // Pass export flag if we add it to modal later
+        movementData.movement_type = movementForm.type; // Pass the real type
       }
 
       await createMovement(endpointType, movementData);

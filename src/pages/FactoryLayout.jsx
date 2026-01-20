@@ -66,7 +66,7 @@ export default function FactoryLayout() {
   // Update zone items when items or currentZone changes
   useEffect(() => {
     fetchZoneAllocations();
-  }, [fetchZoneAllocations, movements]); // Refresh when movements change
+  }, [fetchZoneAllocations]); // Removed 'movements' - no longer used
 
   // Auto-refresh data every 5 seconds
   useEffect(() => {

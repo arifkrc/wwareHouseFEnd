@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Plus, CheckSquare, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Bomb, Truck, RefreshCw, Trash2, AlertTriangle, ArrowRightCircle, Globe, Ship } from 'lucide-react';
+import { Package, Plus, CheckSquare, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Bomb, Truck, RefreshCw, Trash2, AlertTriangle, ArrowRightCircle, Globe } from 'lucide-react';
 import api from '../services/api';
 import { useMovements } from '../hooks/useMovements';
 import ZoneStockForm from './ZoneStockForm';
@@ -257,7 +257,10 @@ export default function ZoneModal({
                         emptyMessage="Bu bölgede henüz ürün yok"
                         rowDecoration={(row) => row.is_export ? (
                             <div className="corner-ribbon" title="Yurtdışı / Export">
-                                <Ship />
+                                <div style={{ position: 'relative', width: '24px', height: '24px' }}>
+                                    <Globe size={20} style={{ position: 'absolute', top: 0, left: 0 }} />
+                                    <Package size={14} style={{ position: 'absolute', bottom: 0, right: 0 }} />
+                                </div>
                             </div>
                         ) : null}
                     />

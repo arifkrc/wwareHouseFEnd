@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Package, Plus, CheckSquare, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Bomb, Truck, RefreshCw, Trash2, AlertTriangle, ArrowRightCircle, Globe, Ship } from 'lucide-react';
 import api from '../services/api';
 import { useMovements } from '../hooks/useMovements';
-import ItemSearchSelect from './ItemSearchSelect';
+import ZoneStockForm from './ZoneStockForm';
 import ExpandableText from './ExpandableText';
 import Modal from './common/Modal';
 import Table from './common/Table';
@@ -88,15 +88,7 @@ export default function ZoneModal({
     // Description editing state
 
 
-    // Add Stock Form state
-    const [addStockForm, setAddStockForm] = useState({
-        itemId: '',
-        quantity: '',
-        customerId: '',
-        customerCode: '',
-        notes: '',
-        isExport: false
-    });
+    // Bulk Actions State
 
     // Bulk Actions State
     const [bulkForm, setBulkForm] = useState({
@@ -109,17 +101,11 @@ export default function ZoneModal({
     useEffect(() => {
         if (isOpen && zone) {
             setActiveTab('assigned');
-            setAddStockForm({ itemId: '', quantity: '', customerCode: '', notes: '', isExport: false });
             setBulkForm({ targetLocationId: '', note: '', confirmClear: false });
         }
     }, [isOpen, zone]);
 
-    const handleStockSubmit = async () => {
-        await onAddStock(zone.locationId, addStockForm);
-        // Reset form on success
-        setAddStockForm({ itemId: '', quantity: '', customerCode: '', notes: '', showCustomerInput: false, isExport: false });
-        setActiveTab('assigned');
-    };
+
 
     // Table Columns Definition
     const columns = [
@@ -278,82 +264,14 @@ export default function ZoneModal({
                 )}
 
                 {activeTab === 'add_stock' && (
-                    <div className="add-stock-panel" style={{ padding: '0.5rem' }}>
-                        <div className="alert alert-info" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px', padding: '1rem', background: '#eff6ff', borderRadius: '8px', color: '#1e40af' }}>
-                            <Package size={20} strokeWidth={2} fill="#bae6fd" />
-                            <span><strong>{zone.name}</strong> alanına yeni stok girişi yapıyorsunuz.</span>
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">Ürün Seç *</label>
-                            <ItemSearchSelect
-                                items={allItems}
-                                value={addStockForm.itemId}
-                                onChange={(newId) => setAddStockForm({ ...addStockForm, itemId: newId })}
-                                placeholder="Ürün kodu ara..."
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">Miktar *</label>
-                            <input
-                                type="number"
-                                className="form-input"
-                                value={addStockForm.quantity}
-                                onChange={(e) => setAddStockForm({ ...addStockForm, quantity: e.target.value })}
-                                placeholder="Adet girin"
-                                min="1"
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">Firma / Müşteri (Opsiyonel)</label>
-                            <input
-                                type="text"
-                                className="form-input"
-                                value={addStockForm.customerCode}
-                                onChange={(e) => setAddStockForm({ ...addStockForm, customerCode: e.target.value })}
-                                placeholder="Örn: Firma A (Sevkiyat yapılacak yer)"
-                            />
-                        </div>
-
-                        <div className="form-group checkbox-group" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setAddStockForm({ ...addStockForm, isExport: !addStockForm.isExport })}>
-                            <div style={{
-                                width: '20px', height: '20px', borderRadius: '4px', border: '2px solid #cbd5e1',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                background: addStockForm.isExport ? '#2563eb' : 'white',
-                                borderColor: addStockForm.isExport ? '#2563eb' : '#cbd5e1'
-                            }}>
-                                {addStockForm.isExport && <CheckSquare size={14} color="white" />}
-                            </div>
-                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#334155', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                Yurtdışı Siparişi <Globe size={16} strokeWidth={2} className="text-blue-600" />
-                            </span>
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">Not</label>
-                            <input
-                                type="text"
-                                className="form-input"
-                                value={addStockForm.notes}
-                                onChange={(e) => setAddStockForm({ ...addStockForm, notes: e.target.value })}
-                                placeholder="Opsiyonel açıklama"
-                            />
-                        </div>
-
-                        <div style={{ marginTop: '1.5rem' }}>
-                            <Button
-                                variant="primary"
-                                size="lg"
-                                style={{ width: '100%' }}
-                                onClick={handleStockSubmit}
-                                isLoading={isProcessing}
-                            >
-                                Stoğa Ekle
-                            </Button>
-                        </div>
-                    </div>
+                    <ZoneStockForm
+                        isActive={activeTab === 'add_stock'}
+                        zone={zone}
+                        allItems={allItems}
+                        onAddStock={onAddStock}
+                        isProcessing={isProcessing}
+                        onSuccess={() => setActiveTab('assigned')}
+                    />
                 )}
 
                 {activeTab === 'bulk_actions' && (

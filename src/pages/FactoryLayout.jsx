@@ -4,6 +4,7 @@ import { useWarehouseZones } from '../hooks/useWarehouseZones';
 import { useLocations } from '../hooks/useLocations';
 import { useItems } from '../hooks/useItems';
 import { useMovements } from '../hooks/useMovements';
+import { useMovementHandler } from '../hooks/useMovementHandler';
 import { useToast } from '../hooks/useToast';
 import Toast from '../components/Toast';
 import { MOVEMENT_TYPES } from '../utils/movementHelpers';
@@ -18,8 +19,8 @@ import './FactoryLayout.scss';
 export default function FactoryLayout() {
   const { zones, loading: zonesLoading, refresh: refreshZones } = useWarehouseZones();
   const { locations, updateLocation } = useLocations();
-  const { items, refresh: refreshItems, updateItem } = useItems(); // Added updateItem
-  const { movements, createMovement, refresh: refreshMovements } = useMovements();
+  const { items, refresh: refreshItems, updateItem } = useItems();
+  const { refresh: refreshMovements } = useMovements();
   const { toasts, removeToast, success, error, warning } = useToast();
 
   const [showZoneModal, setShowZoneModal] = useState(false);
@@ -36,7 +37,18 @@ export default function FactoryLayout() {
     notes: ''
   });
 
-  const [isProcessing, setIsProcessing] = useState(false);
+  // Use shared movement handler hook
+  const { executeMovement, isProcessing } = useMovementHandler({
+    onSuccess: success,
+    onError: error,
+    onWarning: warning,
+    refreshItems,
+    refreshMovements,
+    refreshZones,
+    fetchZoneAllocations,
+    currentZone,
+    locations
+  });
 
 
 
@@ -137,104 +149,10 @@ export default function FactoryLayout() {
   };
 
   const handleMovement = async () => {
-    if (!selectedItem || !movementForm.quantity) {
-      warning('Lütfen tüm alanları doldurun');
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      const movementData = {
-        item_id: selectedItem.id,
-        quantity: parseInt(movementForm.quantity),
-        movement_note: movementForm.notes,
-        customer_code: selectedItem.customer_code, // Maintain customer allocation
-        is_export: selectedItem.is_export // Maintain export status
-      };
-
-      if (movementForm.type === MOVEMENT_TYPES.TRANSFER) {
-        if (!movementForm.toLocationId) {
-          warning('Transfer için hedef lokasyon seçin');
-          return;
-        }
-        // TRANSFER: from current zone to selected zone
-        movementData.from_location_id = selectedItem.current_zone_location_id;
-        movementData.to_location_id = parseInt(movementForm.toLocationId);
-
-        // Add location names to notes
-        const toLocation = locations.find(l => l.id === parseInt(movementForm.toLocationId));
-        movementData.movement_note = `${selectedItem.current_zone_name} → ${toLocation?.location_code || 'Bilinmeyen'}: ${movementForm.notes}`;
-      } else if (movementForm.type === MOVEMENT_TYPES.IN) {
-        // IN: to current zone (ürün bu alana giriyor)
-        movementData.to_location_id = selectedItem.current_zone_location_id;
-        movementData.movement_note = `${selectedItem.current_zone_name} alanına eklendi: ${movementForm.notes}`;
-      } else if (movementForm.type === MOVEMENT_TYPES.OUT) {
-        // OUT: from current zone (ürün bu alandan çıkıyor)
-        movementData.from_location_id = selectedItem.current_zone_location_id;
-        movementData.movement_note = `${selectedItem.current_zone_name} alanından çıkarıldı: ${movementForm.notes}`;
-      } else if (movementForm.type === MOVEMENT_TYPES.PATLATMA) {
-        // PATLATMA: Special OUT
-        movementData.from_location_id = selectedItem.current_zone_location_id;
-        movementData.movement_note = `Patlatma/İmha: ${movementForm.notes}`;
-        movementData.movement_type = 'PATLATMA';
-        // Calls creation with 'OUT' endpoint usually, or we can use the generic creator.
-        // wait, useMovements hook's createMovement maps types to endpoints.
-        // We need to ensure useMovements handles custom types or we map it here.
-      } else if (movementForm.type === MOVEMENT_TYPES.SEVK) {
-        // SEVK: Special OUT
-        movementData.from_location_id = selectedItem.current_zone_location_id;
-        movementData.movement_note = `Sevk Edildi: ${movementForm.notes}`;
-        movementData.movement_type = 'SEVK';
-      }
-
-      // If useMovements.createMovement strictly expects IN/OUT/TRANSFER as endpoint segments,
-      // we might need to change how we call it.
-      // Let's assume we mapped backend routes as:
-      // POST /in
-      // POST /out (accepts movement_type param)
-      // POST /transfer
-      // So checks below.
-
-      let endpointType = movementForm.type;
-      if (movementForm.type === MOVEMENT_TYPES.PATLATMA || movementForm.type === MOVEMENT_TYPES.SEVK) {
-        endpointType = MOVEMENT_TYPES.OUT; // Use the OUT endpoint
-        movementData.movement_type = movementForm.type; // Pass the real type
-        movementData.movement_type = movementForm.type; // Pass the real type
-      }
-
-      await createMovement(endpointType, movementData);
-
-      // Store item info before clearing state
-      const itemName = selectedItem.item_name;
-      const quantity = movementForm.quantity;
-      const type = movementForm.type;
-
-      // Close modal immediately for better UX
+    const success = await executeMovement(selectedItem, movementForm);
+    if (success) {
       setShowMovementModal(false);
       setSelectedItem(null);
-
-      // 1. FAST UPDATE: Refresh the current zone's list immediately (if we are in a zone)
-      if (currentZone) {
-        await fetchZoneAllocations();
-      }
-
-      // 2. BACKGROUND UPDATE: Refresh global counters without blocking logic
-      Promise.all([
-        refreshMovements(),
-        refreshItems(),
-        refreshZones()
-      ]).catch(err => console.warn('Background refresh failed', err));
-
-      const typeLabel = type === MOVEMENT_TYPES.IN ? 'Giriş' :
-        type === MOVEMENT_TYPES.OUT ? 'Çıkış' :
-          type === MOVEMENT_TYPES.PATLATMA ? 'Patlatma' :
-            type === MOVEMENT_TYPES.SEVK ? 'Sevk' : 'Transfer';
-      success(`${typeLabel}: ${quantity} adet ${itemName}`);
-    } catch (err) {
-      console.error('Hareket kaydedilemedi:', err);
-      error('Hareket kaydedilirken hata oluştu');
-    } finally {
-      setIsProcessing(false);
     }
   };
 

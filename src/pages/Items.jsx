@@ -3,6 +3,7 @@ import { Package, Search, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Info, 
 import { useItems } from '../hooks/useItems';
 import { useLocations } from '../hooks/useLocations';
 import { useMovements } from '../hooks/useMovements';
+import { useMovementHandler } from '../hooks/useMovementHandler';
 import { useToast } from '../hooks/useToast';
 import { useTableExport } from '../hooks/useTableExport';
 import { MOVEMENT_TYPES } from '../utils/movementHelpers';
@@ -24,8 +25,17 @@ import './Items.scss';
 export default function Items() {
     const { items, loading: itemsLoading, refresh: refreshItems } = useItems();
     const { locations } = useLocations();
-    const { createMovement, refresh: refreshMovements } = useMovements();
+    const { refresh: refreshMovements } = useMovements();
     const { toasts, success, error, warning, removeToast } = useToast();
+
+    const { executeMovement, isProcessing, setIsProcessing } = useMovementHandler({
+        onSuccess: success,
+        onError: error,
+        onWarning: warning,
+        refreshItems,
+        refreshMovements,
+        locations
+    });
     const { downloadCSV } = useTableExport();
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -67,7 +77,6 @@ export default function Items() {
     // Movement Modal State
     const [showMovementModal, setShowMovementModal] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
-    const [isProcessing, setIsProcessing] = useState(false);
     const [movementForm, setMovementForm] = useState({
         type: MOVEMENT_TYPES.IN,
         quantity: '',
@@ -167,86 +176,10 @@ export default function Items() {
 
     // Handlers
     const handleMovement = async () => {
-        if (!selectedItem || !movementForm.quantity) {
-            warning('Lütfen miktar girin');
-            return;
-        }
-
-        setIsProcessing(true);
-        try {
-            const finalCustomerCode = selectedItem.customer_code || movementForm.customer_code || null;
-
-            const movementData = {
-                item_id: selectedItem.id,
-                quantity: parseInt(movementForm.quantity),
-                movement_note: movementForm.notes,
-                customer_code: finalCustomerCode
-            };
-
-            if (movementForm.type === MOVEMENT_TYPES.IN) {
-                if (!movementForm.toLocationId) {
-                    warning('Hangi lokasyona giriş yapılacak? Lütfen seçin.');
-                    setIsProcessing(false);
-                    return;
-                }
-                movementData.to_location_id = parseInt(movementForm.toLocationId);
-                const locName = locations.find(l => l.id === movementData.to_location_id)?.location_code;
-                movementData.movement_note = `Stok Girişi (${locName}): ${movementForm.notes}`;
-            }
-            else if (movementForm.type === MOVEMENT_TYPES.TRANSFER) {
-                if (!movementForm.toLocationId) {
-                    warning('Hedef lokasyon seçin');
-                    setIsProcessing(false);
-                    return;
-                }
-                // Determine source location from selectedItem context (set when opening modal)
-                if (!selectedItem.current_zone_location_id) {
-                    warning('Transfer için kaynak lokasyon belirlenemedi. Lütfen detay görünümünden işlem yapın.');
-                    setIsProcessing(false);
-                    return;
-                }
-                movementData.from_location_id = selectedItem.current_zone_location_id;
-                movementData.to_location_id = parseInt(movementForm.toLocationId);
-            }
-            else if (movementForm.type === MOVEMENT_TYPES.OUT) {
-                if (!selectedItem.current_zone_location_id) {
-                    warning('Çıkış için kaynak lokasyon belirlenemedi. Lütfen detay görünümünden işlem yapın.');
-                    setIsProcessing(false);
-                    return;
-                }
-                movementData.from_location_id = selectedItem.current_zone_location_id;
-            }
-
-            await createMovement(movementForm.type, movementData);
-
-            // Parallel refresh for speed
-            Promise.all([
-                refreshMovements(),
-                refreshItems()
-            ]).catch(err => console.error(err));
-
-            // If we are in detail view, we might want to refresh the selected item details?
-            // The detail view relies on 'selectedItem' object. 
-            // We should probably re-fetch the item or close the detail modal.
-            // For now, let's close the movement modal. The main list updates. 
-            // If the user keeps Detail Modal open, the data might be stale unless we update 'selectedItem'.
-            // Simple fix: Close detail modal if it's open, or user can re-open.
-            // Better: 'refreshItems' updates the 'items' array. If 'selectedItem' is just a reference, it won't update?
-            // Actually 'selectedItem' is a separate state. We need to find the updated item from new 'items' list if we want to keep it open.
-
-            success('İşlem başarılı');
+        const success = await executeMovement(selectedItem, movementForm);
+        if (success) {
             setShowMovementModal(false);
-
-            // If specific logic for Detail Modal update is needed, we would implement it here.
-            // For now, we will close the Detail Modal to force refresh on re-open, 
-            // or let the user see the list update behind.
             setShowDetailModal(false);
-
-        } catch (err) {
-            console.error(err);
-            error('İşlem başarısız');
-        } finally {
-            setIsProcessing(false);
         }
     };
 

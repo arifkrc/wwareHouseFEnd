@@ -20,7 +20,7 @@ export default function FactoryLayout() {
   const { zones, loading: zonesLoading, refresh: refreshZones } = useWarehouseZones();
   const { locations, updateLocation } = useLocations();
   const { items, refresh: refreshItems, updateItem } = useItems();
-  const { refresh: refreshMovements } = useMovements();
+  const { refresh: refreshMovements, createMovement } = useMovements();
   const { toasts, removeToast, success, error, warning } = useToast();
 
   const [showZoneModal, setShowZoneModal] = useState(false);

@@ -69,17 +69,35 @@ export default function FactoryLayout() {
   // Update zone items when items or currentZone changes
   useEffect(() => {
     fetchZoneAllocations();
-  }, [fetchZoneAllocations]); // Removed 'movements' - no longer used
+  }, [fetchZoneAllocations]);
 
-  // Auto-refresh data every 5 seconds
+  // VERCEL OPTIMIZATION: Visibility-aware auto-refresh
+  // Only refresh when tab is active to save function invocations
   useEffect(() => {
-    const interval = setInterval(async () => {
-      await refreshMovements();
-      await refreshItems();
-      await refreshZones();
-    }, 30000);
+    let interval;
 
-    return () => clearInterval(interval);
+    const handleVisibility = () => {
+      clearInterval(interval);
+
+      if (document.visibilityState === 'visible') {
+        // Tab is active - start auto-refresh
+        interval = setInterval(async () => {
+          await refreshMovements();
+          await refreshItems();
+          await refreshZones();
+        }, 30000);
+      }
+      // Tab is inactive - stop refreshing to save Vercel invocations
+    };
+
+    // Setup listener
+    document.addEventListener('visibilitychange', handleVisibility);
+    handleVisibility(); // Initialize
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [refreshMovements, refreshItems, refreshZones]);
 
   // Prevent body scroll when modal is open
@@ -112,21 +130,10 @@ export default function FactoryLayout() {
       return;
     }
 
-    // PERFORMANCE FIX: Clear stale data immediately to prevent showing wrong zone's data
+    // Clear stale data immediately to prevent showing wrong zone's data
     setZoneItems([]);
     setCurrentZone(zone);
     setShowZoneModal(true);
-  };
-
-  // PERFORMANCE: Prefetch zone data on hover
-  const prefetchZoneData = async (zone) => {
-    if (zone.passive) return;
-    try {
-      const response = await api.get(`/locations/${zone.locationId}/items`);
-      // Cache will be used when modal opens
-    } catch (err) {
-      // Silently fail - prefetch is optimization, not critical
-    }
   };
 
   const openMovementModal = (item, type = MOVEMENT_TYPES.IN) => {
@@ -310,7 +317,6 @@ export default function FactoryLayout() {
           zones={zones.filter(z => z.section === 'left')}
           className="warehouse-section left-section"
           onZoneClick={editZone}
-          onZoneHover={prefetchZoneData}
         />
 
         {/* KORİDOR */}
@@ -320,17 +326,14 @@ export default function FactoryLayout() {
           className="corridor-section"
           type="corridor"
           onZoneClick={editZone}
-          onZoneHover={prefetchZoneData}
         />
 
         {/* KARŞI DUVAR */}
         <ZoneSection
-          title="KARŞI DUVAR"
+          title="KARSI DUVAR"
           zones={zones.filter(z => z.section === 'right')}
           className="warehouse-section right-section"
           onZoneClick={editZone}
-          onZoneHover={prefetchZoneData}
-          onTouchStart={prefetchZoneData}
         />
       </div>
 

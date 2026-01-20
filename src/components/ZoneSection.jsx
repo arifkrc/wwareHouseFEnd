@@ -7,8 +7,7 @@ export default function ZoneSection({
     zones,
     className = '',
     type = 'standard',
-    onZoneClick,
-    onZoneHover  // New prop for prefetch
+    onZoneClick
 }) {
     return (
         <div className={className}>
@@ -19,8 +18,6 @@ export default function ZoneSection({
                     className={`warehouse-zone ${type === 'corridor' ? 'corridor-zone' : ''} ${zone.passive ? 'zone-passive' : ''}`}
                     style={{ backgroundColor: zone.color }}
                     onClick={() => onZoneClick(zone)}
-                    onMouseEnter={() => onZoneHover && onZoneHover(zone)}
-                    onTouchStart={() => onZoneHover && onZoneHover(zone)}
                 >
                     {type === 'corridor' ? (
                         // Corridor Content

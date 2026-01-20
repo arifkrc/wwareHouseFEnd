@@ -37,22 +37,7 @@ export default function FactoryLayout() {
     notes: ''
   });
 
-  // Use shared movement handler hook
-  const { executeMovement, isProcessing } = useMovementHandler({
-    onSuccess: success,
-    onError: error,
-    onWarning: warning,
-    refreshItems,
-    refreshMovements,
-    refreshZones,
-    fetchZoneAllocations,
-    currentZone,
-    locations
-  });
-
-
-
-  // Define fetchZoneAllocations with useCallback so it can be called manually
+  // Define fetchZoneAllocations FIRST (needed by hook)
   const fetchZoneAllocations = useCallback(async () => {
     if (!currentZone?.locationId) return;
 
@@ -64,6 +49,19 @@ export default function FactoryLayout() {
       // Don't spam error toast on auto-refresh
     }
   }, [currentZone]);
+
+  // Use shared movement handler hook (uses fetchZoneAllocations)
+  const { executeMovement, isProcessing } = useMovementHandler({
+    onSuccess: success,
+    onError: error,
+    onWarning: warning,
+    refreshItems,
+    refreshMovements,
+    refreshZones,
+    fetchZoneAllocations,
+    currentZone,
+    locations
+  });
 
   // Update zone items when items or currentZone changes
   useEffect(() => {

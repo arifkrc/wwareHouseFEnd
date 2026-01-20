@@ -112,6 +112,8 @@ export default function FactoryLayout() {
       return;
     }
 
+    // PERFORMANCE FIX: Clear stale data immediately to prevent showing wrong zone's data
+    setZoneItems([]);
     setCurrentZone(zone);
     setShowZoneModal(true);
   };

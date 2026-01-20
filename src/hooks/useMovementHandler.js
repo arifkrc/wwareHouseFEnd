@@ -171,15 +171,11 @@ export function useMovementHandler({
             // Execute API call
             await createMovement(endpointType, movementData);
 
-            // Refresh strategy: Fast + Background
-            // 1. Fast update for current zone (if applicable)
-            if (currentZone && fetchZoneAllocations) {
-                await fetchZoneAllocations();
-            }
-
-            // 2. Background updates (non-blocking)
+            // PERFORMANCE OPTIMIZATION: All refreshes in background (non-blocking)
+            // User gets instant success feedback while data refreshes asynchronously
             const refreshPromises = [refreshItems(), refreshMovements()];
             if (refreshZones) refreshPromises.push(refreshZones());
+            if (currentZone && fetchZoneAllocations) refreshPromises.push(fetchZoneAllocations());
 
             Promise.all(refreshPromises).catch(err => console.warn('Background refresh failed', err));
 

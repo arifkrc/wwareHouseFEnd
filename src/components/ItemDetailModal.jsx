@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useMovements } from '../hooks/useMovements';
 import { useToast } from '../hooks/useToast';
-import { ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Package, Globe } from 'lucide-react';
+import { ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Plane } from 'lucide-react';
 import Modal from './common/Modal';
 import Table from './common/Table';
 import Badge from './common/Badge';
@@ -156,10 +156,7 @@ export default function ItemDetailModal({ isOpen, onClose, item, locations, onMo
                             emptyMessage="Stok kaydı bulunmuyor"
                             rowDecoration={(row) => row.alloc?.is_export ? (
                                 <div className="corner-ribbon" title="Yurtdışı / Export">
-                                    <div style={{ position: 'relative', width: '24px', height: '24px' }}>
-                                        <Globe size={20} style={{ position: 'absolute', top: 0, left: 0 }} />
-                                        <Package size={14} style={{ position: 'absolute', bottom: 0, right: 0 }} />
-                                    </div>
+                                    <Plane />
                                 </div>
                             ) : null}
                         />

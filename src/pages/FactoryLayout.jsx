@@ -306,9 +306,9 @@ export default function FactoryLayout() {
       <div className="warehouse-container">
         {/* STREÇ */}
         <ZoneSection
-          title="SOL TARAF"
-          zones={leftZones}
-          className="left-zones"
+          title="STREC"
+          zones={zones.filter(z => z.section === 'left')}
+          className="warehouse-section left-section"
           onZoneClick={editZone}
           onZoneHover={prefetchZoneData}
         />
@@ -316,8 +316,8 @@ export default function FactoryLayout() {
         {/* KORİDOR */}
         <ZoneSection
           title="KORIDOR"
-          zones={corridor}
-          className="corridor-zones"
+          zones={zones.filter(z => z.section === 'corridor')}
+          className="corridor-section"
           type="corridor"
           onZoneClick={editZone}
           onZoneHover={prefetchZoneData}
@@ -329,6 +329,8 @@ export default function FactoryLayout() {
           zones={zones.filter(z => z.section === 'right')}
           className="warehouse-section right-section"
           onZoneClick={editZone}
+          onZoneHover={prefetchZoneData}
+          onTouchStart={prefetchZoneData}
         />
       </div>
 

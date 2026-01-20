@@ -20,6 +20,7 @@ export default function ZoneSection({
                     style={{ backgroundColor: zone.color }}
                     onClick={() => onZoneClick(zone)}
                     onMouseEnter={() => onZoneHover && onZoneHover(zone)}
+                    onTouchStart={() => onZoneHover && onZoneHover(zone)}
                 >
                     {type === 'corridor' ? (
                         // Corridor Content

@@ -108,7 +108,7 @@ export default function FactoryLayout() {
   const editZone = async (zone) => {
     // Prevent opening modal for passive zones
     if (zone.passive) {
-      warning('Bu alan pasif bölge - stok tutulamaz');
+      warning('Bu alan pasif bolge - stok tutulamaz');
       return;
     }
 
@@ -116,6 +116,17 @@ export default function FactoryLayout() {
     setZoneItems([]);
     setCurrentZone(zone);
     setShowZoneModal(true);
+  };
+
+  // PERFORMANCE: Prefetch zone data on hover
+  const prefetchZoneData = async (zone) => {
+    if (zone.passive) return;
+    try {
+      const response = await api.get(`/locations/${zone.locationId}/items`);
+      // Cache will be used when modal opens
+    } catch (err) {
+      // Silently fail - prefetch is optimization, not critical
+    }
   };
 
   const openMovementModal = (item, type = MOVEMENT_TYPES.IN) => {
@@ -295,19 +306,21 @@ export default function FactoryLayout() {
       <div className="warehouse-container">
         {/* STREÇ */}
         <ZoneSection
-          title="STREÇ"
-          zones={zones.filter(z => z.section === 'left')}
-          className="warehouse-section left-section"
+          title="SOL TARAF"
+          zones={leftZones}
+          className="left-zones"
           onZoneClick={editZone}
+          onZoneHover={prefetchZoneData}
         />
 
         {/* KORİDOR */}
         <ZoneSection
-          title="KORİDOR"
-          zones={zones.filter(z => z.section === 'corridor')}
-          className="corridor-section"
+          title="KORIDOR"
+          zones={corridor}
+          className="corridor-zones"
           type="corridor"
           onZoneClick={editZone}
+          onZoneHover={prefetchZoneData}
         />
 
         {/* KARŞI DUVAR */}

@@ -33,6 +33,22 @@ export default function Items() {
 
     const [filterType, setFilterType] = useState('ALL'); // ALL, DISK, KAMPANA, POYRA
     const [stockSourceFilter, setStockSourceFilter] = useState('ALL'); // ALL, DOMESTIC, EXPORT
+    const [customerFilter, setCustomerFilter] = useState('ALL');
+
+    // Extract Unique Customers
+    const uniqueCustomers = useMemo(() => {
+        const custs = new Set();
+        items.forEach(item => {
+            const dist = item.stock_distribution || {};
+            Object.values(dist).forEach(locData => {
+                const allocs = locData.allocations || {};
+                Object.values(allocs).forEach(a => {
+                    if (a.customer_code) custs.add(a.customer_code);
+                });
+            });
+        });
+        return Array.from(custs).sort();
+    }, [items]);
 
     // Fetch all items on mount
     useEffect(() => {
@@ -96,6 +112,18 @@ export default function Items() {
             });
         }
 
+        // Filter by Customer
+        if (customerFilter !== 'ALL') {
+            result = result.filter(item => {
+                const dist = item.stock_distribution || {};
+                // Check if any allocation matches customer
+                return Object.values(dist).some(locData => {
+                    const allocs = locData.allocations || {};
+                    return Object.values(allocs).some(a => a.customer_code === customerFilter);
+                });
+            });
+        }
+
         if (!searchTerm) return result;
 
         const lowerSearch = searchTerm.toLowerCase();
@@ -103,7 +131,7 @@ export default function Items() {
             item.item_code.toLowerCase().includes(lowerSearch) ||
             item.item_name.toLowerCase().includes(lowerSearch)
         );
-    }, [items, searchTerm, showZeroStock, filterType, stockSourceFilter]);
+    }, [items, searchTerm, showZeroStock, filterType, stockSourceFilter, customerFilter]);
 
     const handleSearch = (e) => setSearchTerm(e.target.value);
     const handleFilterType = (e) => setFilterType(e.target.value);
@@ -356,6 +384,18 @@ export default function Items() {
                             <option value="ALL">Tüm Kaynaklar</option>
                             <option value="DOMESTIC">İç Piyasa</option>
                             <option value="EXPORT">Yurtdışı</option>
+                        </select>
+
+                        <select
+                            className="form-select filter-select"
+                            value={customerFilter}
+                            onChange={(e) => setCustomerFilter(e.target.value)}
+                            style={{ marginLeft: '8px', maxWidth: '150px' }}
+                        >
+                            <option value="ALL">Tüm Müşteriler</option>
+                            {uniqueCustomers.map(c => (
+                                <option key={c} value={c}>{c}</option>
+                            ))}
                         </select>
                     </div>
 

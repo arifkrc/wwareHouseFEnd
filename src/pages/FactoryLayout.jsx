@@ -51,7 +51,7 @@ export default function FactoryLayout() {
   }, [currentZone]);
 
   // Use shared movement handler hook (uses fetchZoneAllocations)
-  const { executeMovement, isProcessing } = useMovementHandler({
+  const { executeMovement, isProcessing: isMovementProcessing } = useMovementHandler({
     onSuccess: success,
     onError: error,
     onWarning: warning,
@@ -62,6 +62,9 @@ export default function FactoryLayout() {
     currentZone,
     locations
   });
+
+  // Separate processing state for bulk operations (add stock, bulk transfer, clear zone)
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Update zone items when items or currentZone changes
   useEffect(() => {

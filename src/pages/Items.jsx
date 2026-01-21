@@ -455,23 +455,6 @@ export default function Items() {
                 >
                     Detaylı Müşteri Dağılımı
                 </button>
-                {viewMode === 'detailed' && allocations.length > 0 && (
-                    <Button
-                        variant="success"
-                        onClick={() => downloadCSV(filteredAllocations, 'detayli-stok-dagilimi', [
-                            { key: 'item_code', label: 'Ürün Kodu' },
-                            { key: 'item_name', label: 'Ürün Adı' },
-                            { key: 'location_code', label: 'Alan' },
-                            { key: 'customer_code', label: 'Müşteri' },
-                            { key: 'is_export', label: 'İhracat', format: val => val ? 'Evet' : 'Hayır' },
-                            { key: 'quantity', label: 'Miktar' }
-                        ])}
-                        icon={Download}
-                        style={{ marginLeft: 'auto' }}
-                    >
-                        CSV İndir
-                    </Button>
-                )}
             </div>
 
             {/* Summary View */}

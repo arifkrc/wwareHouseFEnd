@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Package, Search, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Info, Download, Filter } from 'lucide-react';
+import { Package, Search, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Info, Download, Filter, List } from 'lucide-react';
 import { useItems } from '../hooks/useItems';
 import { useLocations } from '../hooks/useLocations';
 import { useMovements } from '../hooks/useMovements';
@@ -44,6 +44,11 @@ export default function Items() {
     const [filterType, setFilterType] = useState('ALL'); // ALL, DISK, KAMPANA, POYRA
     const [stockSourceFilter, setStockSourceFilter] = useState('ALL'); // ALL, DOMESTIC, EXPORT
     const [customerFilter, setCustomerFilter] = useState('ALL');
+
+    // Detailed Allocations State
+    const [showDetailedAllocations, setShowDetailedAllocations] = useState(false);
+    const [allocations, setAllocations] = useState([]);
+    const [allocationsLoading, setAllocationsLoading] = useState(false);
 
     // Extract Unique Customers
     const uniqueCustomers = useMemo(() => {
@@ -141,6 +146,64 @@ export default function Items() {
             item.item_name.toLowerCase().includes(lowerSearch)
         );
     }, [items, searchTerm, showZeroStock, filterType, stockSourceFilter, customerFilter]);
+
+    // Fetch Detailed Allocations
+    const fetchDetailedAllocations = async () => {
+        setAllocationsLoading(true);
+        try {
+            const response = await api.get('/items/allocations');
+            setAllocations(response.data);
+        } catch (err) {
+            error('Detaylı stok bilgisi yüklenemedi');
+        } finally {
+            setAllocationsLoading(false);
+        }
+    };
+
+    // Load allocations when detailed view is toggled on
+    useEffect(() => {
+        if (showDetailedAllocations && allocations.length === 0) {
+            fetchDetailedAllocations();
+        }
+    }, [showDetailedAllocations]);
+
+    // Filter allocations with same logic as items
+    const filteredAllocations = useMemo(() => {
+        let result = allocations;
+
+        // Search filter
+        if (searchTerm) {
+            const term = searchTerm.toLowerCase();
+            result = result.filter(alloc =>
+                alloc.item_code?.toLowerCase().includes(term) ||
+                alloc.item_name?.toLowerCase().includes(term) ||
+                alloc.customer_code?.toLowerCase().includes(term) ||
+                alloc.location_code?.toLowerCase().includes(term)
+            );
+        }
+
+        // Product type filter
+        if (filterType !== 'ALL') {
+            result = result.filter(alloc => {
+                const productType = getProductType(alloc.item_code);
+                return productType === filterType;
+            });
+        }
+
+        // Export filter
+        if (stockSourceFilter === 'EXPORT') {
+            result = result.filter(alloc => alloc.is_export === true);
+        } else if (stockSourceFilter === 'DOMESTIC') {
+            result = result.filter(alloc => alloc.is_export === false);
+        }
+
+        // Customer filter
+        if (customerFilter !== 'ALL') {
+            result = result.filter(alloc => (alloc.customer_code || '-') === customerFilter);
+        }
+
+        return result;
+    }, [allocations, searchTerm, filterType, stockSourceFilter, customerFilter]);
 
     const handleSearch = (e) => setSearchTerm(e.target.value);
     const handleFilterType = (e) => setFilterType(e.target.value);
@@ -370,6 +433,109 @@ export default function Items() {
                 isLoading={itemsLoading}
                 emptyMessage="Ürün bulunamadı"
             />
+
+            {/* Detailed Allocations Section */}
+            <div className="detailed-allocations-section" style={{ marginTop: '3rem' }}>
+                <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <div>
+                        <h2 style={{ fontSize: '1.25rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <List size={24} />
+                            Detaylı Stok Dağılımı
+                        </h2>
+                        <p className="text-muted" style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                            M şteri ve alan bazlı stok detayları
+                        </p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <Button
+                            variant="secondary"
+                            onClick={() => setShowDetailedAllocations(!showDetailedAllocations)}
+                            icon={showDetailedAllocations ? Package : List}
+                        >
+                            {showDetailedAllocations ? 'Özet Görünüm' : 'Detaylı Görünüm'}
+                        </Button>
+                        {showDetailedAllocations && allocations.length > 0 && (
+                            <Button
+                                variant="success"
+                                onClick={() => downloadCSV(filteredAllocations, 'detayli-stok-dagilimi', [
+                                    { key: 'item_code', label: 'Ürün Kodu' },
+                                    { key: 'item_name', label: 'Ürün Adı' },
+                                    { key: 'location_code', label: 'Alan' },
+                                    { key: 'customer_code', label: 'Müşteri' },
+                                    { key: 'is_export', label: 'İhracat', format: val => val ? 'Evet' : 'Hayır' },
+                                    { key: 'quantity', label: 'Miktar' }
+                                ])}
+                                icon={Download}
+                            >
+                                Excel İndir
+                            </Button>
+                        )}
+                    </div>
+                </div>
+
+                {showDetailedAllocations && (
+                    <>
+                        <div className="items-summary" style={{ marginBottom: '1rem' }}>
+                            <span style={{ fontWeight: 500 }}>Toplam Kayıt:</span>
+                            <span className="summary-pill">
+                                {filteredAllocations.length} allocation
+                            </span>
+                            {filteredAllocations.length !== allocations.length && (
+                                <span className="summary-filtered">(Filtrelendi)</span>
+                            )}
+                        </div>
+                        <Table
+                            columns={[
+                                {
+                                    key: 'item_code',
+                                    label: 'Ürün Kodu',
+                                    sortable: true
+                                },
+                                {
+                                    key: 'item_name',
+                                    label: 'Ürün Adı',
+                                    sortable: true
+                                },
+                                {
+                                    key: 'location_code',
+                                    label: 'Alan',
+                                    sortable: true
+                                },
+                                {
+                                    key: 'customer_code',
+                                    label: 'Müşteri',
+                                    sortable: true,
+                                    render: (row) => row.customer_code || '-'
+                                },
+                                {
+                                    key: 'is_export',
+                                    label: 'İhracat',
+                                    sortable: true,
+                                    render: (row) => (
+                                        <Badge variant={row.is_export ? 'info' : 'secondary'}>
+                                            {row.is_export ? 'İhracat' : 'Yurtiçi'}
+                                        </Badge>
+                                    )
+                                },
+                                {
+                                    key: 'quantity',
+                                    label: 'Miktar',
+                                    sortable: true,
+                                    render: (row) => (
+                                        <Badge variant="primary">{row.quantity}</Badge>
+                                    )
+                                }
+                            ]}
+                            data={filteredAllocations}
+                            keyField="item_id"
+                            isLoading={allocationsLoading}
+                            emptyMessage="Detaylı stok bilgisi bulunamadı"
+                        />
+                    </>
+                )}
+            </div>
+
+
 
 
             {/* Detail Modal */}

@@ -45,8 +45,8 @@ export default function Items() {
     const [stockSourceFilter, setStockSourceFilter] = useState('ALL'); // ALL, DOMESTIC, EXPORT
     const [customerFilter, setCustomerFilter] = useState('ALL');
 
-    // Detailed Allocations State
-    const [showDetailedAllocations, setShowDetailedAllocations] = useState(false);
+    // View Mode: 'summary' or 'detailed'
+    const [viewMode, setViewMode] = useState('summary');
     const [allocations, setAllocations] = useState([]);
     const [allocationsLoading, setAllocationsLoading] = useState(false);
 
@@ -160,12 +160,12 @@ export default function Items() {
         }
     };
 
-    // Load allocations when detailed view is toggled on
+    // Load allocations when switching to detailed view
     useEffect(() => {
-        if (showDetailedAllocations && allocations.length === 0) {
+        if (viewMode === 'detailed' && allocations.length === 0) {
             fetchDetailedAllocations();
         }
-    }, [showDetailedAllocations]);
+    }, [viewMode]);
 
     // Filter allocations with same logic as items
     const filteredAllocations = useMemo(() => {
@@ -417,126 +417,146 @@ export default function Items() {
                 </div>
             </div>
 
-            <div className="items-summary">
-                <span style={{ fontWeight: 500 }}>Toplam:</span>
-                <span className="summary-pill">
-                    {filteredItems.length} kayıt
-                </span>
-                {filteredItems.length !== items.length && (
-                    <span className="summary-filtered">(Filtrelendi)</span>
+            {/* View Mode Tabs */}
+            <div className="view-tabs" style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '2px solid #e2e8f0' }}>
+                <button
+                    className={`tab-button ${viewMode === 'summary' ? 'active' : ''}`}
+                    onClick={() => setViewMode('summary')}
+                    style={{
+                        padding: '0.75rem 1.5rem',
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        fontWeight: viewMode === 'summary' ? '600' : '400',
+                        color: viewMode === 'summary' ? '#1e293b' : '#64748b',
+                        borderBottom: viewMode === 'summary' ? '3px solid #3b82f6' : '3px solid transparent',
+                        marginBottom: '-2px',
+                        fontSize: '1rem',
+                        transition: 'all 0.2s'
+                    }}
+                >
+                    Özet Görünüm
+                </button>
+                <button
+                    className={`tab-button ${viewMode === 'detailed' ? 'active' : ''}`}
+                    onClick={() => setViewMode('detailed')}
+                    style={{
+                        padding: '0.75rem 1.5rem',
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        fontWeight: viewMode === 'detailed' ? '600' : '400',
+                        color: viewMode === 'detailed' ? '#1e293b' : '#64748b',
+                        borderBottom: viewMode === 'detailed' ? '3px solid #3b82f6' : '3px solid transparent',
+                        marginBottom: '-2px',
+                        fontSize: '1rem',
+                        transition: 'all 0.2s'
+                    }}
+                >
+                    Detaylı Müşteri Dağılımı
+                </button>
+                {viewMode === 'detailed' && allocations.length > 0 && (
+                    <Button
+                        variant="success"
+                        onClick={() => downloadCSV(filteredAllocations, 'detayli-stok-dagilimi', [
+                            { key: 'item_code', label: 'Ürün Kodu' },
+                            { key: 'item_name', label: 'Ürün Adı' },
+                            { key: 'location_code', label: 'Alan' },
+                            { key: 'customer_code', label: 'Müşteri' },
+                            { key: 'is_export', label: 'İhracat', format: val => val ? 'Evet' : 'Hayır' },
+                            { key: 'quantity', label: 'Miktar' }
+                        ])}
+                        icon={Download}
+                        style={{ marginLeft: 'auto' }}
+                    >
+                        Excel İndir
+                    </Button>
                 )}
             </div>
-            <Table
-                columns={columns}
-                data={filteredItems}
-                keyField="id"
-                isLoading={itemsLoading}
-                emptyMessage="Ürün bulunamadı"
-            />
 
-            {/* Detailed Allocations Section */}
-            <div className="detailed-allocations-section" style={{ marginTop: '3rem' }}>
-                <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <div>
-                        <h2 style={{ fontSize: '1.25rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <List size={24} />
-                            Detaylı Stok Dağılımı
-                        </h2>
-                        <p className="text-muted" style={{ fontSize: '0.875rem', marginTop: '0.25rem' }}>
-                            M şteri ve alan bazlı stok detayları
-                        </p>
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <Button
-                            variant="secondary"
-                            onClick={() => setShowDetailedAllocations(!showDetailedAllocations)}
-                            icon={showDetailedAllocations ? Package : List}
-                        >
-                            {showDetailedAllocations ? 'Özet Görünüm' : 'Detaylı Görünüm'}
-                        </Button>
-                        {showDetailedAllocations && allocations.length > 0 && (
-                            <Button
-                                variant="success"
-                                onClick={() => downloadCSV(filteredAllocations, 'detayli-stok-dagilimi', [
-                                    { key: 'item_code', label: 'Ürün Kodu' },
-                                    { key: 'item_name', label: 'Ürün Adı' },
-                                    { key: 'location_code', label: 'Alan' },
-                                    { key: 'customer_code', label: 'Müşteri' },
-                                    { key: 'is_export', label: 'İhracat', format: val => val ? 'Evet' : 'Hayır' },
-                                    { key: 'quantity', label: 'Miktar' }
-                                ])}
-                                icon={Download}
-                            >
-                                Excel İndir
-                            </Button>
+            {/* Summary View */}
+            {viewMode === 'summary' && (
+                <>
+                    <div className="items-summary">
+                        <span style={{ fontWeight: 500 }}>Toplam:</span>
+                        <span className="summary-pill">
+                            {filteredItems.length} kayıt
+                        </span>
+                        {filteredItems.length !== items.length && (
+                            <span className="summary-filtered">(Filtrelendi)</span>
                         )}
                     </div>
-                </div>
+                    <Table
+                        columns={columns}
+                        data={filteredItems}
+                        keyField="id"
+                        isLoading={itemsLoading}
+                        emptyMessage="Ürün bulunamadı"
+                    />
+                </>
+            )}
 
-                {showDetailedAllocations && (
-                    <>
-                        <div className="items-summary" style={{ marginBottom: '1rem' }}>
-                            <span style={{ fontWeight: 500 }}>Toplam Kayıt:</span>
-                            <span className="summary-pill">
-                                {filteredAllocations.length} allocation
-                            </span>
-                            {filteredAllocations.length !== allocations.length && (
-                                <span className="summary-filtered">(Filtrelendi)</span>
-                            )}
-                        </div>
-                        <Table
-                            columns={[
-                                {
-                                    key: 'item_code',
-                                    label: 'Ürün Kodu',
-                                    sortable: true
-                                },
-                                {
-                                    key: 'item_name',
-                                    label: 'Ürün Adı',
-                                    sortable: true
-                                },
-                                {
-                                    key: 'location_code',
-                                    label: 'Alan',
-                                    sortable: true
-                                },
-                                {
-                                    key: 'customer_code',
-                                    label: 'Müşteri',
-                                    sortable: true,
-                                    render: (row) => row.customer_code || '-'
-                                },
-                                {
-                                    key: 'is_export',
-                                    label: 'İhracat',
-                                    sortable: true,
-                                    render: (row) => (
-                                        <Badge variant={row.is_export ? 'info' : 'secondary'}>
-                                            {row.is_export ? 'İhracat' : 'Yurtiçi'}
-                                        </Badge>
-                                    )
-                                },
-                                {
-                                    key: 'quantity',
-                                    label: 'Miktar',
-                                    sortable: true,
-                                    render: (row) => (
-                                        <Badge variant="primary">{row.quantity}</Badge>
-                                    )
-                                }
-                            ]}
-                            data={filteredAllocations}
-                            keyField="item_id"
-                            isLoading={allocationsLoading}
-                            emptyMessage="Detaylı stok bilgisi bulunamadı"
-                        />
-                    </>
-                )}
-            </div>
-
-
-
+            {/* Detailed Allocations View */}
+            {viewMode === 'detailed' && (
+                <>
+                    <div className="items-summary" style={{ marginBottom: '1rem' }}>
+                        <span style={{ fontWeight: 500 }}>Toplam Kayıt:</span>
+                        <span className="summary-pill">
+                            {filteredAllocations.length} allocation
+                        </span>
+                        {filteredAllocations.length !== allocations.length && (
+                            <span className="summary-filtered">(Filtrelendi)</span>
+                        )}
+                    </div>
+                    <Table
+                        columns={[
+                            {
+                                key: 'item_code',
+                                label: 'Ürün Kodu',
+                                sortable: true
+                            },
+                            {
+                                key: 'item_name',
+                                label: 'Ürün Adı',
+                                sortable: true
+                            },
+                            {
+                                key: 'location_code',
+                                label: 'Alan',
+                                sortable: true
+                            },
+                            {
+                                key: 'customer_code',
+                                label: 'Müşteri',
+                                sortable: true,
+                                render: (row) => row.customer_code || '-'
+                            },
+                            {
+                                key: 'is_export',
+                                label: 'İhracat',
+                                sortable: true,
+                                render: (row) => (
+                                    <Badge variant={row.is_export ? 'info' : 'secondary'}>
+                                        {row.is_export ? 'İhracat' : 'Yurtiçi'}
+                                    </Badge>
+                                )
+                            },
+                            {
+                                key: 'quantity',
+                                label: 'Miktar',
+                                sortable: true,
+                                render: (row) => (
+                                    <Badge variant="primary">{row.quantity}</Badge>
+                                )
+                            }
+                        ]}
+                        data={filteredAllocations}
+                        keyField="item_id"
+                        isLoading={allocationsLoading}
+                        emptyMessage="Detaylı stok bilgisi bulunamadı"
+                    />
+                </>
+            )}
 
             {/* Detail Modal */}
             {/* Detail Modal */}

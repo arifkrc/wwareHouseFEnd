@@ -210,30 +210,56 @@ export default function Items() {
     const handleStockFilter = (e) => setShowZeroStock(e.target.checked);
 
     const handleExportCSV = () => {
-        if (!filteredItems.length) {
-            warning('Dışa aktarılacak veri yok');
-            return;
-        }
+        if (viewMode === 'summary') {
+            // Export summary table
+            if (!filteredItems.length) {
+                warning('Dışa aktarılacak veri yok');
+                return;
+            }
 
-        const headers = ['Ürün Kodu', 'Ürün Adı', 'Stok Miktarı', 'Lokasyon', 'Kategori', 'Açıklama'];
+            const headers = ['Ürün Kodu', 'Ürün Adı', 'Stok Miktarı', 'Lokasyon', 'Kategori', 'Açıklama'];
 
-        const rowMapper = (item) => {
-            const type = getProductType(item.item_code);
-            return [
-                item.item_code,
-                item.item_name,
-                item.quantity,
-                item.location_code || '-',
-                type.label,
-                item.description || ''
-            ];
-        };
+            const rowMapper = (item) => {
+                const type = getProductType(item.item_code);
+                return [
+                    item.item_code,
+                    item.item_name,
+                    item.quantity,
+                    item.location_code || '-',
+                    type.label,
+                    item.description || ''
+                ];
+            };
 
-        const successExport = downloadCSV(filteredItems, headers, rowMapper, 'urunler_listesi');
-        if (successExport) {
-            success('Excel dosyası indirildi');
+            const successExport = downloadCSV(filteredItems, headers, rowMapper, 'urunler_listesi');
+            if (successExport) {
+                success('Excel dosyası indirildi');
+            } else {
+                error('İndirme başarısız');
+            }
         } else {
-            error('İndirme başarısız');
+            // Export detailed allocations
+            if (!filteredAllocations.length) {
+                warning('Dışa aktarılacak veri yok');
+                return;
+            }
+
+            const headers = ['Ürün Kodu', 'Ürün Adı', 'Alan', 'Müşteri', 'İhracat', 'Miktar'];
+            const rowMapper = (alloc) => [
+                alloc.item_code,
+                alloc.item_name,
+                alloc.location_code,
+                alloc.customer_code || '-',
+                alloc.is_export ? 'Evet' : 'Hayır',
+                alloc.quantity
+            ];
+
+            const successExport = downloadCSV(filteredAllocations, headers, rowMapper, 'detayli_stok_dagilimi');
+            if (successExport) {
+                success('Excel dosyası indirildi');
+            } else {
+                error('İndirme başarısız');
+            }
         }
     };
 

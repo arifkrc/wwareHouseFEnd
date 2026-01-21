@@ -142,8 +142,9 @@ export default function FactoryLayout() {
       ...item,
       current_zone_location_id: currentZone?.locationId,
       current_zone_name: currentZone?.name,
-      stock_at_zone: item.quantity, // Now coming directly from backend allocation
-      customer_code: item.customer_code // Pass allocation customer code
+      stock_at_zone: item.quantity,
+      customer_code: item.customer_code,
+      is_export: item.is_export
     };
 
     setSelectedItem(itemWithLocation);
@@ -151,9 +152,16 @@ export default function FactoryLayout() {
     // Auto-fill logic
     let initialQuantity = '';
     let initialNote = '';
+    let initialToLocationId = '';
+    let initialCustomerCode = item.customer_code || '';
+
+    // For IN movements in ZoneModal, pre-fill the current zone as destination
+    if (type === MOVEMENT_TYPES.IN) {
+      initialToLocationId = currentZone?.locationId || '';
+    }
 
     if (type === MOVEMENT_TYPES.OUT || type === MOVEMENT_TYPES.PATLATMA || type === MOVEMENT_TYPES.SEVK) {
-      initialQuantity = item.quantity; // Default to full stock for out/patlatma/sevk
+      initialQuantity = item.quantity;
     }
 
     if (type === MOVEMENT_TYPES.PATLATMA) {
@@ -163,7 +171,8 @@ export default function FactoryLayout() {
     setMovementForm({
       type: type,
       quantity: initialQuantity,
-      toLocationId: '',
+      toLocationId: initialToLocationId,
+      customer_code: initialCustomerCode,
       notes: initialNote
     });
     setShowMovementModal(true);

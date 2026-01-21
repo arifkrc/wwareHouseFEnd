@@ -469,7 +469,7 @@ export default function Items() {
                         icon={Download}
                         style={{ marginLeft: 'auto' }}
                     >
-                        Excel İndir
+                        CSV İndir
                     </Button>
                 )}
             </div>

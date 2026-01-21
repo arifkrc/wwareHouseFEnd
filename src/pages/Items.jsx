@@ -511,29 +511,29 @@ export default function Items() {
                     <Table
                         columns={[
                             {
-                                key: 'item_code',
-                                label: 'Ürün Kodu',
+                                accessor: 'item_code',
+                                header: 'Ürün Kodu',
                                 sortable: true
                             },
                             {
-                                key: 'item_name',
-                                label: 'Ürün Adı',
+                                accessor: 'item_name',
+                                header: 'Ürün Adı',
                                 sortable: true
                             },
                             {
-                                key: 'location_code',
-                                label: 'Alan',
+                                accessor: 'location_code',
+                                header: 'Alan',
                                 sortable: true
                             },
                             {
-                                key: 'customer_code',
-                                label: 'Müşteri',
+                                accessor: 'customer_code',
+                                header: 'Müşteri',
                                 sortable: true,
                                 render: (row) => row.customer_code || '-'
                             },
                             {
-                                key: 'is_export',
-                                label: 'İhracat',
+                                accessor: 'is_export',
+                                header: 'İhracat',
                                 sortable: true,
                                 render: (row) => (
                                     <Badge variant={row.is_export ? 'info' : 'secondary'}>
@@ -542,8 +542,8 @@ export default function Items() {
                                 )
                             },
                             {
-                                key: 'quantity',
-                                label: 'Miktar',
+                                accessor: 'quantity',
+                                header: 'Miktar',
                                 sortable: true,
                                 render: (row) => (
                                     <Badge variant="primary">{row.quantity}</Badge>

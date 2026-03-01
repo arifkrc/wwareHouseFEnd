@@ -11,7 +11,7 @@ import { useZoneOperations } from '../hooks/useZoneOperations';
 import Toast from '../components/Toast';
 import { MOVEMENT_TYPES } from '../utils/movementHelpers';
 import api from '../services/api';
-import ZoneModal from '../components/ZoneModal';
+import ZoneDrawer from '../components/ZoneDrawer';
 import MovementModal from '../components/MovementModal';
 import ZoneSection from '../components/ZoneSection';
 import { REFRESH_INTERVALS } from '../config/constants';
@@ -247,8 +247,8 @@ export default function FactoryLayout() {
         <p>Bölge isimlerini özelleştirmek için <strong>Ayarlar &gt; Lokasyonlar</strong> bölümünden düzenleyebilirsiniz</p>
       </div>
 
-      {/* Refactored Zone Items Modal */}
-      <ZoneModal
+      {/* Refactored Zone Items Drawer */}
+      <ZoneDrawer
         isOpen={showZoneModal}
         onClose={() => setShowZoneModal(false)}
         zone={currentZone}

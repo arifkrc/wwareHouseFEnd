@@ -132,6 +132,7 @@ export default function ZoneDrawer({
         {
             header: 'Not',
             accessor: 'movement_note',
+            style: { minWidth: '150px', maxWidth: '250px' },
             render: (row) => {
                 const displayNote = row.movement_note
                     ? (row.movement_note.includes(':')
@@ -162,6 +163,7 @@ export default function ZoneDrawer({
         {
             header: 'Açıklama',
             accessor: 'description',
+            style: { minWidth: '150px', maxWidth: '250px' },
             render: (row) => (
                 <EditableCell
                     value={row.description}

@@ -54,16 +54,37 @@ export default function ZoneStockForm({
                 />
             </div>
 
-            <div className="form-group">
-                <label className="form-label">Miktar *</label>
-                <input
-                    type="number"
-                    className="form-input"
-                    value={form.quantity}
-                    onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-                    placeholder="Adet girin"
-                    min="1"
-                />
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', alignItems: 'flex-end' }}>
+                <div className="form-group" style={{ flex: 1, margin: 0 }}>
+                    <label className="form-label">Miktar *</label>
+                    <input
+                        type="number"
+                        className="form-input"
+                        value={form.quantity}
+                        onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                        placeholder="Adet girin"
+                        min="1"
+                    />
+                </div>
+
+                <div
+                    className="form-group checkbox-group"
+                    style={{ margin: 0, paddingBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                    onClick={() => setForm({ ...form, isExport: !form.isExport })}
+                >
+                    <div style={{
+                        width: '24px', height: '24px', borderRadius: '4px', border: '2px solid #cbd5e1',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: form.isExport ? '#2563eb' : 'white',
+                        borderColor: form.isExport ? '#2563eb' : '#cbd5e1',
+                        transition: 'all 0.2s'
+                    }}>
+                        {form.isExport && <CheckSquare size={16} color="white" />}
+                    </div>
+                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        Yurtdışı <Globe size={16} strokeWidth={2} className="text-blue-600" />
+                    </span>
+                </div>
             </div>
 
             <div className="form-group">
@@ -77,20 +98,6 @@ export default function ZoneStockForm({
                 />
             </div>
 
-            <div className="form-group checkbox-group" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setForm({ ...form, isExport: !form.isExport })}>
-                <div style={{
-                    width: '20px', height: '20px', borderRadius: '4px', border: '2px solid #cbd5e1',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: form.isExport ? '#2563eb' : 'white',
-                    borderColor: form.isExport ? '#2563eb' : '#cbd5e1'
-                }}>
-                    {form.isExport && <CheckSquare size={14} color="white" />}
-                </div>
-                <span style={{ fontSize: '14px', fontWeight: 500, color: '#334155', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    Yurtdışı Siparişi <Globe size={16} strokeWidth={2} className="text-blue-600" />
-                </span>
-            </div>
-
             <div className="form-group">
                 <label className="form-label">Not</label>
                 <input
@@ -102,11 +109,11 @@ export default function ZoneStockForm({
                 />
             </div>
 
-            <div style={{ marginTop: '1.5rem' }}>
+            <div style={{ marginTop: '2rem', paddingBottom: '2rem' }}>
                 <Button
                     variant="primary"
                     size="lg"
-                    style={{ width: '100%' }}
+                    style={{ width: '100%', padding: '1rem', fontSize: '1.1rem', fontWeight: 600, boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)' }}
                     onClick={handleSubmit}
                     isLoading={isProcessing}
                 >

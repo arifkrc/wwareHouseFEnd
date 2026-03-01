@@ -1,5 +1,5 @@
 import React from 'react';
-import { Download, Filter } from 'lucide-react';
+import { Download, Filter, Plane } from 'lucide-react';
 import Table from '../common/Table';
 import Badge from '../common/Badge';
 import Button from '../common/Button';
@@ -143,7 +143,10 @@ export function RecentMovementsTable({
                         accessor: 'item_name',
                         render: (row) => (
                             <div>
-                                <div style={{ fontWeight: 600, fontSize: '0.9em' }}>{row.item_code}</div>
+                                <div style={{ fontWeight: 600, fontSize: '0.9em', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    {row.item_code}
+                                    {row.is_export && <Badge variant="info" style={{ padding: '0 4px', height: '18px' }} title="İhracat"><Plane size={12} /></Badge>}
+                                </div>
                                 <div style={{ fontSize: '0.85em', color: '#64748b' }}>{row.item_name}</div>
                             </div>
                         )

@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { useMovements } from '../hooks/useMovements';
 import { useToast } from '../hooks/useToast';
-import { ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Plane } from 'lucide-react';
-import Modal from './common/Modal';
+import { ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Plane, Package } from 'lucide-react';
+import Drawer from './common/Drawer';
 import Table from './common/Table';
 import Badge from './common/Badge';
 import Button from './common/Button';
@@ -10,7 +10,7 @@ import EditableCell from './common/EditableCell';
 import Toast from './Toast';
 import { MOVEMENT_TYPES } from '../utils/movementHelpers';
 
-export default function ItemDetailModal({ isOpen, onClose, item, locations, onMovementRequest, onRefresh }) {
+export default function ItemDetailDrawer({ isOpen, onClose, item, locations, onMovementRequest, onRefresh }) {
     const { updateMovement } = useMovements();
     const { toasts, removeToast, success, error } = useToast();
 
@@ -54,6 +54,7 @@ export default function ItemDetailModal({ isOpen, onClose, item, locations, onMo
                     locId,
                     locationName: location?.location_code || 'Bilinmiyor',
                     isFirstInGroup: idx === 0,
+                    is_export: alloc.is_export, // Ensure is_export is passed to row
                     alloc, // { quantity, customer_code, latest_note, latest_movement_id }
                     originalItem: item
                 });
@@ -66,7 +67,14 @@ export default function ItemDetailModal({ isOpen, onClose, item, locations, onMo
         {
             header: 'Lokasyon',
             cell: (row) => row.isFirstInGroup ? (
-                <Badge variant="info">{row.locationName}</Badge>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Badge variant="info">{row.locationName}</Badge>
+                    {row.is_export && (
+                        <Badge variant="info" style={{ padding: '0 4px', height: '18px' }} title="İhracat">
+                            <Plane size={12} />
+                        </Badge>
+                    )}
+                </div>
             ) : (
                 <span className="text-muted" style={{ opacity: 0.3, paddingLeft: '10px' }}>↳</span>
             )
@@ -138,11 +146,21 @@ export default function ItemDetailModal({ isOpen, onClose, item, locations, onMo
         }
     ];
 
+    const DrawerTitle = item ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Package size={24} strokeWidth={2} fill="#e2e8f0" style={{ color: '#1e293b' }} />
+            <div>
+                <strong style={{ display: 'block', fontSize: '1.1em' }}>{item.item_code}</strong>
+                <span style={{ fontSize: '0.85em', color: '#64748b', fontWeight: 400 }}>{item.item_name}</span>
+            </div>
+        </div>
+    ) : 'Ürün Detayı';
+
     return (
-        <Modal
+        <Drawer
             isOpen={isOpen}
             onClose={onClose}
-            title={item ? `${item.item_code} - ${item.item_name}` : 'Ürün Detayı'}
+            title={DrawerTitle}
             size="lg"
         >
             {item && (
@@ -154,11 +172,6 @@ export default function ItemDetailModal({ isOpen, onClose, item, locations, onMo
                             data={detailData}
                             keyField="id"
                             emptyMessage="Stok kaydı bulunmuyor"
-                            rowDecoration={(row) => row.alloc?.is_export ? (
-                                <div className="corner-ribbon" title="Yurtdışı / Export">
-                                    <Plane />
-                                </div>
-                            ) : null}
                         />
                     ) : (
                         <p className="text-muted" style={{ padding: '1rem', fontStyle: 'italic' }}>Bu ürün için henüz stok kaydı bulunmuyor.</p>
@@ -201,6 +214,6 @@ export default function ItemDetailModal({ isOpen, onClose, item, locations, onMo
             {toasts.map(toast => (
                 <Toast key={toast.id} {...toast} onClose={() => removeToast(toast.id)} />
             ))}
-        </Modal>
+        </Drawer>
     );
 }

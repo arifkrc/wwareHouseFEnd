@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Bomb, Truck } from 'lucide-react';
 import { MOVEMENT_TYPES } from '../utils/movementHelpers';
-import Modal from './common/Modal';
+import Drawer from './common/Drawer';
 import Button from './common/Button';
 
-export default function MovementModal({
+export default function MovementDrawer({
     isOpen,
     onClose,
     selectedItem,
@@ -49,7 +49,7 @@ export default function MovementModal({
     );
 
     return (
-        <Modal
+        <Drawer
             isOpen={isOpen}
             onClose={onClose}
             title={getTitle()}
@@ -153,6 +153,6 @@ export default function MovementModal({
                     rows="3"
                 />
             </div>
-        </Modal>
+        </Drawer>
     );
 }

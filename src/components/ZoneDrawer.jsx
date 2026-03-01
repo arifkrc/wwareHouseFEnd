@@ -115,7 +115,14 @@ export default function ZoneDrawer({
             accessor: 'item_code',
             render: (row) => (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <strong style={{ fontSize: '1.05em', color: '#0f172a' }}>{row.item_code}</strong>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <strong style={{ fontSize: '1.05em', color: '#0f172a' }}>{row.item_code}</strong>
+                        {row.is_export && (
+                            <Badge variant="info" style={{ padding: '0 4px', height: '18px' }} title="İhracat">
+                                <Plane size={12} />
+                            </Badge>
+                        )}
+                    </div>
                     <span style={{ fontSize: '0.85em', color: '#64748b' }}>
                         <ExpandableText text={row.item_name} limit={25} />
                     </span>
@@ -260,11 +267,6 @@ export default function ZoneDrawer({
                         data={zoneItems}
                         keyField="allocation_id"
                         emptyMessage="Bu bölgede henüz ürün yok"
-                        rowDecoration={(row) => row.is_export ? (
-                            <div className="corner-ribbon" title="Yurtdışı / Export">
-                                <Plane />
-                            </div>
-                        ) : null}
                     />
                 )}
 

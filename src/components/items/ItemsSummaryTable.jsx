@@ -1,5 +1,5 @@
 import React from 'react';
-import { Info } from 'lucide-react';
+import { Info, Plane } from 'lucide-react';
 import Table from '../common/Table';
 import Badge from '../common/Badge';
 import Button from '../common/Button';
@@ -43,9 +43,16 @@ export default function ItemsSummaryTable({
             header: 'Toplam Stok',
             accessor: 'quantity',
             cell: (item) => (
-                <Badge variant={item.quantity > 0 ? 'success' : 'warning'}>
-                    {item.quantity}
-                </Badge>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Badge variant={item.quantity > 0 ? 'success' : 'warning'}>
+                        {item.quantity}
+                    </Badge>
+                    {item.quantity_export > 0 && (
+                        <Badge variant="info" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }} title={`İhracat: ${item.quantity_export}`}>
+                            <Plane size={14} /> {item.quantity_export}
+                        </Badge>
+                    )}
+                </div>
             )
         },
         {

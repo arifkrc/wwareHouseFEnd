@@ -10,8 +10,8 @@ import { MOVEMENT_TYPES } from '../utils/movementHelpers';
 import { getProductType, PRODUCT_TYPES } from '../utils/productHelpers';
 import api from '../services/api';
 import Toast from '../components/Toast';
-import MovementModal from '../components/MovementModal';
-import ItemDetailModal from '../components/ItemDetailModal';
+import MovementDrawer from '../components/MovementDrawer';
+import ItemDetailDrawer from '../components/ItemDetailDrawer';
 
 // New Components
 import ItemsFilters from '../components/items/ItemsFilters';
@@ -385,7 +385,7 @@ export default function Items() {
             )}
 
             {/* Detail Modal */}
-            <ItemDetailModal
+            <ItemDetailDrawer
                 isOpen={showDetailModal}
                 onClose={() => setShowDetailModal(false)}
                 item={selectedItem}
@@ -394,7 +394,7 @@ export default function Items() {
                 onRefresh={() => refreshItems({ limit: -1 })}
             />
 
-            <MovementModal
+            <MovementDrawer
                 isOpen={showMovementModal}
                 onClose={() => setShowMovementModal(false)}
                 selectedItem={selectedItem}

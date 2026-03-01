@@ -1,4 +1,5 @@
 import React from 'react';
+import { Plane } from 'lucide-react';
 import Table from '../common/Table';
 import Badge from '../common/Badge';
 
@@ -31,10 +32,11 @@ export default function ItemsDetailedTable({
         },
         {
             accessor: 'is_export',
-            header: 'İhracat',
+            header: 'Yurtiçi/Dışı',
             sortable: true,
             render: (row) => (
-                <Badge variant={row.is_export ? 'info' : 'secondary'}>
+                <Badge variant={row.is_export ? 'info' : 'secondary'} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    {row.is_export && <Plane size={14} />}
                     {row.is_export ? 'İhracat' : 'Yurtiçi'}
                 </Badge>
             )

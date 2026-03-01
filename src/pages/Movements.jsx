@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { History, RefreshCw, Edit2 } from 'lucide-react';
+import { History, RefreshCw, Edit2, Plane, Package } from 'lucide-react';
 import { useMovements } from '../hooks/useMovements';
 import { useToast } from '../hooks/useToast';
 import { useTableExport } from '../hooks/useTableExport';
@@ -9,6 +9,7 @@ import Button from '../components/common/Button';
 import Pagination from '../components/Pagination';
 import Skeleton from '../components/common/Skeleton';
 import Modal from '../components/common/Modal';
+import Drawer from '../components/common/Drawer';
 import './Movements.scss';
 
 import MovementsFilter from '../components/movements/MovementsFilter';
@@ -208,7 +209,15 @@ export default function Movements() {
                       </span>
                     </td>
                     <td>
-                      <strong>{movement.item_code}</strong> - {movement.item_name}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <strong>{movement.item_code}</strong>
+                        {movement.is_export && (
+                          <Badge variant="info" style={{ padding: '0 4px', height: '18px' }} title="İhracat">
+                            <Plane size={12} />
+                          </Badge>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '0.85em', color: '#64748b' }}>{movement.item_name}</div>
                     </td>
                     <td><strong>{movement.quantity}</strong></td>
                     <td>{movement.from_location_code || '-'}</td>
@@ -241,10 +250,15 @@ export default function Movements() {
         />
       </div>
 
-      <Modal
+      <Drawer
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
-        title="Notu Düzenle"
+        title={(
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Edit2 size={20} />
+            <span>Notu Düzenle</span>
+          </div>
+        )}
         size="sm"
         footer={(
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
@@ -254,17 +268,23 @@ export default function Movements() {
         )}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ padding: '0.75rem', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0', marginBottom: '1rem' }}>
+            <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{selectedMovement?.item_code}</div>
+            <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{selectedMovement?.item_name}</div>
+          </div>
+
           <label style={{ fontSize: '0.9rem', fontWeight: 500, color: '#475569' }}>Hareket Notu</label>
           <textarea
             className="form-input"
-            rows={3}
+            rows={5}
             value={editNote}
             onChange={(e) => setEditNote(e.target.value)}
             placeholder="Not giriniz..."
             autoFocus
+            style={{ width: '100%', padding: '0.75rem' }}
           />
         </div>
-      </Modal>
+      </Drawer>
     </div>
   );
 }

@@ -12,7 +12,7 @@ import Toast from '../components/Toast';
 import { MOVEMENT_TYPES } from '../utils/movementHelpers';
 import api from '../services/api';
 import ZoneDrawer from '../components/ZoneDrawer';
-import MovementModal from '../components/MovementModal';
+import MovementDrawer from '../components/MovementDrawer';
 import ZoneSection from '../components/ZoneSection';
 import { REFRESH_INTERVALS } from '../config/constants';
 import './FactoryLayout.scss';
@@ -273,8 +273,8 @@ export default function FactoryLayout() {
         showError={error} // Pass global toast handler
       />
 
-      {/* Reused Movement Modal */}
-      <MovementModal
+      {/* Reused Movement Drawer */}
+      <MovementDrawer
         isOpen={showMovementModal}
         onClose={() => setShowMovementModal(false)}
         selectedItem={selectedItem}

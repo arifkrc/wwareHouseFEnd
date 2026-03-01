@@ -154,6 +154,15 @@
     min-height: 65px;
     padding: 0.3rem 0.25rem;
     justify-content: flex-start;
+    overflow: hidden; /* prevent text from bleeding outside the box */
+
+    .zone-content-wrapper {
+        min-width: 0; /* allow flex shrink */
+    }
+
+    .zone-header-row {
+        min-width: 0; /* allow flex shrink */
+    }
 
     .zone-structural-name {
         font-size: 0.82rem;
@@ -162,6 +171,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
         max-width: 100%;
+        min-width: 0;
         display: block;
     }
 
@@ -291,5 +301,23 @@
     .corridor-zone {
         min-height: 55px; /* match warehouse-zone */
         padding: 0.4rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .corridor-zone {
+        padding: 0.2rem 0.15rem;
+
+        .zone-structural-name {
+            font-size: 0.72rem;
+        }
+
+        .stat-compact {
+            font-size: 0.55rem;
+        }
+
+        .zone-empty {
+            font-size: 0.6rem;
+        }
     }
 }

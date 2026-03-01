@@ -94,6 +94,17 @@ body {
   /* Orange-600 */
 }
 
+.btn-info {
+  background: #0ea5e9;
+  /* Sky-500 */
+  color: white;
+}
+
+.btn-info:hover:not(:disabled) {
+  background: #0284c7;
+  /* Sky-600 */
+}
+
 .btn-outline {
   background: transparent;
   border: 1px solid var(--border);

@@ -252,7 +252,15 @@
   .zone-label {
     font-size: 0.8rem;
   }
+}
 
+@media (max-width: 480px) {
+  .corridor-section {
+    flex: 0 0 54px;
+  }
+}
+
+@media (max-width: 1200px) {
   .modal-large {
     width: 95%;
     max-height: 85vh;

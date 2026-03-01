@@ -156,10 +156,10 @@ export default function ZoneDrawer({
                     <Button variant="primary" className="btn-danger btn-sm" onClick={() => onOpenMovementModal(row, 'OUT')} title="Stok Çıkışı" style={{ padding: '6px' }}>
                         <ArrowDownCircle size={18} strokeWidth={2.5} />
                     </Button>
-                    <Button variant="outline" className="btn-info btn-sm" onClick={() => onOpenMovementModal(row, 'TRANSFER')} title="Transfer" style={{ padding: '6px' }}>
+                    <Button variant="primary" className="btn-info btn-sm" onClick={() => onOpenMovementModal(row, 'TRANSFER')} title="Transfer" style={{ padding: '6px' }}>
                         <ArrowRightLeft size={18} strokeWidth={2.5} />
                     </Button>
-                    <Button variant="outline" className="btn-warning btn-sm" onClick={() => onOpenMovementModal(row, 'PATLATMA')} title="Patlatma / İmha" style={{ padding: '6px' }}>
+                    <Button variant="primary" className="btn-warning btn-sm" onClick={() => onOpenMovementModal(row, 'PATLATMA')} title="Patlatma / İmha" style={{ padding: '6px' }}>
                         <Bomb size={18} strokeWidth={2.5} />
                     </Button>
                     <Button variant="outline" className="btn-primary btn-sm" onClick={() => onOpenMovementModal(row, 'SEVK')} title="Sevk Et" style={{ padding: '6px' }}>

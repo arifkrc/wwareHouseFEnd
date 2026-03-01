@@ -181,7 +181,10 @@ export default function FactoryLayout() {
   };
 
   /* ZoneModal Handlers (Delegated to Hook) */
-  const onAddStock = (locationId, formData) => handleAddStock(locationId, formData, currentZone);
+  const onAddStock = (locationId, formData) => {
+    setZoneItemsLoading(true); // Show loading skeleton immediately when tab switches back
+    return handleAddStock(locationId, formData, currentZone);
+  };
   const onBulkTransfer = (fromLocationId, toLocationId, note) => handleBulkTransfer(fromLocationId, toLocationId, note);
   const onClearZone = (locationId, note) => handleClearZone(locationId, note);
 

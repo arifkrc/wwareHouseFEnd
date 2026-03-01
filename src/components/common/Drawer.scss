@@ -18,9 +18,9 @@
     background: white;
     box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.1), -5px 0 10px -5px rgba(0, 0, 0, 0.04);
     height: 100%;
-    /* Fallback */
-    height: 100dvh;
-    /* Mobile safari support */
+    max-height: 100%;
+    margin: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     display: flex;
     flex-direction: column;
     animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);

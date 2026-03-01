@@ -19,7 +19,7 @@ export const useLocations = () => {
   const createMutation = useMutation({
     mutationFn: (locationData) => api.post('/locations', locationData),
     onSuccess: () => {
-      queryClient.invalidateQueries(['locations']);
+      queryClient.invalidateQueries({ queryKey: ['locations'] });
     },
   });
 
@@ -27,7 +27,7 @@ export const useLocations = () => {
   const updateMutation = useMutation({
     mutationFn: ({ id, ...data }) => api.put(`/locations/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['locations']);
+      queryClient.invalidateQueries({ queryKey: ['locations'] });
     },
   });
 
@@ -35,11 +35,11 @@ export const useLocations = () => {
   const deleteMutation = useMutation({
     mutationFn: (id) => api.delete(`/locations/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries(['locations']);
+      queryClient.invalidateQueries({ queryKey: ['locations'] });
     },
   });
 
-  const refresh = useCallback(() => queryClient.invalidateQueries(['locations']), [queryClient]);
+  const refresh = useCallback(() => queryClient.invalidateQueries({ queryKey: ['locations'] }), [queryClient]);
 
   const createLocation = useCallback(async (data) => {
     const res = await createMutation.mutateAsync(data);

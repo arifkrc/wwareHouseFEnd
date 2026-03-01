@@ -23,17 +23,17 @@ export const useItems = () => {
   // Mutations
   const createMutation = useMutation({
     mutationFn: (itemData) => api.post('/items', itemData),
-    onSuccess: () => queryClient.invalidateQueries(['items']),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['items'] }),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, ...data }) => api.put(`/items/${id}`, data),
-    onSuccess: () => queryClient.invalidateQueries(['items']),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['items'] }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id) => api.delete(`/items/${id}`),
-    onSuccess: () => queryClient.invalidateQueries(['items']),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['items'] }),
   });
 
 
@@ -47,8 +47,7 @@ export const useItems = () => {
     // New `refresh` will just invalidate/refetch the main list.
     // If components strictly need pagination, we might need to expand this hook later.
     refresh: (params) => {
-      // warning: params are ignored in this simple port unless we add state
-      return queryClient.invalidateQueries(['items']);
+      return queryClient.invalidateQueries({ queryKey: ['items'] });
     },
 
     createItem: async (data) => {
@@ -66,7 +65,7 @@ export const useItems = () => {
     // Bulk Create Helper
     bulkCreateItems: async (itemsData) => {
       const res = await api.post('/items/bulk', itemsData);
-      queryClient.invalidateQueries(['items']);
+      queryClient.invalidateQueries({ queryKey: ['items'] });
       return res.data;
     },
 

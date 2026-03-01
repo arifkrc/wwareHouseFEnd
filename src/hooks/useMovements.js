@@ -57,7 +57,7 @@ export const useMovements = () => {
         return updated;
       });
     } else {
-      queryClient.invalidateQueries(['movements']);
+      queryClient.invalidateQueries({ queryKey: ['movements'] });
     }
   }, [queryClient]);
 
@@ -123,7 +123,7 @@ export const useMovements = () => {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['movements']);
+      queryClient.invalidateQueries({ queryKey: ['movements'] });
     }
   });
 

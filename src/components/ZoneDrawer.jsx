@@ -105,7 +105,7 @@ export default function ZoneDrawer({
             setActiveTab('assigned');
             setBulkForm({ targetLocationId: '', note: '', confirmClear: false });
         }
-    }, [isOpen, zone]);
+    }, [isOpen, zone?.locationId]); // Use locationId not object ref to avoid reset on background refresh
 
 
 

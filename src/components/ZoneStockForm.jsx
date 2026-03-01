@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Package, CheckSquare, Globe } from 'lucide-react';
 import Button from './common/Button';
 import ItemSearchSelect from './ItemSearchSelect';
@@ -21,12 +21,27 @@ export default function ZoneStockForm({
         isExport: false
     });
 
-    // Reset when tab becomes active or zone changes
+    const emptyForm = { itemId: '', quantity: '', customerCode: '', notes: '', isExport: false };
+
+    // Reset form ONLY when the tab transitions false→true (user opens the tab),
+    // NOT on every re-render that passes a new zone object reference.
+    const prevIsActiveRef = useRef(false);
     useEffect(() => {
-        if (isActive) {
-            setForm({ itemId: '', quantity: '', customerCode: '', notes: '', isExport: false });
+        const becameActive = isActive && !prevIsActiveRef.current;
+        prevIsActiveRef.current = isActive;
+        if (becameActive) {
+            setForm(emptyForm);
         }
-    }, [isActive, zone]);
+    }, [isActive]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Also reset when the actual zone changes (different locationId)
+    const prevZoneIdRef = useRef(zone?.locationId);
+    useEffect(() => {
+        if (zone?.locationId !== prevZoneIdRef.current) {
+            prevZoneIdRef.current = zone?.locationId;
+            setForm(emptyForm);
+        }
+    }, [zone?.locationId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleSubmit = () => {
         // PERFORMANCE OPTIMIZATION: Optimistic UI

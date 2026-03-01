@@ -16,12 +16,15 @@ export default function ZoneSection({
                 <div
                     key={zone.id}
                     className={`warehouse-zone ${type === 'corridor' ? 'corridor-zone' : ''} ${zone.passive ? 'zone-passive' : ''}`}
-                    style={{ backgroundColor: zone.color }}
+                    style={{ backgroundColor: zone.color, position: 'relative' }}
                     onClick={() => onZoneClick(zone)}
                 >
                     {type === 'corridor' ? (
                         // Corridor Content
                         <>
+                            <div style={{ position: 'absolute', top: 2, left: 4, fontSize: '0.65rem', fontWeight: 600, opacity: 0.5, letterSpacing: '0.5px' }}>
+                                {zone.originalName}
+                            </div>
                             <div className="zone-name-badge">
                                 <Package size={14} strokeWidth={2.5} style={{ marginRight: 4, opacity: 0.7 }} />
                                 {zone.name}
@@ -39,7 +42,10 @@ export default function ZoneSection({
                         </>
                     ) : (
                         // Standard Content (Left/Right)
-                        <div className="zone-content-wrapper">
+                        <div className="zone-content-wrapper" style={{ position: 'relative', width: '100%', height: '100%' }}>
+                            <div style={{ position: 'absolute', top: 4, left: 6, fontSize: '0.75rem', fontWeight: 600, opacity: 0.55, letterSpacing: '0.5px' }}>
+                                {zone.originalName}
+                            </div>
                             <div className="zone-label-center">
                                 <Package size={16} strokeWidth={2.5} style={{ display: 'block', margin: '0 auto 1px auto', opacity: 0.4 }} />
                                 {zone.name}

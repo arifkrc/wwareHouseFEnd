@@ -90,7 +90,8 @@ export const useWarehouseZones = () => {
         mappedZones.push({
           id: loc.location_code.toLowerCase(),
           section: config.section,
-          name: loc.description || config.name, // Use custom name from DB if set, otherwise fallback
+          name: loc.description || config.name,
+          originalName: config.name,
           description: loc.description,
           color: config.color,
           passive: config.passive,
@@ -108,6 +109,7 @@ export const useWarehouseZones = () => {
           id: code.toLowerCase(),
           section: ZONE_CONFIG[code].section,
           name: ZONE_CONFIG[code].name,
+          originalName: ZONE_CONFIG[code].name,
           description: '',
           color: ZONE_CONFIG[code].color,
           passive: ZONE_CONFIG[code].passive,

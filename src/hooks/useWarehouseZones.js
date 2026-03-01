@@ -67,24 +67,14 @@ export const useWarehouseZones = () => {
   const { refresh: refreshMovements } = useMovements();
   const [zones, setZones] = useState([]);
 
-  const mapLocationsToZones = useCallback(() => {
+  // Update zones whenever locations data changes (direct effect — no useCallback indirection)
+  useEffect(() => {
     const mappedZones = [];
 
-    // OPTIMIZATION: Removed client-side stock calculation. 
-    // We now rely on the backend 'locations' endpoint to provide 'item_count' and 'total_quantity'.
-    // This removes the need to iterate through thousands of movement records on the frontend.
-
-    // Map existing locations to zones
-    // Use the item_count and total_quantity ALREADY returned by the backend (if available)
-    // Fallback to 0 if not present (requires backend update to return these fields usually, 
-    // but the current locations endpoint DOES calculate them in JS, so likely they exist in 'locations' prop)
+    // Map DB locations → zone objects, using item_count / total_quantity returned by backend
     locations.forEach(loc => {
       const config = ZONE_CONFIG[loc.location_code];
       if (config) {
-        // Optimization: Use values from backend if they exist, otherwise 0.
-        const totalQuantity = loc.total_quantity || 0;
-        const itemCount = loc.item_count || 0;
-
         mappedZones.push({
           id: loc.location_code.toLowerCase(),
           section: config.section,
@@ -94,13 +84,13 @@ export const useWarehouseZones = () => {
           color: config.color,
           passive: config.passive,
           locationId: loc.id,
-          itemCount: itemCount,
-          totalQuantity: totalQuantity,
+          itemCount: loc.item_count || 0,
+          totalQuantity: loc.total_quantity || 0,
         });
       }
     });
 
-    // Add missing zones (not yet in database)
+    // Add zones not yet in DB (locationId: null, counts 0)
     Object.keys(ZONE_CONFIG).forEach(code => {
       if (!mappedZones.find(z => z.id === code.toLowerCase())) {
         mappedZones.push({
@@ -118,27 +108,18 @@ export const useWarehouseZones = () => {
       }
     });
 
-    // Sort by section and zone order (SOL-1, SOL-2, ... KORIDOR-1, ... SAG-1, ...)
-    const sortedZones = mappedZones.sort((a, b) => {
+    // Sort: left → corridor → right, numeric within section
+    mappedZones.sort((a, b) => {
       const order = { left: 0, corridor: 1, right: 2 };
-      const sectionCompare = order[a.section] - order[b.section];
-      if (sectionCompare !== 0) return sectionCompare;
-      // Within same section, sort by numeric ID if possible
-      // Extract number from code (A1 -> 1, K12 -> 12)
+      const sec = order[a.section] - order[b.section];
+      if (sec !== 0) return sec;
       const numA = parseInt(a.id.match(/\d+/)?.[0] || '0');
       const numB = parseInt(b.id.match(/\d+/)?.[0] || '0');
-
       return numA - numB;
     });
 
-    setZones(sortedZones);
-    return sortedZones;
+    setZones(mappedZones);
   }, [locations]);
-
-  // Update zones when locations or items change
-  useEffect(() => {
-    mapLocationsToZones();
-  }, [mapLocationsToZones]);
 
   const createZoneLocation = useCallback(async (zone) => {
     try {

@@ -27,7 +27,9 @@ export const useAutoRefresh = (callback, intervalMs) => {
 
         // Initial check
         if (document.visibilityState === 'visible' && intervalMs) {
-            // Option: also trigger immediately on mount if requested
+            // Fire immediately on mount, then on every interval
+            if (callbackRef.current) callbackRef.current();
+
             interval = setInterval(() => {
                 if (callbackRef.current) callbackRef.current();
             }, intervalMs);

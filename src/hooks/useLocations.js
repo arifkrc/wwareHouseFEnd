@@ -12,7 +12,8 @@ export const useLocations = () => {
       const response = await api.get('/locations');
       return response.data;
     },
-    staleTime: 1000 * 30, // 30 seconds - needs to be fresh for zone stock tiles
+    staleTime: 0,              // always consider stale → refetch on every mount
+    refetchInterval: 30000,    // poll every 30s automatically
   });
 
   // Mutation: Create Location

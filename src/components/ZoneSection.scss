@@ -155,13 +155,23 @@
     padding: 0.3rem 0.25rem;
     justify-content: flex-start;
     overflow: hidden; /* prevent text from bleeding outside the box */
+    max-width: 100%;
 
     .zone-content-wrapper {
         min-width: 0; /* allow flex shrink */
+        overflow: hidden;
+        width: 100%;
     }
 
     .zone-header-row {
         min-width: 0; /* allow flex shrink */
+        overflow: hidden;
+        width: 100%;
+    }
+
+    .zone-body-row {
+        overflow: hidden;
+        min-width: 0;
     }
 
     .zone-structural-name {
@@ -170,6 +180,7 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        width: 100%;
         max-width: 100%;
         min-width: 0;
         display: block;
@@ -183,6 +194,24 @@
 
     .stat-compact {
         font-size: 0.62rem;
+    }
+}
+
+/* Vertical stat layout for narrow corridor boxes */
+.corridor-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    overflow: hidden;
+    min-width: 0;
+    width: 100%;
+
+    .stat-compact {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.6rem;
+        line-height: 1.2;
     }
 }
 

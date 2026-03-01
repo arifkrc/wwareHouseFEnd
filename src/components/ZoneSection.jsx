@@ -97,9 +97,9 @@ export default function ZoneSection({
                                 <div className="zone-body-row" style={{ justifyContent: 'flex-start', marginTop: 'auto' }}>
                                     {!zone.passive && !isEditing && (
                                         zone.itemCount > 0 ? (
-                                            <div className="zone-stats-row text-center">
+                                            <div className="corridor-stats">
                                                 <span className="stat-compact">{zone.itemCount} Ürün</span>
-                                                <span className="stat-compact" style={{ marginLeft: 4 }}>{zone.totalQuantity} Adet</span>
+                                                <span className="stat-compact">{zone.totalQuantity} Ad</span>
                                             </div>
                                         ) : (
                                             <div className="zone-empty">Boş</div>

@@ -171,12 +171,21 @@ export default function FactoryLayout() {
   };
 
   const handleMovement = async () => {
-    const succeeded = await executeMovement(selectedItem, movementForm);
+    // Snapshot before clearing state
+    const itemSnapshot = selectedItem;
+    const formSnapshot = movementForm;
+    // Close drawer immediately for instant UX
+    setShowMovementModal(false);
+    setSelectedItem(null);
+    // Show loading in ZoneDrawer right away
+    setZoneItemsLoading(true);
+    // Process API in background
+    const succeeded = await executeMovement(itemSnapshot, formSnapshot);
     if (succeeded) {
-      setShowMovementModal(false);
-      setSelectedItem(null);
-      // Immediately refresh ZoneDrawer with committed data
       handleModalRefresh();
+    } else {
+      // On failure stop loading spinner (error toast already shown by executeMovement)
+      setZoneItemsLoading(false);
     }
   };
 

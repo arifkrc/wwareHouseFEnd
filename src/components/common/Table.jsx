@@ -47,7 +47,9 @@ export default function Table({
         const values = new Set();
         data.forEach(item => {
             const val = getValue(item, accessor);
-            if (val !== null && val !== undefined && val !== '') {
+            if (val === null || val === undefined || val === '') {
+                values.add('(Boş)');
+            } else {
                 values.add(String(val));
             }
         });
@@ -62,11 +64,16 @@ export default function Table({
         // Apply Filters
         Object.keys(filters).forEach(key => {
             const selectedValues = filters[key];
-            if (selectedValues && selectedValues.size > 0) {
-                processed = processed.filter(item => {
-                    const val = String(getValue(item, key) || '');
-                    return selectedValues.has(val);
-                });
+            if (selectedValues) {
+                if (selectedValues.size === 0) {
+                    processed = [];
+                } else {
+                    processed = processed.filter(item => {
+                        const rawVal = getValue(item, key);
+                        const val = (rawVal === null || rawVal === undefined || String(rawVal) === '') ? '(Boş)' : String(rawVal);
+                        return selectedValues.has(val);
+                    });
+                }
             }
         });
 
@@ -265,11 +272,14 @@ function FilterDropdown({ values, initialSelection, onApply, onClose }) {
     };
 
     const toggleSelectAll = () => {
-        if (selected.size === filteredValues.length && filteredValues.length > 0) {
-            setSelected(new Set());
+        const allFilteredSelected = filteredValues.length > 0 && filteredValues.every(v => selected.has(v));
+        const newSet = new Set(selected);
+        if (allFilteredSelected) {
+            filteredValues.forEach(v => newSet.delete(v));
         } else {
-            setSelected(new Set(values));
+            filteredValues.forEach(v => newSet.add(v));
         }
+        setSelected(newSet);
     };
 
     const handleApply = () => {

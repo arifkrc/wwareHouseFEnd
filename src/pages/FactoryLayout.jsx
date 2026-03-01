@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Package, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Warehouse } from 'lucide-react';
 import { useWarehouseZones } from '../hooks/useWarehouseZones';
 import { useLocations } from '../hooks/useLocations';
@@ -6,20 +6,23 @@ import { useItems } from '../hooks/useItems';
 import { useMovements } from '../hooks/useMovements';
 import { useMovementHandler } from '../hooks/useMovementHandler';
 import { useToast } from '../hooks/useToast';
+import { useAutoRefresh } from '../hooks/useAutoRefresh';
+import { useZoneOperations } from '../hooks/useZoneOperations';
 import Toast from '../components/Toast';
 import { MOVEMENT_TYPES } from '../utils/movementHelpers';
 import api from '../services/api';
 import ZoneModal from '../components/ZoneModal';
 import MovementModal from '../components/MovementModal';
 import ZoneSection from '../components/ZoneSection';
+import { REFRESH_INTERVALS } from '../config/constants';
 import './FactoryLayout.scss';
 
 
 
 export default function FactoryLayout() {
   const { zones, loading: zonesLoading, refresh: refreshZones } = useWarehouseZones();
-  const { locations, updateLocation } = useLocations();
-  const { items, refresh: refreshItems, updateItem } = useItems();
+  const { locations } = useLocations();
+  const { items, refresh: refreshItems } = useItems();
   const { refresh: refreshMovements, createMovement } = useMovements();
   const { toasts, removeToast, success, error, warning } = useToast();
 
@@ -63,42 +66,28 @@ export default function FactoryLayout() {
     locations
   });
 
-  // Separate processing state for bulk operations (add stock, bulk transfer, clear zone)
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  // Update zone items when items or currentZone changes
-  useEffect(() => {
-    fetchZoneAllocations();
-  }, [fetchZoneAllocations]);
+  // Helper to refresh everything
+  const refreshAll = async () => {
+    await Promise.all([
+      refreshMovements(),
+      refreshItems(),
+      refreshZones(),
+      fetchTotalStock() // Also refresh total stock
+    ]);
+  };
 
   // VERCEL OPTIMIZATION: Visibility-aware auto-refresh
   // Only refresh when tab is active to save function invocations
-  useEffect(() => {
-    let interval;
+  useAutoRefresh(refreshAll, REFRESH_INTERVALS.FACTORY_LAYOUT);
 
-    const handleVisibility = () => {
-      clearInterval(interval);
-
-      if (document.visibilityState === 'visible') {
-        // Tab is active - start auto-refresh
-        interval = setInterval(async () => {
-          await refreshMovements();
-          await refreshItems();
-          await refreshZones();
-        }, 30000);
-      }
-      // Tab is inactive - stop refreshing to save Vercel invocations
-    };
-
-    // Setup listener
-    document.addEventListener('visibilitychange', handleVisibility);
-    handleVisibility(); // Initialize
-
-    return () => {
-      clearInterval(interval);
-      document.removeEventListener('visibilitychange', handleVisibility);
-    };
-  }, [refreshMovements, refreshItems, refreshZones]);
+  // 2. USE ZONE OPERATIONS HOOK
+  const { isProcessing, handleBulkTransfer, handleClearZone, handleAddStock } = useZoneOperations({
+    onSuccess: success,
+    onError: error,
+    refreshAll,
+    fetchZoneAllocations,
+    createMovement
+  });
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -112,16 +101,6 @@ export default function FactoryLayout() {
       document.body.style.overflow = '';
     };
   }, [showZoneModal, showMovementModal]);
-
-  const handleRefresh = async () => {
-    await refreshMovements();
-    await refreshItems();
-    await refreshZones();
-    if (currentZone) {
-      await fetchZoneAllocations();
-    }
-    success('Yerleşim güncellendi!');
-  };
 
   const editZone = async (zone) => {
     // Prevent opening modal for passive zones
@@ -186,87 +165,10 @@ export default function FactoryLayout() {
     }
   };
 
-  const onBulkTransfer = async (fromLocationId, toLocationId, note) => {
-    setIsProcessing(true);
-    try {
-      await api.post('/movements/bulk-transfer', {
-        from_location_id: fromLocationId,
-        to_location_id: toLocationId,
-        note: note
-      });
-
-      // Refresh everything
-      await handleModalRefresh();
-      success('Toplu transfer başarılı');
-    } catch (err) {
-      console.error('Bulk transfer failed:', err);
-      // Extra safety check for error message
-      const msg = err.response?.data?.error || err.message || 'Toplu transfer başarısız';
-      error(msg);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const onClearZone = async (locationId, note) => {
-    setIsProcessing(true);
-    try {
-      await api.post('/movements/clear-zone', {
-        location_id: locationId,
-        note: note
-      });
-
-      // Refresh everything
-      await handleModalRefresh();
-      success('Alan başarıyla temizlendi');
-    } catch (err) {
-      console.error('Clear zone failed:', err);
-      const msg = err.response?.data?.error || err.message || 'Alan temizleme başarısız';
-      error(msg);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  /* ZoneModal Handlers (Delegated) */
-
-  const onAddStock = async (locationId, formData) => {
-    setIsProcessing(true);
-    try {
-      const movementData = {
-        item_id: parseInt(formData.itemId),
-        quantity: parseInt(formData.quantity),
-        to_location_id: locationId,
-        customer_code: formData.customerCode || null,
-        movement_note: `Panelden Hızlı Giriş: ${formData.notes || ''}`,
-        is_export: formData.isExport
-      };
-
-      await createMovement(MOVEMENT_TYPES.IN, movementData);
-
-      // 1. FAST UPDATE: Refresh hierarchy
-      if (currentZone) {
-        await fetchZoneAllocations();
-      }
-
-      // 2. BACKGROUND UPDATE
-      Promise.all([
-        refreshMovements(),
-        refreshItems(),
-        refreshZones()
-      ]).catch(err => console.warn('Background refresh failed', err));
-
-      success(`Stok girişi başarılı!`);
-    } catch (err) {
-      console.error('Stok eklenemedi:', err);
-      error('Stok eklenirken hata oluştu');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-
-
+  /* ZoneModal Handlers (Delegated to Hook) */
+  const onAddStock = (locationId, formData) => handleAddStock(locationId, formData, currentZone);
+  const onBulkTransfer = (targetZone) => handleBulkTransfer(targetZone, currentZone, zoneItems);
+  const onClearZone = (locationId, note) => handleClearZone(locationId, note);
 
 
   // Fetch authoritative total stock from backend (matches Telegram)
@@ -296,12 +198,7 @@ export default function FactoryLayout() {
 
     // 2. Refresh global data in background (Fire & Forget)
     // This ensures the "Total Stock" badge eventually updates without blocking the user
-    Promise.all([
-      refreshMovements(),
-      refreshItems(),
-      refreshZones(),
-      fetchTotalStock()
-    ]).catch(err => console.warn('Background refresh failed', err));
+    refreshAll().catch(err => console.warn('Background refresh failed', err));
   };
 
   return (

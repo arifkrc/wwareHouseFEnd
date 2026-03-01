@@ -7,17 +7,20 @@ import { useMovements } from './useMovements';
 // Fixed zone names: Streç (left), Koridor (corridor), Karşı Duvar (right)
 // Passive zones cannot store items (Streç Makinesi, Kapı, Jeneratör)
 // Zone configuration - Dynamic generation for 3x14 grid
+import { LOCATIONS } from '../config/constants';
+
+// Zone configuration - Dynamic generation based on constants
 const generateZoneConfig = () => {
   const config = {};
 
-  // Left Side (A1-A14)
-  for (let i = 1; i <= 14; i++) {
+  // Left Side (A Zones)
+  for (let i = 1; i <= LOCATIONS.A_ZONES; i++) {
     const code = `A${i}`;
     let name = code;
     let passive = false;
-    let color = '#506d95'; // Blue-ish for storage
+    let color = '#506d95'; // Blue-ish
 
-    // Special cases for Left
+    // Special cases for Left (Keep hardcoded or move to config if needed, usually static features)
     if (i === 6) { name = 'Kapı (A6)'; passive = true; color = '#9ca3af'; }
     if (i === 9) { name = 'Jeneratör (A9)'; passive = true; color = '#9ca3af'; }
     if (i === 10) { name = 'Jeneratör (A10)'; passive = true; color = '#9ca3af'; }
@@ -25,14 +28,14 @@ const generateZoneConfig = () => {
     config[code] = { section: 'left', name, color, passive };
   }
 
-  // Corridor (K1-K14)
-  for (let i = 1; i <= 14; i++) {
+  // Corridor (K Zones)
+  for (let i = 1; i <= LOCATIONS.K_ZONES; i++) {
     const code = `K${i}`;
-    config[code] = { section: 'corridor', name: code, color: '#e4ae62', passive: false }; // Yellow/Orange
+    config[code] = { section: 'corridor', name: code, color: '#e4ae62', passive: false };
   }
 
-  // Right Side (B1-B14)
-  for (let i = 1; i <= 14; i++) {
+  // Right Side (B Zones)
+  for (let i = 1; i <= LOCATIONS.B_ZONES; i++) {
     // B1 is now PAKETLEME
     if (i === 1) {
       const code = 'PAKETLEME';
@@ -48,10 +51,10 @@ const generateZoneConfig = () => {
     const code = `B${i}`;
     let name = code;
     let passive = false;
-    let color = '#506d95'; // Blue-ish
+    let color = '#506d95';
 
     // Special cases for Right
-    if (i === 14) { name = 'Arızalı Makine (B14)'; passive = true; color = '#ef4444'; } // Red
+    if (i === 14) { name = 'Arızalı Makine (B14)'; passive = true; color = '#ef4444'; }
 
     config[code] = { section: 'right', name, color, passive };
   }

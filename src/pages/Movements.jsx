@@ -11,6 +11,8 @@ import Skeleton from '../components/common/Skeleton';
 import Modal from '../components/common/Modal';
 import './Movements.scss';
 
+import MovementsFilter from '../components/movements/MovementsFilter';
+
 export default function Movements() {
   const { movements, pagination, refresh: refreshMovements, loading } = useMovements();
   const { downloadCSV } = useTableExport();
@@ -118,52 +120,22 @@ export default function Movements() {
 
   return (
     <div className="container movements-page" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
-      <div className="page-header">
+      <div className="page-header" style={{ marginBottom: '0.5rem' }}>
         <div>
           <h1><History size={28} strokeWidth={2} /> Hareket Geçmişi</h1>
           <p>Tüm stok hareketlerinin geçmişi</p>
         </div>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <input
-            type="date"
-            className="form-input"
-            value={dateRange.startDate}
-            onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
-            title="Başlangıç Tarihi"
-          />
-          <input
-            type="date"
-            className="form-input"
-            value={dateRange.endDate}
-            onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
-            title="Bitiş Tarihi"
-          />
-          <input
-            type="text"
-            className="form-input"
-            placeholder="Ara: Ürün, Kod, Not..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ width: '200px' }}
-          />
-          <Button
-            variant="secondary"
-            onClick={() => refreshMovements({ page: 1, limit: 20, search, sortBy, order, start_date: dateRange.startDate, end_date: dateRange.endDate })}
-            disabled={loading}
-            icon={RefreshCw}
-          >
-            Yenile
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleExport}
-            disabled={loading || movements.length === 0}
-            title="Listeyi Excel olarak indir"
-          >
-            Excel İndir
-          </Button>
-        </div>
       </div>
+
+      <MovementsFilter
+        dateRange={dateRange}
+        setDateRange={setDateRange}
+        search={search}
+        setSearch={setSearch}
+        onRefresh={() => refreshMovements({ page: 1, limit: 20, search, sortBy, order, start_date: dateRange.startDate, end_date: dateRange.endDate })}
+        onExport={handleExport}
+        loading={loading}
+      />
 
       {/* Tabs */}
       <div className="tabs-container" style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', borderBottom: '1px solid #e2e8f0', paddingBottom: '0.5rem' }}>

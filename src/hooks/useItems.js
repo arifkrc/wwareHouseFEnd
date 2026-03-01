@@ -7,24 +7,7 @@ export const useItems = () => {
   // Helper to construct query key based on params
   const getQueryKey = (params) => ['items', params];
 
-  // We need a way to track the "current" params to expose data
-  // But hooks are declarative. We can expose a generic fetcher or specific data.
-  // The original hook had a manual `fetchItems(params)`. 
-  // To adapt this to React Query, we should use `useQuery` with dynamic params.
-  // HOWEVER, the existing components call `refresh({ limit: -1 })` manually.
-
-  // Strategy: 
-  // 1. Maintain local state for params to drive the query.
-  // 2. Or, since the app seems to load ALL items (`limit: -1`) mostly, optimize for that.
-
-  // Let's assume for now we default to fetching ALL items as per recent changes
-  // Components that want specific params will need to be updated eventually, 
-  // but for backward compatibility with `refresh(params)`, we might need a workaround.
-
-  // ACTUALLY: The best way is to expose a `refetch` that accepts params? 
-  // No, `refetch` re-runs the CURRENT query.
-
-  // Let's implement a standard "All Items" query for now, as that's what `Items.jsx` uses.
+  // Fetch all items (defaulting to unlimited for now to match UI requirements)
   const { data: responseData, isLoading: loading, error, refetch } = useQuery({
     queryKey: ['items', { limit: -1 }],
     queryFn: async () => {
@@ -78,6 +61,13 @@ export const useItems = () => {
     },
     deleteItem: async (id) => {
       await deleteMutation.mutateAsync(id);
+    },
+
+    // Bulk Create Helper
+    bulkCreateItems: async (itemsData) => {
+      const res = await api.post('/items/bulk', itemsData);
+      queryClient.invalidateQueries(['items']);
+      return res.data;
     },
 
     pagination

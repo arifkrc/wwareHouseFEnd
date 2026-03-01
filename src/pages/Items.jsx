@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Package, Search, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Info, Download, Filter, List } from 'lucide-react';
+import { Package } from 'lucide-react';
 import { useItems } from '../hooks/useItems';
 import { useLocations } from '../hooks/useLocations';
 import { useMovements } from '../hooks/useMovements';
@@ -11,16 +11,14 @@ import { getProductType, PRODUCT_TYPES } from '../utils/productHelpers';
 import api from '../services/api';
 import Toast from '../components/Toast';
 import MovementModal from '../components/MovementModal';
-import ExpandableText from '../components/ExpandableText';
-
-// Check if these paths are correct based on file listing. Yes, they are in components/common/
-import Table from '../components/common/Table';
-import Badge from '../components/common/Badge';
-
-import Button from '../components/common/Button';
 import ItemDetailModal from '../components/ItemDetailModal';
-import './Items.scss';
 
+// New Components
+import ItemsFilters from '../components/items/ItemsFilters';
+import ItemsSummaryTable from '../components/items/ItemsSummaryTable';
+import ItemsDetailedTable from '../components/items/ItemsDetailedTable';
+
+import './Items.scss';
 
 export default function Items() {
     const { items, loading: itemsLoading, refresh: refreshItems } = useItems();
@@ -304,67 +302,6 @@ export default function Items() {
         setShowMovementModal(true);
     };
 
-    // Columns for Main Table
-    const columns = [
-        {
-            header: 'Kod',
-            accessor: 'item_code',
-            cell: (item) => {
-                const type = getProductType(item.item_code);
-                return (
-                    <div className="item-code-wrapper">
-                        <strong>{item.item_code}</strong>
-                        <span
-                            className="item-type-badge"
-                            style={{
-                                backgroundColor: type.bg,
-                                color: type.color
-                            }}
-                        >
-                            {type.label}
-                        </span>
-                    </div>
-                );
-            }
-        },
-        {
-            header: 'Ürün Adı',
-            accessor: 'item_name',
-            cell: (item) => <ExpandableText text={item.item_name} limit={30} />
-        },
-        {
-            header: 'Toplam Stok',
-            accessor: 'quantity',
-            cell: (item) => (
-                <Badge variant={item.quantity > 0 ? 'success' : 'warning'}>
-                    {item.quantity}
-                </Badge>
-            )
-        },
-        {
-            header: 'Birincil Konum',
-            accessor: 'location_code',
-            cell: (item) => item.location_code ? <Badge variant="info">{item.location_code}</Badge> : '-'
-        },
-        {
-            header: 'İşlemler',
-            cell: (item) => (
-                <Button
-                    variant="icon"
-                    className="btn-primary"
-                    size="sm"
-                    onClick={(e) => { e.stopPropagation(); openDetails(item); }}
-                    title="Detay & Hareket"
-                    icon={Info}
-                >
-                    Detay
-                </Button>
-            )
-        }
-    ];
-
-    // Detail columns and data calculation moved to ItemDetailModal
-
     return (
         <div className="container" style={{ paddingBottom: '2rem', paddingTop: '2rem' }}>
             <div className="items-header">
@@ -373,74 +310,20 @@ export default function Items() {
                     <p className="text-muted">Tüm ürünlerin stok durumu ve detayları</p>
                 </div>
 
-                <div className="items-controls">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleExportCSV}
-                        icon={Download}
-                        title="Listeyi Excel olarak indir"
-                    >
-                        Excel
-                    </Button>
-
-                    <div className="filter-wrapper">
-                        <Filter size={16} className="filter-icon" />
-                        <select
-                            className="form-select filter-select"
-                            value={filterType}
-                            onChange={handleFilterType}
-                        >
-                            <option value="ALL">Tüm Türler</option>
-                            <option value="DISK">Disk</option>
-                            <option value="KAMPANA">Kampana</option>
-                            <option value="POYRA">Poyra</option>
-                        </select>
-
-                        <select
-                            className="form-select filter-select"
-                            value={stockSourceFilter}
-                            onChange={(e) => setStockSourceFilter(e.target.value)}
-                            style={{ marginLeft: '8px' }}
-                        >
-                            <option value="ALL">Tüm Kaynaklar</option>
-                            <option value="DOMESTIC">İç Piyasa</option>
-                            <option value="EXPORT">Yurtdışı</option>
-                        </select>
-
-                        <select
-                            className="form-select filter-select"
-                            value={customerFilter}
-                            onChange={(e) => setCustomerFilter(e.target.value)}
-                            style={{ marginLeft: '8px', maxWidth: '150px' }}
-                        >
-                            <option value="ALL">Tüm Müşteriler</option>
-                            {uniqueCustomers.map(c => (
-                                <option key={c} value={c}>{c}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <label className="stock-toggle">
-                        <input
-                            type="checkbox"
-                            checked={showZeroStock}
-                            onChange={handleStockFilter}
-                        />
-                        Stoksuzları Göster
-                    </label>
-
-                    <div className="search-wrapper">
-                        <Search size={20} className="search-icon" />
-                        <input
-                            type="text"
-                            placeholder="Ürün Ara..."
-                            className="form-input search-input"
-                            value={searchTerm}
-                            onChange={handleSearch}
-                        />
-                    </div>
-                </div>
+                <ItemsFilters
+                    searchTerm={searchTerm}
+                    onSearchChange={handleSearch}
+                    filterType={filterType}
+                    onFilterTypeChange={handleFilterType}
+                    stockSourceFilter={stockSourceFilter}
+                    onStockSourceChange={(e) => setStockSourceFilter(e.target.value)}
+                    customerFilter={customerFilter}
+                    onCustomerFilterChange={(e) => setCustomerFilter(e.target.value)}
+                    showZeroStock={showZeroStock}
+                    onShowZeroStockChange={handleStockFilter}
+                    uniqueCustomers={uniqueCustomers}
+                    onExport={handleExportCSV}
+                />
             </div>
 
             {/* View Mode Tabs */}
@@ -485,89 +368,22 @@ export default function Items() {
 
             {/* Summary View */}
             {viewMode === 'summary' && (
-                <>
-                    <div className="items-summary">
-                        <span style={{ fontWeight: 500 }}>Toplam:</span>
-                        <span className="summary-pill">
-                            {filteredItems.length} kayıt
-                        </span>
-                        {filteredItems.length !== items.length && (
-                            <span className="summary-filtered">(Filtrelendi)</span>
-                        )}
-                    </div>
-                    <Table
-                        columns={columns}
-                        data={filteredItems}
-                        keyField="id"
-                        isLoading={itemsLoading}
-                        emptyMessage="Ürün bulunamadı"
-                    />
-                </>
+                <ItemsSummaryTable
+                    items={filteredItems}
+                    loading={itemsLoading}
+                    onRowClick={openDetails}
+                />
             )}
 
             {/* Detailed Allocations View */}
             {viewMode === 'detailed' && (
-                <>
-                    <div className="items-summary" style={{ marginBottom: '1rem' }}>
-                        <span style={{ fontWeight: 500 }}>Toplam Kayıt:</span>
-                        <span className="summary-pill">
-                            {filteredAllocations.length} allocation
-                        </span>
-                        {filteredAllocations.length !== allocations.length && (
-                            <span className="summary-filtered">(Filtrelendi)</span>
-                        )}
-                    </div>
-                    <Table
-                        columns={[
-                            {
-                                accessor: 'item_code',
-                                header: 'Ürün Kodu',
-                                sortable: true
-                            },
-                            {
-                                accessor: 'item_name',
-                                header: 'Ürün Adı',
-                                sortable: true
-                            },
-                            {
-                                accessor: 'location_code',
-                                header: 'Alan',
-                                sortable: true
-                            },
-                            {
-                                accessor: 'customer_code',
-                                header: 'Müşteri',
-                                sortable: true,
-                                render: (row) => row.customer_code || '-'
-                            },
-                            {
-                                accessor: 'is_export',
-                                header: 'İhracat',
-                                sortable: true,
-                                render: (row) => (
-                                    <Badge variant={row.is_export ? 'info' : 'secondary'}>
-                                        {row.is_export ? 'İhracat' : 'Yurtiçi'}
-                                    </Badge>
-                                )
-                            },
-                            {
-                                accessor: 'quantity',
-                                header: 'Miktar',
-                                sortable: true,
-                                render: (row) => (
-                                    <Badge variant="primary">{row.quantity}</Badge>
-                                )
-                            }
-                        ]}
-                        data={filteredAllocations}
-                        keyField="item_id"
-                        isLoading={allocationsLoading}
-                        emptyMessage="Detaylı stok bilgisi bulunamadı"
-                    />
-                </>
+                <ItemsDetailedTable
+                    allocations={filteredAllocations}
+                    loading={allocationsLoading}
+                    totalCount={allocations.length}
+                />
             )}
 
-            {/* Detail Modal */}
             {/* Detail Modal */}
             <ItemDetailModal
                 isOpen={showDetailModal}

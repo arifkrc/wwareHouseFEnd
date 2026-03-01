@@ -21,51 +21,58 @@ export default function ZoneSection({
                 >
                     {type === 'corridor' ? (
                         // Corridor Content
-                        <>
-                            <div style={{ position: 'absolute', top: 2, left: 4, fontSize: '0.65rem', fontWeight: 600, opacity: 0.5, letterSpacing: '0.5px' }}>
-                                {zone.originalName}
+                        <div className="zone-content-wrapper corridor-wrapper">
+                            <div className="zone-header-row" style={{ justifyContent: 'center' }}>
+                                <span className="zone-structural-name">{zone.originalName}</span>
                             </div>
-                            <div className="zone-name-badge">
-                                <Package size={14} strokeWidth={2.5} style={{ marginRight: 4, opacity: 0.7 }} />
-                                {zone.name}
-                            </div>
-                            {!zone.passive && (
-                                zone.itemCount > 0 ? (
-                                    <div className="corridor-stats-bottom">
-                                        <span className="stat-compact">{zone.itemCount} Ürün</span>
-                                        <span className="stat-compact">{zone.totalQuantity} Adet</span>
-                                    </div>
-                                ) : (
-                                    <div className="zone-empty-corridor">Boş</div>
-                                )
+
+                            {zone.name !== zone.originalName && (
+                                <div className="zone-custom-name" style={{ margin: '2px auto' }}>
+                                    <Package size={12} strokeWidth={2.5} style={{ marginRight: 4 }} />
+                                    <span className="truncate-text">{zone.name}</span>
+                                </div>
                             )}
-                        </>
+
+                            <div className="zone-body-row" style={{ justifyContent: 'center', marginTop: 'auto' }}>
+                                {!zone.passive && (
+                                    zone.itemCount > 0 ? (
+                                        <div className="zone-stats-row text-center">
+                                            <span className="stat-compact">{zone.itemCount} Ürün</span>
+                                            <span className="stat-compact" style={{ marginLeft: 4 }}>{zone.totalQuantity} Adet</span>
+                                        </div>
+                                    ) : (
+                                        <div className="zone-empty">Boş</div>
+                                    )
+                                )}
+                            </div>
+                        </div>
                     ) : (
                         // Standard Content (Left/Right)
-                        <div className="zone-content-wrapper" style={{ position: 'relative', width: '100%', height: '100%' }}>
-                            <div style={{ position: 'absolute', top: 4, left: 6, fontSize: '0.75rem', fontWeight: 600, opacity: 0.55, letterSpacing: '0.5px' }}>
-                                {zone.originalName}
+                        <div className="zone-content-wrapper">
+                            <div className="zone-header-row">
+                                <span className="zone-structural-name">{zone.originalName}</span>
+                                {zone.name !== zone.originalName && (
+                                    <div className="zone-custom-name">
+                                        <Package size={12} style={{ marginRight: 4, flexShrink: 0 }} />
+                                        <span className="truncate-text">{zone.name}</span>
+                                    </div>
+                                )}
                             </div>
-                            <div className="zone-label-center">
-                                <Package size={16} strokeWidth={2.5} style={{ display: 'block', margin: '0 auto 1px auto', opacity: 0.4 }} />
-                                {zone.name}
-                            </div>
-                            {!zone.passive && (
-                                zone.itemCount > 0 ? (
-                                    <div className="zone-stats-left">
-                                        <div className="zone-stat-item">
+
+                            <div className="zone-body-row">
+                                {!zone.passive && (
+                                    zone.itemCount > 0 ? (
+                                        <div className="zone-stats-row">
                                             <span className="stat-value">{zone.itemCount}</span>
                                             <span className="stat-label">ürün</span>
-                                        </div>
-                                        <div className="zone-stat-item">
-                                            <span className="stat-value">{zone.totalQuantity}</span>
+                                            <span className="stat-value" style={{ marginLeft: 6 }}>{zone.totalQuantity}</span>
                                             <span className="stat-label">adet</span>
                                         </div>
-                                    </div>
-                                ) : (
-                                    <div className="zone-empty">Boş</div>
-                                )
-                            )}
+                                    ) : (
+                                        <div className="zone-empty">Boş</div>
+                                    )
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>

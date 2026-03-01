@@ -53,6 +53,13 @@ export default function FactoryLayout() {
     }
   }, [currentZone]);
 
+  // Fetch items when a zone is selected and modal is opened
+  useEffect(() => {
+    if (currentZone && showZoneModal) {
+      fetchZoneAllocations();
+    }
+  }, [currentZone, showZoneModal, fetchZoneAllocations]);
+
   // Use shared movement handler hook (uses fetchZoneAllocations)
   const { executeMovement, isProcessing: isMovementProcessing } = useMovementHandler({
     onSuccess: success,

@@ -267,6 +267,10 @@ export default function Items() {
         if (success) {
             setShowMovementModal(false);
             setShowDetailModal(false);
+            // If in detailed view, also refresh allocations immediately
+            if (viewMode === 'detailed') {
+                fetchDetailedAllocations();
+            }
         }
     };
 

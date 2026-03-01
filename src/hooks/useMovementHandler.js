@@ -168,34 +168,27 @@ export function useMovementHandler({
             const movementData = buildMovementData(selectedItem, movementForm);
             const endpointType = getEndpointType(movementForm.type);
 
-            // PERFORMANCE OPTIMIZATION: Optimistic UI
-            // 1. Fire the API call without awaiting it to block the UI
-            createMovement(endpointType, movementData)
-                .then(() => {
-                    // 2. Fire background refreshes after success
-                    const refreshPromises = [refreshItems(), refreshMovements()];
-                    if (refreshZones) refreshPromises.push(refreshZones());
-                    if (currentZone && fetchZoneAllocations) refreshPromises.push(fetchZoneAllocations());
+            // Await the API call so the DB transaction is fully committed before refresh
+            await createMovement(endpointType, movementData);
 
-                    return Promise.all(refreshPromises);
-                })
-                .catch(err => {
-                    console.error('Background movement or refresh failed:', err);
-                    onError('Arka planda işlem hatası oluştu');
-                });
+            // Fire background refreshes (non-blocking)
+            // fetchZoneAllocations is handled by FactoryLayout after this resolves
+            const refreshPromises = [refreshItems(), refreshMovements()];
+            if (refreshZones) refreshPromises.push(refreshZones());
+            Promise.all(refreshPromises).catch(err => console.warn('Background refresh error:', err));
 
-            // 3. Immediately give success feedback and close the modal
+            // Success feedback
             const typeLabel = getTypeLabel(movementForm.type);
             const itemName = selectedItem.item_name || selectedItem.item_code;
             onSuccess(`${typeLabel}: ${movementForm.quantity} adet ${itemName}`);
 
             return true;
         } catch (err) {
-            console.error('Movement execution validation failed:', err);
-            onError('İşlem başlatılamadı');
+            console.error('Movement execution failed:', err);
+            const serverMsg = err?.response?.data?.error;
+            onError(serverMsg || 'İşlem başarısız oldu');
             return false;
         } finally {
-            // Instantly free the UI
             setIsProcessing(false);
         }
     };

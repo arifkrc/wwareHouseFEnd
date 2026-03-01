@@ -9,7 +9,8 @@ export default function Drawer({
     children,
     footer,
     size = 'md', // 'sm', 'md', 'lg', 'xl' (Widths on desktop)
-    closeOnOverlayClick = true
+    closeOnOverlayClick = true,
+    elevated = false // Set true when rendered on top of another drawer
 }) {
     useEffect(() => {
         const handleEscape = (e) => {
@@ -19,14 +20,14 @@ export default function Drawer({
         };
 
         if (isOpen) {
-            document.body.style.overflow = 'hidden'; // Prevent background scrolling
             window.addEventListener('keydown', handleEscape);
         }
 
         return () => {
-            document.body.style.overflow = 'unset';
             window.removeEventListener('keydown', handleEscape);
         };
+        // NOTE: body.overflow is managed centrally by FactoryLayout/parent pages
+        // to prevent conflicts when multiple drawers are stacked
     }, [isOpen, onClose]);
 
     if (!isOpen) return null;
@@ -38,7 +39,10 @@ export default function Drawer({
     };
 
     return (
-        <div className="drawer-overlay" onClick={handleOverlayClick}>
+        <div
+            className={`drawer-overlay${elevated ? ' elevated' : ''}`}
+            onClick={handleOverlayClick}
+        >
             <div className={`drawer drawer-${size} ${isOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
                 <div className="drawer-header">
                     <h3 className="drawer-title">{title}</h3>

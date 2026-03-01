@@ -14,8 +14,9 @@ export const useAutoRefresh = (callback, intervalMs) => {
             clearInterval(interval);
 
             if (document.visibilityState === 'visible' && intervalMs) {
-                // Execute immediately on visible? Optional.
-                // For now, just start interval.
+                // Execute immediately when user comes back
+                if (callbackRef.current) callbackRef.current();
+
                 interval = setInterval(() => {
                     if (callbackRef.current) callbackRef.current();
                 }, intervalMs);
@@ -26,6 +27,7 @@ export const useAutoRefresh = (callback, intervalMs) => {
 
         // Initial check
         if (document.visibilityState === 'visible' && intervalMs) {
+            // Option: also trigger immediately on mount if requested
             interval = setInterval(() => {
                 if (callbackRef.current) callbackRef.current();
             }, intervalMs);

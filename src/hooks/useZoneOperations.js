@@ -11,25 +11,26 @@ export const useZoneOperations = ({
 }) => {
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const handleBulkTransfer = async (targetZone, sourceZone, currentZoneItems) => {
-        if (!targetZone || targetZone.id === sourceZone?.id) return;
+    const handleBulkTransfer = async (fromLocationId, toLocationId, note) => {
+        if (!fromLocationId || !toLocationId) return;
 
         // Validation for capacity or rules could go here
 
-        if (!window.confirm(`${sourceZone.locationCode} alanındaki TÜM ürünler ${targetZone.locationCode} alanına taşınacak. Onaylıyor musunuz?`)) {
+        if (!window.confirm(`Bu alandaki TÜM ürünler seçilen alana taşınacak. Onaylayıyor musunuz?`)) {
             return;
         }
 
         setIsProcessing(true);
         try {
             await api.post('/movements/bulk-transfer', {
-                from_location_id: sourceZone.id,
-                to_location_id: targetZone.id
+                from_location_id: parseInt(fromLocationId),
+                to_location_id: parseInt(toLocationId),
+                note
             });
 
             await refreshAll();
 
-            // Should refetch zone items if we are still viewing source
+            // Refetch zone items if still viewing source zone
             if (fetchZoneAllocations) await fetchZoneAllocations();
 
             onSuccess('Toplu transfer başarılı');

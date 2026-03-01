@@ -3,6 +3,7 @@ import { BarChart3 } from 'lucide-react';
 
 import { useLocations } from '../hooks/useLocations';
 import { useMovements } from '../hooks/useMovements';
+import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { getProductType, PRODUCT_TYPES } from '../utils/productHelpers';
 import { useTableExport } from '../hooks/useTableExport';
 import { useToast } from '../hooks/useToast';
@@ -111,6 +112,15 @@ export default function Dashboard() {
     };
     fetchWidgets();
   }, []);
+
+  // Auto-Refresh Dashboard every 30 seconds
+  useAutoRefresh(() => {
+    refresh({ page: currentPage, limit: 10, search, start_date: filters.startDate, end_date: filters.endDate });
+    getMovementStats({ start_date: filters.startDate, end_date: filters.endDate }).then(data => setStats(data));
+
+    // Also re-fetch widgets
+    api.get('/items/stats/widgets').then(res => setWidgetStats(res.data)).catch(() => { });
+  }, 30000);
 
   // Fetch stats based on current date filters
   useEffect(() => {

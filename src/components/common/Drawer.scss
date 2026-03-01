@@ -14,6 +14,12 @@
     /* Align drawer to the right */
 }
 
+/* Elevated overlay - for drawers stacked on top of another drawer (e.g. MovementDrawer over ZoneDrawer) */
+.drawer-overlay.elevated {
+    z-index: 1100;
+    background-color: rgba(0, 0, 0, 0.25);
+}
+
 .drawer {
     background: white;
     box-shadow: -10px 0 25px -5px rgba(0, 0, 0, 0.1), -5px 0 10px -5px rgba(0, 0, 0, 0.04);
@@ -118,6 +124,16 @@
 
     to {
         transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
         opacity: 1;
     }
 }

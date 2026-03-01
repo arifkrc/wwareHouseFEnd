@@ -165,16 +165,18 @@ export default function FactoryLayout() {
   };
 
   const handleMovement = async () => {
-    const success = await executeMovement(selectedItem, movementForm);
-    if (success) {
+    const succeeded = await executeMovement(selectedItem, movementForm);
+    if (succeeded) {
       setShowMovementModal(false);
       setSelectedItem(null);
+      // Immediately refresh ZoneDrawer with committed data
+      handleModalRefresh();
     }
   };
 
   /* ZoneModal Handlers (Delegated to Hook) */
   const onAddStock = (locationId, formData) => handleAddStock(locationId, formData, currentZone);
-  const onBulkTransfer = (targetZone) => handleBulkTransfer(targetZone, currentZone, zoneItems);
+  const onBulkTransfer = (fromLocationId, toLocationId, note) => handleBulkTransfer(fromLocationId, toLocationId, note);
   const onClearZone = (locationId, note) => handleClearZone(locationId, note);
 
 
@@ -273,7 +275,7 @@ export default function FactoryLayout() {
         showError={error} // Pass global toast handler
       />
 
-      {/* Reused Movement Drawer */}
+      {/* Reused Movement Drawer - elevated above ZoneDrawer */}
       <MovementDrawer
         isOpen={showMovementModal}
         onClose={() => setShowMovementModal(false)}
@@ -283,6 +285,7 @@ export default function FactoryLayout() {
         handleMovement={handleMovement}
         isProcessing={isProcessing}
         locations={locations}
+        elevated={true}
       />
 
       {/* Toast Notifications - Rendered at root level to avoid z-index/transform issues */}

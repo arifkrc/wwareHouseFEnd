@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLocations } from './useLocations';
-import { useItems } from './useItems';
 import { useMovements } from './useMovements';
 
 // Zone configuration - Single source of truth
@@ -65,8 +64,7 @@ const generateZoneConfig = () => {
 const ZONE_CONFIG = generateZoneConfig();
 export const useWarehouseZones = () => {
   const { locations, loading: locationsLoading, createLocation, updateLocation, refresh: refreshLocations } = useLocations();
-  const { items } = useItems();
-  const { movements, refresh: refreshMovements } = useMovements();
+  const { refresh: refreshMovements } = useMovements();
   const [zones, setZones] = useState([]);
 
   const mapLocationsToZones = useCallback(() => {
@@ -135,7 +133,7 @@ export const useWarehouseZones = () => {
 
     setZones(sortedZones);
     return sortedZones;
-  }, [locations, movements]);
+  }, [locations]);
 
   // Update zones when locations or items change
   useEffect(() => {

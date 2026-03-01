@@ -16,6 +16,7 @@ export default function ZoneDrawer({
     onClose,
     zone,
     zoneItems,
+    zoneItemsLoading = false,
     allItems,
     onAddStock,
     onOpenMovementModal,
@@ -262,12 +263,31 @@ export default function ZoneDrawer({
             {/* Content */}
             <div className="zone-items-container">
                 {activeTab === 'assigned' && (
-                    <Table
-                        columns={columns}
-                        data={zoneItems}
-                        keyField="allocation_id"
-                        emptyMessage="Bu bölgede henüz ürün yok"
-                    />
+                    zone?.locationId
+                        ? (
+                            <Table
+                                columns={columns}
+                                data={zoneItems}
+                                keyField="allocation_id"
+                                emptyMessage="Bu bölgede henüz ürün yok"
+                                isLoading={zoneItemsLoading}
+                            />
+                        ) : (
+                            <div style={{
+                                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                justifyContent: 'center', padding: '3rem 1.5rem', gap: '0.75rem',
+                                textAlign: 'center', color: '#64748b'
+                            }}>
+                                <Package size={40} strokeWidth={1.5} style={{ color: '#cbd5e1' }} />
+                                <p style={{ fontWeight: 600, color: '#475569', margin: 0 }}>
+                                    Bu bölge henüz sisteme eklenmemiş
+                                </p>
+                                <p style={{ fontSize: '0.875rem', margin: 0 }}>
+                                    Bölge karoseri üzerine gelerek kalem simgesine tıklayın ve
+                                    bir isim verin &mdash; bölge otomatik olarak aktif olacak.
+                                </p>
+                            </div>
+                        )
                 )}
 
                 {activeTab === 'add_stock' && (

@@ -20,7 +20,7 @@ import './FactoryLayout.scss';
 
 
 export default function FactoryLayout() {
-  const { zones, loading: zonesLoading, refresh: refreshZones } = useWarehouseZones();
+  const { zones, loading: zonesLoading, refresh: refreshZones, renameZone } = useWarehouseZones();
   const { locations } = useLocations();
   const { items, refresh: refreshItems, updateItem } = useItems();
   const { refresh: refreshMovements, createMovement } = useMovements();
@@ -29,6 +29,7 @@ export default function FactoryLayout() {
   const [showZoneModal, setShowZoneModal] = useState(false);
   const [currentZone, setCurrentZone] = useState(null);
   const [zoneItems, setZoneItems] = useState([]);
+  const [zoneItemsLoading, setZoneItemsLoading] = useState(false);
 
   // FactoryLayout keeps MovementModal state because it's shared across zones
   const [showMovementModal, setShowMovementModal] = useState(false);
@@ -42,14 +43,19 @@ export default function FactoryLayout() {
 
   // Define fetchZoneAllocations FIRST (needed by hook)
   const fetchZoneAllocations = useCallback(async () => {
-    if (!currentZone?.locationId) return;
+    if (!currentZone?.locationId) {
+      setZoneItems([]);
+      return;
+    }
 
+    setZoneItemsLoading(true);
     try {
       const response = await api.get(`/locations/${currentZone.locationId}/items`);
       setZoneItems(response.data);
     } catch (err) {
       console.error('Bölge ürünleri yüklenemedi:', err);
-      // Don't spam error toast on auto-refresh
+    } finally {
+      setZoneItemsLoading(false);
     }
   }, [currentZone]);
 
@@ -232,6 +238,7 @@ export default function FactoryLayout() {
           zones={zones.filter(z => z.section === 'left')}
           className="warehouse-section left-section"
           onZoneClick={editZone}
+          onRenameZone={renameZone}
         />
 
         {/* KORİDOR */}
@@ -241,6 +248,7 @@ export default function FactoryLayout() {
           className="corridor-section"
           type="corridor"
           onZoneClick={editZone}
+          onRenameZone={renameZone}
         />
 
         {/* KARŞI DUVAR */}
@@ -249,11 +257,12 @@ export default function FactoryLayout() {
           zones={zones.filter(z => z.section === 'right')}
           className="warehouse-section right-section"
           onZoneClick={editZone}
+          onRenameZone={renameZone}
         />
       </div>
 
       <div className="layout-info">
-        <p>Bölge isimlerini özelleştirmek için <strong>Ayarlar &gt; Lokasyonlar</strong> bölümünden düzenleyebilirsiniz</p>
+        <p>Bölge adını değiştirmek için üzerine gelin ve <strong>✏️ kalem simgesine</strong> tıklayın · Enter ile kaydet, Esc ile iptal</p>
       </div>
 
       {/* Refactored Zone Items Drawer */}
@@ -262,6 +271,7 @@ export default function FactoryLayout() {
         onClose={() => setShowZoneModal(false)}
         zone={currentZone}
         zoneItems={zoneItems}
+        zoneItemsLoading={zoneItemsLoading}
         allItems={items}
         onAddStock={onAddStock}
         onBulkTransfer={onBulkTransfer}

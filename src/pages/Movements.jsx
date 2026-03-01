@@ -10,6 +10,7 @@ import Pagination from '../components/Pagination';
 import Skeleton from '../components/common/Skeleton';
 import Modal from '../components/common/Modal';
 import Drawer from '../components/common/Drawer';
+import Badge from '../components/common/Badge';
 import './Movements.scss';
 
 import MovementsFilter from '../components/movements/MovementsFilter';

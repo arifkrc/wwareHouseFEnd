@@ -64,7 +64,7 @@ const generateZoneConfig = () => {
 
 const ZONE_CONFIG = generateZoneConfig();
 export const useWarehouseZones = () => {
-  const { locations, loading: locationsLoading, createLocation } = useLocations();
+  const { locations, loading: locationsLoading, createLocation, updateLocation, refresh: refreshLocations } = useLocations();
   const { items } = useItems();
   const { movements, refresh: refreshMovements } = useMovements();
   const [zones, setZones] = useState([]);
@@ -157,16 +157,35 @@ export const useWarehouseZones = () => {
     }
   }, [createLocation]);
 
+  const renameZone = useCallback(async (zone, newName) => {
+    const trimmed = newName.trim();
+
+    if (!zone.locationId) {
+      // Zone not yet in DB – create it with the new name as description
+      if (!trimmed) return;
+      await createLocation({
+        location_code: zone.id.toUpperCase(),
+        description: trimmed,
+      });
+      return;
+    }
+
+    // Update existing location description by numeric DB id
+    await updateLocation(zone.locationId, { description: trimmed });
+  }, [createLocation, updateLocation]);
+
   const refreshAll = useCallback(async () => {
-    await refreshMovements();
-    // Locations refresh might be needed too if locations changed, but usually movements/items are the volatile ones
-    // mapLocationsToZones will automatically run via useEffect when movements updates
-  }, [refreshMovements]);
+    await Promise.all([
+      refreshMovements(),
+      refreshLocations()
+    ]);
+  }, [refreshMovements, refreshLocations]);
 
   return {
     zones,
     loading: locationsLoading,
     refresh: refreshAll,
     createZoneLocation,
+    renameZone,
   };
 };

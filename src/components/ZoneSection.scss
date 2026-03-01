@@ -25,9 +25,10 @@
     box-shadow: var(--shadow);
     border: 2px solid transparent;
     min-height: 65px;
+    flex: 1;          /* stretch to fill section height equally */
     height: auto;
     -webkit-tap-highlight-color: transparent;
-    flex-shrink: 0;
+    flex-shrink: 1;   /* allow shrink so all zones in a column stay equal */
 }
 
 .warehouse-zone:active {
@@ -153,6 +154,107 @@
     padding: 0.4rem;
 }
 
+/* ── Zone Rename Controls ─────────────────────────────────── */
+
+.zone-rename-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0, 0, 0, 0.28);
+    border: none;
+    border-radius: 3px;
+    color: rgba(255, 255, 255, 0.9);
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.1s;
+    padding: 0;
+    z-index: 2;
+    flex-shrink: 0;
+
+    &:hover {
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+    }
+}
+
+.warehouse-zone:hover:not(.zone-passive) .zone-rename-btn {
+    opacity: 1;
+}
+
+.zone-editing {
+    cursor: default !important;
+
+    &:hover {
+        box-shadow: var(--shadow) !important;
+        border-color: rgba(255, 255, 255, 0.3) !important;
+        transform: none !important;
+    }
+}
+
+.zone-rename-row {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    width: 100%;
+}
+
+.zone-rename-input {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-radius: 4px;
+    padding: 2px 5px;
+    color: #1e293b;
+    outline: none;
+
+    &::placeholder {
+        color: #94a3b8;
+        font-weight: 400;
+    }
+
+    &:focus {
+        border-color: white;
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+    }
+}
+
+.zone-rename-confirm,
+.zone-rename-cancel {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: opacity 0.1s;
+
+    &:hover {
+        opacity: 0.85;
+    }
+}
+
+.zone-rename-confirm {
+    background: #22c55e;
+    color: white;
+}
+
+.zone-rename-cancel {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
 @media (max-width: 1200px) {
     .section-header {
         font-size: 0.65rem;
@@ -165,7 +267,7 @@
     }
 
     .corridor-zone {
-        min-height: 45px;
+        min-height: 55px; /* match warehouse-zone */
         padding: 0.4rem;
     }
 }

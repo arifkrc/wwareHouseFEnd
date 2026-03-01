@@ -12,7 +12,7 @@ export const useLocations = () => {
       const response = await api.get('/locations');
       return response.data;
     },
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 1000 * 30, // 30 seconds - needs to be fresh for zone stock tiles
   });
 
   // Mutation: Create Location

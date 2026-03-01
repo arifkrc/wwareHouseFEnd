@@ -67,7 +67,7 @@ export default function ZoneSection({
 
                         {type === 'corridor' ? (
                             <div className="zone-content-wrapper corridor-wrapper">
-                                <div className="zone-header-row" style={{ justifyContent: 'center' }}>
+                                <div className="zone-header-row" style={{ justifyContent: 'flex-start' }}>
                                     {isEditing ? (
                                         <div className="zone-rename-row" onClick={e => e.stopPropagation()}>
                                             <input
@@ -94,7 +94,7 @@ export default function ZoneSection({
                                     </div>
                                 )}
 
-                                <div className="zone-body-row" style={{ justifyContent: 'center', marginTop: 'auto' }}>
+                                <div className="zone-body-row" style={{ justifyContent: 'flex-start', marginTop: 'auto' }}>
                                     {!zone.passive && !isEditing && (
                                         zone.itemCount > 0 ? (
                                             <div className="zone-stats-row text-center">

@@ -61,7 +61,8 @@
 }
 
 .corridor-wrapper {
-    align-items: center;
+    align-items: flex-start;
+    justify-content: flex-start;
 }
 
 .zone-header-row {
@@ -152,6 +153,7 @@
 .corridor-zone {
     min-height: 65px;
     padding: 0.3rem 0.25rem;
+    justify-content: flex-start;
 
     .zone-structural-name {
         font-size: 0.82rem;

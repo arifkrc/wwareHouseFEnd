@@ -141,6 +141,7 @@ export default function Table({
 
     return (
         <div className="table-container">
+            <div className="table-scroll-x">
             <table className="table">
                 <thead>
                     <tr>
@@ -245,8 +246,7 @@ export default function Table({
                         </tr>
                     )}
                 </tbody>
-            </table>
-        </div>
+            </table>            </div>        </div>
     );
 }
 

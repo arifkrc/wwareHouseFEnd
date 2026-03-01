@@ -102,6 +102,9 @@
     padding: 1.5rem;
     overflow-y: auto;
     flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
     /* Style for touch momentum scrolling on iOS */
     -webkit-overflow-scrolling: touch;
 }

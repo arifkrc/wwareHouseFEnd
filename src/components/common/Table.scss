@@ -1,12 +1,22 @@
 /* Table Base Styles */
 .table-container {
     width: 100%;
-    overflow-x: auto;
+    overflow: visible;
     border-radius: 8px;
     border: 1px solid #e2e8f0;
     background: white;
-    /* Ensure dropdowns don't get clipped if table scrolls */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Inner x-scroll wrapper — keeps table-container overflow:visible so filter dropdowns aren't clipped */
+.table-scroll-x {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 8px;
     min-height: 200px;
+    flex: 1;
 }
 
 .table {

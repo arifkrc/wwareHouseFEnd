@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Package, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Warehouse } from 'lucide-react';
 import { useWarehouseZones } from '../hooks/useWarehouseZones';
 import { useLocations } from '../hooks/useLocations';
@@ -22,7 +22,7 @@ import './FactoryLayout.scss';
 export default function FactoryLayout() {
   const { zones, loading: zonesLoading, refresh: refreshZones } = useWarehouseZones();
   const { locations } = useLocations();
-  const { items, refresh: refreshItems } = useItems();
+  const { items, refresh: refreshItems, updateItem } = useItems();
   const { refresh: refreshMovements, createMovement } = useMovements();
   const { toasts, removeToast, success, error, warning } = useToast();
 

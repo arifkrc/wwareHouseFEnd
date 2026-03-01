@@ -5,12 +5,13 @@ import { useMovements } from '../hooks/useMovements';
 import ZoneStockForm from './ZoneStockForm';
 import ExpandableText from './ExpandableText';
 import Modal from './common/Modal';
+import Drawer from './common/Drawer';
 import Table from './common/Table';
 import Badge from './common/Badge';
 import Button from './common/Button';
 import EditableCell from './common/EditableCell';
 
-export default function ZoneModal({
+export default function ZoneDrawer({
     isOpen,
     onClose,
     zone,
@@ -214,14 +215,14 @@ export default function ZoneModal({
 
 
     return (
-        <Modal
+        <Drawer
             isOpen={isOpen}
             onClose={onClose}
             title={ModalTitle} // We pass the JSX title
             size="lg"
         >
             {/* Tabs */}
-            <div className="tabs" style={{ marginBottom: '1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: '1rem' }}>
+            <div className="tabs" style={{ marginBottom: '1rem', borderBottom: '1px solid #e2e8f0', display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '4px' }}>
                 <button
                     className={`tab ${activeTab === 'assigned' ? 'active' : ''}`}
                     onClick={() => setActiveTab('assigned')}
@@ -383,6 +384,6 @@ export default function ZoneModal({
                 )}
 
             </div>
-        </Modal>
+        </Drawer>
     );
 }

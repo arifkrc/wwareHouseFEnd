@@ -108,31 +108,62 @@ export default function ZoneDrawer({
 
 
 
-    // Table Columns Definition
+    // Table Columns Definition - UX Optimized
     const columns = [
         {
-            header: 'Ürün Kodu',
+            header: 'Ürün',
             accessor: 'item_code',
-            render: (row) => <strong>{row.item_code}</strong>
-        },
-        {
-            header: 'Ürün Adı',
-            accessor: 'item_name',
-            render: (row) => <ExpandableText text={row.item_name} limit={20} />
-        },
-        {
-            header: 'Firma / Müşteri',
-            accessor: 'customer_code',
-            render: (row) => row.customer_code ? (
-                <Badge variant="warning">{row.customer_code}</Badge>
-            ) : (
-                <span className="text-muted text-small">Genel</span>
+            render: (row) => (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <strong style={{ fontSize: '1.05em', color: '#0f172a' }}>{row.item_code}</strong>
+                    <span style={{ fontSize: '0.85em', color: '#64748b' }}>
+                        <ExpandableText text={row.item_name} limit={25} />
+                    </span>
+                    {row.customer_code && (
+                        <span style={{ marginTop: '2px' }}><Badge variant="warning">{row.customer_code}</Badge></span>
+                    )}
+                </div>
             )
         },
         {
-            header: 'Not',
+            header: 'Stok',
+            accessor: 'quantity',
+            render: (row) => (
+                <div style={{ fontSize: '1.1em', fontWeight: 600, color: '#0369a1' }}>
+                    <EditableCell
+                        value={row.quantity}
+                        onSave={(val) => handleStockQuantityUpdate(row, val)}
+                        type="number"
+                    />
+                </div>
+            )
+        },
+        {
+            header: 'İşlemler (Hızlı)',
+            render: (row) => (
+                <div className="action-buttons" style={{ display: 'flex', gap: '4px', flexWrap: 'nowrap' }}>
+                    <Button variant="primary" className="btn-success btn-sm" onClick={() => onOpenMovementModal(row, 'IN')} title="Stok Arttır" style={{ padding: '6px' }}>
+                        <ArrowUpCircle size={18} strokeWidth={2.5} />
+                    </Button>
+                    <Button variant="primary" className="btn-danger btn-sm" onClick={() => onOpenMovementModal(row, 'OUT')} title="Stok Çıkışı" style={{ padding: '6px' }}>
+                        <ArrowDownCircle size={18} strokeWidth={2.5} />
+                    </Button>
+                    <Button variant="outline" className="btn-info btn-sm" onClick={() => onOpenMovementModal(row, 'TRANSFER')} title="Transfer" style={{ padding: '6px' }}>
+                        <ArrowRightLeft size={18} strokeWidth={2.5} />
+                    </Button>
+                    <Button variant="outline" className="btn-warning btn-sm" onClick={() => onOpenMovementModal(row, 'PATLATMA')} title="Patlatma / İmha" style={{ padding: '6px' }}>
+                        <Bomb size={18} strokeWidth={2.5} />
+                    </Button>
+                    <Button variant="outline" className="btn-primary btn-sm" onClick={() => onOpenMovementModal(row, 'SEVK')} title="Sevk Et" style={{ padding: '6px' }}>
+                        <Truck size={18} strokeWidth={2.5} />
+                    </Button>
+                </div>
+            )
+        },
+        {
+            header: 'Not (Hareket)',
             accessor: 'movement_note',
-            style: { minWidth: '150px', maxWidth: '250px' },
+            style: { minWidth: '180px', maxWidth: '300px' },
             render: (row) => {
                 const displayNote = row.movement_note
                     ? (row.movement_note.includes(':')
@@ -141,58 +172,29 @@ export default function ZoneDrawer({
                     : '';
 
                 return (
-                    <EditableCell
-                        value={displayNote}
-                        onSave={(val) => handleCellNoteUpdate(row, val)}
-                        placeholder="Not ekle..."
-                    />
+                    <div style={{ background: '#f8fafc', padding: '4px', borderRadius: '4px', border: '1px dashed #cbd5e1' }}>
+                        <EditableCell
+                            value={displayNote}
+                            onSave={(val) => handleCellNoteUpdate(row, val)}
+                            placeholder="Yeni not ekle..."
+                            type="textarea"
+                        />
+                    </div>
                 );
             }
         },
         {
-            header: 'Stok',
-            accessor: 'quantity',
-            render: (row) => (
-                <EditableCell
-                    value={row.quantity}
-                    onSave={(val) => handleStockQuantityUpdate(row, val)}
-                    type="number"
-                />
-            )
-        },
-        {
-            header: 'Açıklama',
+            header: 'Açıklama (Ürün)',
             accessor: 'description',
-            style: { minWidth: '150px', maxWidth: '250px' },
+            style: { minWidth: '120px', maxWidth: '200px' },
             render: (row) => (
-                <EditableCell
-                    value={row.description}
-                    onSave={(val) => handleCellDescriptionUpdate(row, val)}
-                    placeholder="Açıklama..."
-                    type="textarea"
-                />
-            )
-        },
-
-        {
-            header: 'İşlemler',
-            render: (row) => (
-                <div className="action-buttons">
-                    <Button variant="icon" className="btn-success" onClick={() => onOpenMovementModal(row, 'IN')} title="Stok Arttır">
-                        <ArrowUpCircle size={20} strokeWidth={2.5} />
-                    </Button>
-                    <Button variant="icon" className="btn-danger" onClick={() => onOpenMovementModal(row, 'OUT')} title="Stok Çıkışı">
-                        <ArrowDownCircle size={20} strokeWidth={2.5} />
-                    </Button>
-                    <Button variant="icon" className="btn-warning" onClick={() => onOpenMovementModal(row, 'PATLATMA')} title="Patlatma / İmha">
-                        <Bomb size={20} strokeWidth={2.5} />
-                    </Button>
-                    <Button variant="icon" className="btn-primary" onClick={() => onOpenMovementModal(row, 'SEVK')} title="Sevk Et">
-                        <Truck size={20} strokeWidth={2.5} />
-                    </Button>
-                    <Button variant="icon" className="btn-info" onClick={() => onOpenMovementModal(row, 'TRANSFER')} title="Transfer">
-                        <ArrowRightLeft size={20} strokeWidth={2.5} />
-                    </Button>
+                <div style={{ opacity: 0.7 }}>
+                    <EditableCell
+                        value={row.description}
+                        onSave={(val) => handleCellDescriptionUpdate(row, val)}
+                        placeholder="Açıklama..."
+                        type="textarea"
+                    />
                 </div>
             )
         }

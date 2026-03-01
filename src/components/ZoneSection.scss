@@ -151,7 +151,27 @@
 /* Corridor Specific Override */
 .corridor-zone {
     min-height: 65px;
-    padding: 0.4rem;
+    padding: 0.3rem 0.25rem;
+
+    .zone-structural-name {
+        font-size: 0.82rem;
+        letter-spacing: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        display: block;
+    }
+
+    .zone-custom-name {
+        font-size: 0.62rem;
+        padding: 1px 4px;
+        max-width: 100%;
+    }
+
+    .stat-compact {
+        font-size: 0.62rem;
+    }
 }
 
 /* ── Zone Rename Controls ─────────────────────────────────── */

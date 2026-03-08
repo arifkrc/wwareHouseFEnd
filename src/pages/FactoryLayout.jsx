@@ -315,10 +315,6 @@ export default function FactoryLayout() {
         />
       </div>
 
-      <div className="layout-info">
-        <p>Bölge adını değiştirmek için üzerine gelin ve <strong>✏️ kalem simgesine</strong> tıklayın · Enter ile kaydet, Esc ile iptal</p>
-      </div>
-
       {/* Refactored Zone Items Drawer */}
       <ZoneDrawer
         isOpen={showZoneModal}

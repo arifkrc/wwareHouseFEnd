@@ -1,0 +1,276 @@
+/* ── QuickStockModal ── */
+.qsm-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #0f766e;
+    font-weight: 700;
+}
+
+/* ── body ── */
+.qsm-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    min-width: 0;
+}
+
+/* ── header & row grid ── */
+.qsm-header-row,
+.qsm-row {
+    display: grid;
+    grid-template-columns: 2.8fr 1.6fr 90px 48px 1.8fr 34px;
+    gap: 6px;
+    align-items: center;
+    padding: 5px 4px;
+}
+
+.qsm-header-row {
+    background: #f8fafc;
+    border-radius: 6px 6px 0 0;
+    border: 1px solid #e2e8f0;
+    border-bottom: none;
+    padding: 6px 8px;
+}
+
+.qsm-col {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    min-width: 0;
+}
+
+/* rows container */
+.qsm-rows {
+    border: 1px solid #e2e8f0;
+    border-radius: 0 0 6px 6px;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+}
+
+.qsm-row {
+    border-bottom: 1px solid #f1f5f9;
+    background: #fff;
+    transition: background 0.12s;
+    padding: 5px 8px;
+}
+
+.qsm-row:last-child {
+    border-bottom: none;
+    border-radius: 0 0 6px 6px;
+}
+
+.qsm-row:hover {
+    background: #f8fafc;
+}
+
+/* ── dropdown ── */
+.qsm-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.qsm-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.qsm-search-icon {
+    position: absolute;
+    left: 8px;
+    color: #94a3b8;
+    pointer-events: none;
+    flex-shrink: 0;
+}
+
+.qsm-input {
+    width: 100%;
+    padding: 5px 28px 5px 26px;
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+    font-size: 0.82rem;
+    background: #fdfdfd;
+    color: #1e293b;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    box-sizing: border-box;
+}
+
+.qsm-input:focus {
+    border-color: #0d9488;
+    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.12);
+    background: #fff;
+}
+
+.qsm-input::placeholder {
+    color: #b0b8c8;
+}
+
+/* qty variant – no left icon padding */
+.qsm-qty-input {
+    padding-left: 8px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.qsm-clear-btn {
+    position: absolute;
+    right: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #ef4444;
+    display: flex;
+    align-items: center;
+    padding: 0;
+    line-height: 1;
+}
+
+/* dropdown list */
+.qsm-list {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    max-height: 220px;
+    overflow-y: auto;
+    list-style: none;
+    margin: 0;
+    padding: 4px 0;
+}
+
+.qsm-list-item {
+    display: flex;
+    flex-direction: column;
+    padding: 6px 10px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin: 0 3px;
+    transition: background 0.1s;
+}
+
+.qsm-list-item:hover,
+.qsm-list-item.selected {
+    background: #f0fdfa;
+}
+
+.qsm-list-main {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.qsm-list-sub {
+    font-size: 0.74rem;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* ── YD checkbox ── */
+.qsm-yd-label {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.qsm-yd-label input[type="checkbox"] {
+    display: none;
+}
+
+.qsm-yd-box {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #cbd5e1;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    transition: border-color 0.15s, background 0.15s;
+    color: #fff;
+}
+
+.qsm-yd-label input:checked + .qsm-yd-box {
+    background: #0d9488;
+    border-color: #0d9488;
+}
+
+/* ── delete button ── */
+.qsm-del-btn {
+    background: none;
+    border: none;
+    color: #cbd5e1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+}
+
+.qsm-del-btn:hover:not(:disabled) {
+    color: #ef4444;
+    background: #fee2e2;
+}
+
+.qsm-del-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* ── footer ── */
+.modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.qsm-footer-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.qsm-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.qsm-add-row-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border: 1.5px dashed #0d9488;
+    color: #0d9488;
+    background: transparent;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.qsm-add-row-btn:hover {
+    background: #f0fdfa;
+}
+
+.qsm-row-count {
+    font-size: 0.78rem;
+    color: #94a3b8;
+}

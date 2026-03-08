@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Package, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Warehouse } from 'lucide-react';
+import { Package, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, Warehouse, Zap } from 'lucide-react';
 import { useWarehouseZones } from '../hooks/useWarehouseZones';
 import { useLocations } from '../hooks/useLocations';
 import { useItems } from '../hooks/useItems';
@@ -14,6 +14,7 @@ import api from '../services/api';
 import ZoneDrawer from '../components/ZoneDrawer';
 import MovementDrawer from '../components/MovementDrawer';
 import ZoneSection from '../components/ZoneSection';
+import QuickStockModal from '../components/QuickStockModal';
 import { REFRESH_INTERVALS } from '../config/constants';
 import './FactoryLayout.scss';
 
@@ -27,6 +28,8 @@ export default function FactoryLayout() {
   const { toasts, removeToast, success, error, warning } = useToast();
 
   const [showZoneModal, setShowZoneModal] = useState(false);
+  const [showQuickStockModal, setShowQuickStockModal] = useState(false);
+  const [quickStockProcessing, setQuickStockProcessing] = useState(false);
   const [currentZone, setCurrentZone] = useState(null);
   const [zoneItems, setZoneItems] = useState([]);
   const [zoneItemsLoading, setZoneItemsLoading] = useState(false);
@@ -189,6 +192,38 @@ export default function FactoryLayout() {
     }
   };
 
+  /* QuickStockModal bulk submit */
+  const handleQuickStockSubmit = async (rows) => {
+    setQuickStockProcessing(true);
+    let successCount = 0;
+    let firstError = null;
+    for (const row of rows) {
+      try {
+        await createMovement(MOVEMENT_TYPES.IN, {
+          item_id: parseInt(row.itemId),
+          quantity: parseInt(row.quantity),
+          to_location_id: parseInt(row.locationId),
+          customer_code: null,
+          movement_note: row.notes ? `Hızlı Giriş: ${row.notes}` : 'Hızlı Giriş',
+          is_export: row.isExport
+        });
+        successCount++;
+      } catch (err) {
+        firstError = err?.response?.data?.error || err?.message || 'Giriş başarısız';
+      }
+    }
+    setQuickStockProcessing(false);
+    if (successCount > 0) {
+      success(`${successCount} stok girişi kaydedildi`);
+      refreshAll().catch(() => {});
+    }
+    if (firstError) {
+      error(`Bazı satırlar kaydedilemedi: ${firstError}`);
+    } else {
+      setShowQuickStockModal(false);
+    }
+  };
+
   /* ZoneModal Handlers (Delegated to Hook) */
   const onAddStock = (locationId, formData) => {
     setZoneItemsLoading(true); // Show loading skeleton immediately when tab switches back
@@ -239,7 +274,14 @@ export default function FactoryLayout() {
           </div>
         </div>
         <div className="toolbar-right">
-
+          <button
+            className="btn btn-primary quick-stock-btn"
+            onClick={() => setShowQuickStockModal(true)}
+            title="Hızlı toplu stok girişi"
+          >
+            <Zap size={16} style={{ marginRight: 5 }} />
+            Hızlı Giriş
+          </button>
         </div>
       </div>
 
@@ -308,6 +350,16 @@ export default function FactoryLayout() {
         isProcessing={isProcessing}
         locations={locations}
         elevated={true}
+      />
+
+      {/* Quick Stock Bulk Entry Modal */}
+      <QuickStockModal
+        isOpen={showQuickStockModal}
+        onClose={() => setShowQuickStockModal(false)}
+        items={items}
+        zones={zones}
+        onSubmit={handleQuickStockSubmit}
+        isProcessing={quickStockProcessing}
       />
 
       {/* Toast Notifications - Rendered at root level to avoid z-index/transform issues */}

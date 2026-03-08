@@ -217,6 +217,7 @@ export default function QuickStockModal({ isOpen, onClose, items = [], zones = [
                                 {/* YD checkbox */}
                                 <div className="qsm-col qsm-col-yd">
                                     <label className="qsm-yd-label" title="Yurt Dışı (İhracat)">
+                                        <span className="qsm-yd-text">Yurtdışı</span>
                                         <input
                                             type="checkbox"
                                             checked={row.isExport}

@@ -249,7 +249,16 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    gap: 5px;
     cursor: pointer;
+}
+
+.qsm-yd-text {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #64748b;
+    white-space: nowrap;
+    user-select: none;
 }
 
 .qsm-yd-label input[type="checkbox"] {

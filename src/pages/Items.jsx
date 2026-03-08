@@ -184,7 +184,14 @@ export default function Items() {
         if (filterType !== 'ALL') {
             result = result.filter(alloc => {
                 const productType = getProductType(alloc.item_code);
-                return productType === filterType;
+                let targetType;
+                switch (filterType) {
+                    case 'DISK': targetType = PRODUCT_TYPES.DISK; break;
+                    case 'KAMPANA': targetType = PRODUCT_TYPES.KAMPANA; break;
+                    case 'POYRA': targetType = PRODUCT_TYPES.POYRA; break;
+                    default: return true;
+                }
+                return productType === targetType;
             });
         }
 

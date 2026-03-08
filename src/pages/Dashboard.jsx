@@ -84,7 +84,7 @@ export default function Dashboard() {
   const handleFilterClear = () => {
     setFilters({ startDate: '', endDate: '' });
     setSearch('');
-    refresh({ limit: 20 });
+    refresh({ page: 1, limit: 10 });
   };
 
   const handlePageChange = (p) => {

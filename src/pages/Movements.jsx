@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { History, RefreshCw, Edit2, Plane, Package } from 'lucide-react';
 import { useMovements } from '../hooks/useMovements';
 import { useToast } from '../hooks/useToast';
@@ -25,8 +25,15 @@ export default function Movements() {
   const [sortBy, setSortBy] = useState('created_at');
   const [order, setOrder] = useState('desc');
   const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' });
+  const [activeTab, setActiveTab] = useState('ALL');
 
-  // Debounce Search and Date Range
+  // Refs so non-debounced effect can read latest search/date without triggering immediately
+  const searchRef = useRef(search);
+  const dateRangeRef = useRef(dateRange);
+  useEffect(() => { searchRef.current = search; });
+  useEffect(() => { dateRangeRef.current = dateRange; });
+
+  // Debounced effect for search / date-range changes — resets to page 1
   useEffect(() => {
     const timer = setTimeout(() => {
       refreshMovements({
@@ -36,28 +43,27 @@ export default function Movements() {
         sortBy,
         order,
         start_date: dateRange.startDate,
-        end_date: dateRange.endDate
+        end_date: dateRange.endDate,
+        movement_type: activeTab === 'ALL' ? undefined : activeTab
       });
-      setPage(1); // Reset to page 1 on search or date range change
-    }, 500); // 500ms debounce
+      setPage(1);
+    }, 500);
     return () => clearTimeout(timer);
-  }, [search, dateRange, refreshMovements]); // Include dateRange in debounce effect
+  }, [search, dateRange, refreshMovements]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Separate effect for Page/Sort changes
-  const [activeTab, setActiveTab] = useState('ALL');
-
+  // Immediate effect for page / sort / tab changes — reads search/date from refs
   useEffect(() => {
     refreshMovements({
       page,
       limit: 20,
-      search,
+      search: searchRef.current,
       sortBy,
       order,
-      start_date: dateRange.startDate,
-      end_date: dateRange.endDate,
+      start_date: dateRangeRef.current.startDate,
+      end_date: dateRangeRef.current.endDate,
       movement_type: activeTab === 'ALL' ? undefined : activeTab
     });
-  }, [page, sortBy, order, search, dateRange, activeTab, refreshMovements]);
+  }, [page, sortBy, order, activeTab, refreshMovements]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSort = (field) => {
     const newOrder = sortBy === field && order === 'desc' ? 'asc' : 'desc';

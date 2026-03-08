@@ -99,6 +99,44 @@
   padding: 0;
 }
 
+/* ── Mobile toolbar fixes ── */
+@media (max-width: 600px) {
+  .layout-toolbar {
+    padding: 0.625rem 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .toolbar-left {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .toolbar-left h2 {
+    font-size: 1rem;
+    gap: 0.4rem;
+    white-space: nowrap;
+  }
+
+  .total-stock-badge {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.78rem;
+    gap: 0.35rem;
+    white-space: nowrap;
+  }
+
+  .total-stock-badge strong {
+    font-size: 0.9rem;
+    margin-left: 0.15rem;
+  }
+
+  .quick-stock-btn {
+    font-size: 0.78rem;
+    padding: 0.4rem 0.6rem;
+  }
+}
+
 
 
 .layout-info {
